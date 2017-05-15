@@ -127,7 +127,54 @@ public class ImageResizer
     public static void resize(File origFile, int maxWidth, int maxHeight, boolean centered, File destfile, String type) throws IOException
     {
         resize(origFile, maxWidth, maxHeight, centered, destfile, type, Color.WHITE);
-    }    
+    }
+
+    /**
+     * Threshold.
+     * 
+     * @param origFile the orig file
+     * @param maxWidth the max width
+     * @param maxHeight the max height
+     * @param centered the centered
+     * @param destfile the destfile
+     * @param type the type
+     * @throws IOException Signals that an I/O exception has occurred.
+     */
+    public static void threshold(File origFile, int maxWidth, int maxHeight, boolean centered, File destfile, String type, Color color) throws IOException
+    {
+        BufferedImage bi = ImageIO.read(origFile);
+        int calcWidth;
+        int calcHeight;
+        
+        final int width = bi.getWidth();
+        final int height = bi.getHeight();
+        
+        if(width>maxWidth || height>maxHeight)
+        {
+            float ch = height / (float) maxHeight;  
+            float cw = width / (float) maxWidth;
+
+            if(cw > ch) {
+                calcHeight = (int) (bi.getHeight() / cw);
+                calcWidth = (int) (bi.getWidth() / cw);
+            }else if(ch > cw) {
+                calcWidth = (int) (bi.getWidth() / ch);
+                calcHeight = (int) (bi.getHeight() / ch);
+                ;
+            }else {
+                calcHeight = maxHeight;
+                calcWidth = maxWidth;
+            }
+            ImageIO.write(createResizedCopy(bi, maxWidth, maxHeight, centered, calcWidth, calcHeight, color), type, destfile);
+        }
+        else
+        {
+//            calcWidth = width;
+//            calcHeight = height;
+            ImageIO.write(bi, type, destfile);
+        }
+//        ImageIO.write(createResizedCopy(bi, maxWidth, maxHeight, centered, calcWidth, calcHeight, color), type, destfile);
+    }
 
     /**
      * Resize.
