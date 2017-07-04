@@ -15,15 +15,8 @@
                     <include>**/*.xslt</include>
                 </includes>
             </resource>
-        </resources>        
-    </build>    
-    <repositories>
-        <repository>
-            <id>SWBExternalDeps</id>
-            <name>SWBExternalDeps</name>
-            <url>https://github.com/SemanticWebBuilder/SWBExternalDeps/raw/master/</url>
-        </repository>  
-    </repositories>  
+        </resources>
+    </build>
     <dependencies>
         <dependency>
             <groupId>log4j</groupId>
@@ -59,15 +52,15 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.semanticwb.external</groupId>
-            <artifactId>isorelax</artifactId>
-            <version>1.0.0</version>
-        </dependency>  
+          <groupId>com.sun.xml.bind.jaxb</groupId>
+          <artifactId>isorelax</artifactId>
+          <version>20090621</version>
+        </dependency>
         <dependency>
-            <groupId>org.semanticwb.external</groupId>
-            <artifactId>msv</artifactId>
-            <version>1.0.0</version>
-        </dependency>                 
+          <groupId>net.java.dev.msv</groupId>
+          <artifactId>msv-core</artifactId>
+          <version>2013.6.1</version>
+        </dependency>
     </dependencies>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
