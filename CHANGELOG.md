@@ -1,6 +1,6 @@
 # Change Log
 
-## [5.0-beta.1](https://github.com/SemanticWebBuilder/SWBBase/tree/5.0-beta.1) (2017-05-15)
+## [5.0-beta.1](https://github.com/SemanticWebBuilder/SWBBase/tree/5.0-beta.1) (2017-08-22)
 [Todos los cambios](https://github.com/SemanticWebBuilder/SWBBase/compare/5.0-SNAPSHOT...5.0-beta.1)
 
 ## [5.0-SNAPSHOT](https://github.com/SemanticWebBuilder/SWBBase/tree/5.0-SNAPSHOT) (2016-12-15)
