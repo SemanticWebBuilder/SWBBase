@@ -6,7 +6,7 @@
  * procesada por personas y/o sistemas, es una creación original del Fondo de Información y Documentación
  * para la Industria INFOTEC, cuyo registro se encuentra actualmente en trámite.
  *
- * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público (‘open source’),
+ * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público ('open source'),
  * en virtud del cual, usted podrá usarlo en las mismas condiciones con que INFOTEC lo ha diseñado y puesto a su disposición;
  * aprender de él; distribuirlo a terceros; acceder a su código fuente y modificarlo, y combinarlo o enlazarlo con otro software,
  * todo ello de conformidad con los términos y condiciones de la LICENCIA ABIERTA AL PÚBLICO que otorga INFOTEC para la utilización
@@ -18,28 +18,72 @@
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
  * dirección electrónica:
- *  http://www.semanticwebbuilder.org
+ *  http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.net.SocketException;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Formatter;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
+import java.util.StringTokenizer;
+import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.DHParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import javax.mail.internet.InternetAddress;
+import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
 import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
@@ -48,86 +92,52 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import org.apache.log4j.PropertyConfigurator;
-import org.semanticwb.base.db.DBConnectionManager;
-import org.semanticwb.base.db.DBConnectionPool;
-import org.semanticwb.base.db.PoolConnectionTimeLock;
-import org.semanticwb.base.util.imp.Logger4jImpl;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.xml.sax.InputSource;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.math.BigInteger;
-import java.net.SocketException;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.MessageDigest;
-import java.security.SecureRandom;
-import org.apache.commons.mail.HtmlEmail;
-import org.apache.commons.mail.EmailAttachment;
-import java.util.Collection;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Formatter;
-import java.util.GregorianCalendar;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.Vector;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.DHParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import javax.xml.namespace.QName;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.mail.DefaultAuthenticator;
+import org.apache.commons.mail.EmailAttachment;
+import org.apache.commons.mail.HtmlEmail;
+import org.apache.log4j.PropertyConfigurator;
+import org.semanticwb.base.db.DBConnectionManager;
+import org.semanticwb.base.db.DBConnectionPool;
+import org.semanticwb.base.db.PoolConnectionTimeLock;
 //import org.apache.poi.POITextExtractor;
 //import org.apache.poi.extractor.ExtractorFactory;
 //import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 //import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
-import org.semanticwb.base.util.*;
+import org.semanticwb.base.util.ErrorElement;
+import org.semanticwb.base.util.FilterRule;
+import org.semanticwb.base.util.GenericFilterRule;
+import org.semanticwb.base.util.SFBase64;
+import org.semanticwb.base.util.SWBMail;
+import org.semanticwb.base.util.SWBMailSender;
+import org.semanticwb.base.util.SWBProperties;
+import org.semanticwb.base.util.SimpleDateFormatTS;
+import org.semanticwb.base.util.imp.Logger4jImpl;
 import org.semanticwb.base.util.parser.html.HTMLParser;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-// TODO: Auto-generated Javadoc
-//import sun.misc.BASE64Encoder;
+import org.xml.sax.InputSource;
 
 /**
- * Contains utileries for managing error logs, text, database, IO, Zip files,
- * emails, Xml, Xslt , Dom, Collections and encriptions
+ * Contains utilities for managing error logs, text, database, IO, Zip files,
+ * emails, Xml, Xslt , Dom, Collections and encryption
  * <p>
  * Contiene utilerias para manejo de log de errores, texto, base de datos, IO,
  * Zip, Email, Xml, colecciones y encripciones</p>.
  *
- * @author Javier Solis Gonzalez (jsolis@infotec.com.mx)
- * @author Jorge Jiménez (george24@infotec.com.mx)
+ * @author Javier Solis Gonzalez
+ * @author Jorge Jiménez
+ * @author Hasdai Pacheco
  * @version 1.0
  */
 public class SWBUtils
@@ -305,7 +315,6 @@ public class SWBUtils
         {
             e.printStackTrace();
         }
-        //org.apache.log4j.Logger.getLogger("org.semanticwb").setLevel(Level.TRACE);
         SWBUtils.initLogger = true;
     }
 
@@ -351,7 +360,6 @@ public class SWBUtils
         {
             SWBUtils.log.error("Error: logging.properties not found...", e);
         }
-        //org.apache.log4j.Logger.getLogger("org.semanticwb").setLevel(Level.TRACE);
         SWBUtils.initLogger = true;
     }
 
@@ -402,16 +410,11 @@ public class SWBUtils
         public static void addError(String msg, Throwable e, Class cls, String level)
         {
             //MAPS74 try removed, shoudn't be an error here
-//            try
-//            {
             SWBUtils.errorElement.add(0, new ErrorElement(e, msg, cls, level));
             if (SWBUtils.errorElement.size() > SWBUtils.errorElementSize)
             {
                 SWBUtils.errorElement.remove(SWBUtils.errorElementSize);
             }
-//            } catch (Exception noe)
-//            {
-//            }
         }
 
         /**
@@ -569,11 +572,6 @@ public class SWBUtils
                 name = name.substring(0, name.length() - 2);
                 name += "es";
             }
-            /*else if(name.endsWith("f"))
-             {
-             name=name.substring(0,name.length()-1);
-             name+="ves";
-             }*/
             else if (name.endsWith("fe"))
             {
                 name = name.substring(0, name.length() - 2);
@@ -633,7 +631,6 @@ public class SWBUtils
                 loc = SWBUtils.locale;
             }
 
-            //SimpleDateFormat formatter = new SimpleDateFormat("MMMM");
             GregorianCalendar gc = new GregorianCalendar(loc);
             gc.set(Calendar.MONTH, Calendar.JANUARY);
             gc.set(Calendar.DATE, 1);
@@ -699,15 +696,13 @@ public class SWBUtils
             {
                 return str;
             }
-            StringBuffer ret = new StringBuffer();
+            StringBuilder ret = new StringBuilder();
             int i = str.indexOf(match);
             int y = 0;
             while (i >= 0)
             {
-                //System.out.println("i:"+i+" y:"+y);
                 ret.append(str.substring(y, i));
                 ret.append(replace);
-                //str = str.substring(y, i) + replace + str.substring(i + match.length());
                 y = i + match.length();
                 i = str.indexOf(match, y);
             }
@@ -802,7 +797,6 @@ public class SWBUtils
          */
         public static String iso8601DateFormat(Date date)
         {
-            //SimpleDateFormat iso8601dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'.'SSS");
             return iso8601dateFormat1.format(date);
         }
 
@@ -828,15 +822,15 @@ public class SWBUtils
             SimpleDateFormatTS iso8601dateFormat = null;
             if (date.length() > 19)
             {
-                iso8601dateFormat = iso8601dateFormat1;//new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'.'SSS");
+                iso8601dateFormat = iso8601dateFormat1;//"yyyy-MM-dd'T'HH:mm:ss'.'SSS"
             }
             if (date.length() > 10)
             {
-                iso8601dateFormat = iso8601dateFormat2;//new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+                iso8601dateFormat = iso8601dateFormat2;//"yyyy-MM-dd'T'HH:mm:ss"
             }
             else
             {
-                iso8601dateFormat = iso8601dateFormat3;//new SimpleDateFormat("yyyy-MM-dd");
+                iso8601dateFormat = iso8601dateFormat3;//"yyyy-MM-dd"
             }
             return iso8601dateFormat.parse(date);
         }
@@ -939,7 +933,7 @@ public class SWBUtils
             ByteArrayInputStream sw = new ByteArrayInputStream(data.getBytes());
             InputStreamReader in = new InputStreamReader(sw, enc);
 
-            StringBuffer ret = new StringBuffer(data.length());
+            StringBuilder ret = new StringBuilder(data.length());
 
             char[] bfile = new char[SWBUtils.bufferSize];
             int x;
@@ -1052,9 +1046,8 @@ public class SWBUtils
          */
         public static String replaceSpecialCharacters(String txt, boolean replaceSpaces)
         {
-            StringBuffer ret = new StringBuffer();
+            StringBuilder ret = new StringBuilder();
             String aux = txt;
-            //aux = aux.toLowerCase();
             aux = aux.replace('Á', 'A');
             aux = aux.replace('Ä', 'A');
             aux = aux.replace('Å', 'A');
@@ -1147,7 +1140,6 @@ public class SWBUtils
         public static String replaceSpecialCharactersForFile(String txt, char ch, boolean replaceSpaces,char word_separator)
         {
             String aux = txt;
-            //aux = aux.toLowerCase();
             aux = aux.replace('Á', 'A');
             aux = aux.replace('Ä', 'A');
             aux = aux.replace('Å', 'A');
@@ -1277,8 +1269,6 @@ public class SWBUtils
         public static String scape4Script(String txt)
         {
             String aux = txt;
-            //aux = aux.replace("'", "\\'");
-            //aux = aux.replace("\"", "\\\"");
             aux = aux.replace("'", "\\'");
             aux = aux.replace("\"", "&quot;");
 
@@ -1376,7 +1366,6 @@ public class SWBUtils
                 {
                     cad = java.util.ResourceBundle.getBundle(Bundle, locale, loader).getString(key);
                 }
-                //System.out.println("cad:" + cad);
             }
             catch (Exception e)
             {
@@ -1423,10 +1412,10 @@ public class SWBUtils
          * {@code regexp}.
          */
         //version 1.4
-        public static ArrayList regExpSplit(String txt, String regexp)
+        public static ArrayList<String> regExpSplit(String txt, String regexp)
         {
             int index = 0;
-            ArrayList matchList = new ArrayList();
+            ArrayList<String> matchList = new ArrayList<>();
             java.util.regex.Matcher m = java.util.regex.Pattern.compile(regexp).matcher(txt);
 
             while (m.find())
@@ -1470,7 +1459,7 @@ public class SWBUtils
          */
         public static Iterator<String> findInterStr(String str, String pre, String pos)
         {
-            ArrayList<String> ret = new ArrayList();
+            ArrayList<String> ret = new ArrayList<>();
             int y = 0;
             do
             {
@@ -1505,7 +1494,7 @@ public class SWBUtils
          * {@code pre} no es encontrado en {@code str}.</p>
          */
         private static int findInterStr(String str, String pre, String pos,
-                int index, ArrayList arr)
+                int index, ArrayList<String> arr)
         {
 
             int i = str.indexOf(pre, index);
@@ -1614,7 +1603,6 @@ public class SWBUtils
          */
         public static String getStrDate(Date date, String lang, String format)
         {
-            //System.out.println(date+" "+lang+" "+format);
             String ret = "";
             if (format != null)
             {
@@ -1972,9 +1960,9 @@ public class SWBUtils
          * objeto map que relaciona el nombre de cada par&aacute;metro con el
          * conjunto de sus valores almacenados en un array de objetos string.
          */
-        public static Map parseQueryParams(String path)
+        public static Map<String, String[]> parseQueryParams(String path)
         {
-            Map map = new java.util.HashMap();
+            Map<String, String[]> map = new HashMap<>();
             if (path == null)
             {
                 return map;
@@ -2058,7 +2046,7 @@ public class SWBUtils
          */
         public static String encodeExtendedCharacters(String str)
         {
-            StringBuffer ret = new StringBuffer();
+            StringBuilder ret = new StringBuilder();
             if (str != null)
             {
                 for (int x = 0; x < str.length(); x++)
@@ -2091,7 +2079,7 @@ public class SWBUtils
          */
         public static String decodeExtendedCharacters(String str)
         {
-            StringBuffer ret = new StringBuffer();
+            StringBuilder ret = new StringBuilder();
             int l = str.length();
             for (int x = 0; x < l; x++)
             {
@@ -2149,109 +2137,14 @@ public class SWBUtils
         {
 
             String ret = null;
-            //String summ=null;
             if (txt != null)
             {
                 HTMLParser parser = new HTMLParser(new StringReader(txt));
                 ret = parser.getText();
             }
-            //System.out.println("txt:"+ret);
             return ret;
         }
 
-        /**
-         * Extracts all the text in the Office document.
-         * <p>
-         * Extrae todo el texto del documento de Office.</p>
-         *
-         * @param file a file pathname referencing the office document
-         * @return a string representing all the text in the indicated Office
-         * document. un objeto string que representa todo el texto contenido en
-         * el documento de Office indicado.
-         * @throws org.apache.poi.openxml4j.exceptions.InvalidFormatException if
-         * there is a problem with the document's format.
-         * <p>
-         * si ocurre un problema con el formato del documento.</p>
-         * @throws org.apache.poi.openxml4j.exceptions.OpenXML4JException if a
-         * critical error occurs.
-         * <p>
-         * si ocurre un error cr&iacute;tico.</p>
-         * @throws org.apache.xmlbeans.XmlException if an error occurs while
-         * processing, parsing, or compiling XML.
-         * <p>
-         * si ocurre un error durante el proceso, an&aacute;lisis o
-         * compilaci&oacute;n de XML</p>
-         * @throws java.io.IOException if an I/O error occurs.
-         * <p>
-         * si ocurre cualquier error de E/S.</p>
-         * @throws InvalidFormatException the invalid format exception
-         * @throws OpenXML4JException the open xm l4 j exception
-         * @throws XmlException the xml exception
-         * @throws IOException Signals that an I/O exception has occurred.
-         */
-//        public static String parseOfficeFile(File file)
-//                throws InvalidFormatException, OpenXML4JException, XmlException,
-//                java.io.IOException
-//        {
-//
-//            POITextExtractor textExtractor = ExtractorFactory.createExtractor(file);
-//            return textExtractor.getText();
-//        }
-//        /**
-//         * Extracts all the text from a PDF formatted file.
-//         * <p>Extrae todo el texto de un archivo con formato PDF.</p>
-//         *
-//         * @param file a file pathname referencing the PDF document
-//         * @return a string representing all the text in the indicated PDF document.
-//         * un objeto string que representa todo el texto contenido en
-//         * el documento indicado con formato PDF.
-//         * @throws java.io.IOException if an I/O error occurs.
-//         * <p>si ocurre cualquier error de E/S.</p>
-//         * @throws IOException Signals that an I/O exception has occurred.
-//         */
-//        public String parserPDF(File file) throws java.io.IOException
-//        {
-//
-//            FileInputStream is = new FileInputStream(file);
-//            org.pdfbox.pdmodel.PDDocument pdfDocument = null;
-//            try
-//            {
-//                pdfDocument = org.pdfbox.pdmodel.PDDocument.load(is);
-//
-//                if (pdfDocument.isEncrypted())
-//                {
-//                    //Just try using the default password and move on
-//                    pdfDocument.decrypt("");
-//                }
-//
-//                //create a writer where to append the text content.
-//                StringWriter writer = new StringWriter();
-//                org.pdfbox.util.PDFTextStripper stripper = new org.pdfbox.util.PDFTextStripper();
-//                stripper.writeText(pdfDocument, writer);
-//
-//                // Note: the buffer to string operation is costless;
-//                // the char array value of the writer buffer and the content string
-//                // is shared as long as the buffer content is not modified, which will
-//                // not occur here.
-//                String contents = writer.getBuffer().toString();
-//                return contents;
-//            } catch (org.pdfbox.exceptions.CryptographyException e)
-//            {
-//                throw new IOException("Error decrypting document("
-//                        + file.getPath() + "): " + e);
-//            } catch (org.pdfbox.exceptions.InvalidPasswordException e)
-//            {
-//                //they didn't suppply a password and the default of "" was wrong.
-//                throw new IOException("Error: The document(" + file.getPath()
-//                        + ") is encrypted and will not be indexed.");
-//            } finally
-//            {
-//                if (pdfDocument != null)
-//                {
-//                    pdfDocument.close();
-//                }
-//            }
-//        }
         /**
          * Valida si txt es nulo regresa def de lo contrario regresa txt
          *
@@ -2294,7 +2187,7 @@ public class SWBUtils
          */
         public static String join(String concat, String[] arr)
         {
-            StringBuffer ret = new StringBuffer();
+            StringBuilder ret = new StringBuilder();
             for (int x = 0; x < arr.length; x++)
             {
                 ret.append(arr[x]);
@@ -2465,7 +2358,7 @@ public class SWBUtils
             {
                 throw new IOException("Input Stream null");
             }
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             char[] bfile = new char[SWBUtils.bufferSize];
             int x;
             while ((x = in.read(bfile, 0, SWBUtils.bufferSize)) > -1)
@@ -2517,7 +2410,7 @@ public class SWBUtils
             }
             InputStreamReader in = new InputStreamReader(inp, enc);
 
-            StringBuffer ret = new StringBuffer();
+            StringBuilder ret = new StringBuilder();
 
             char[] bfile = new char[SWBUtils.bufferSize];
             int x;
@@ -3090,10 +2983,7 @@ public class SWBUtils
                 throw new FileNotFoundException("File Not Found...");
             }
             FileInputStream in = new FileInputStream(file);
-            if (in == null)
-            {
-                throw new FileNotFoundException("File Not Found...");
-            }
+            //EHSP2017 - Removed dead code
 
             int len = (int) file.length();
 
@@ -3132,7 +3022,7 @@ public class SWBUtils
 
             DiskFileItemFactory factory = new DiskFileItemFactory();
             ServletFileUpload fu = new ServletFileUpload(factory);
-            java.util.List items = null;
+            List<FileItem> items = null;
             try
             {
                 items = fu.parseRequest(request);
@@ -3417,7 +3307,7 @@ public class SWBUtils
          */
         public static final void unzip(File zip, File extractTo) throws IOException
         {
-            unzip(zip, extractTo, new ArrayList(), null, null);
+            unzip(zip, extractTo, new ArrayList<String>(), null, null);
         }
 
         /**
@@ -3445,7 +3335,7 @@ public class SWBUtils
          * @author Jorge Jim&eacute;nez
          */
         public static final void unzip(File zip, File extractTo,
-                ArrayList fext2parse, String parse, String parse2)
+                ArrayList<String> fext2parse, String parse, String parse2)
                 throws IOException
         {
 
@@ -3455,7 +3345,6 @@ public class SWBUtils
             {
                 ZipEntry entry = (ZipEntry) e.nextElement();
                 File file = new File(extractTo, TEXT.replaceAll(entry.getName(), "\\", "/")); //TODO:Pienso que con esto se soluciona el problema de creación de rutas en linux
-                //File file = new File(extractTo, entry.getName());
                 if (entry.isDirectory() && !file.exists())
                 {
                     file.mkdirs();
@@ -3518,12 +3407,12 @@ public class SWBUtils
          */
         public static final Iterator<ZipEntry> readZip(String zipName)
         {
-            ArrayList itFiles = new ArrayList();
+            ArrayList<ZipEntry> itFiles = new ArrayList<>();
             ZipFile zf = null;
             try
             {
                 zf = new ZipFile(zipName);
-                java.util.Enumeration enu = zf.entries();
+                Enumeration enu = zf.entries();
                 while (enu.hasMoreElements())
                 {
                     ZipEntry zen = (ZipEntry) enu.nextElement();
@@ -3778,7 +3667,7 @@ public class SWBUtils
          * esta documentaci&oacute;n es igual a {@code null}.
          */
         public static String sendMail(String fromEmail, String fromName,
-                Collection address, Collection ccEmail, Collection bccEmail,
+                Collection<InternetAddress> address, Collection<InternetAddress> ccEmail, Collection<InternetAddress> bccEmail,
                 String subject, String contentType, String data, String login,
                 String password, ArrayList<EmailAttachment> attachments)
         {
@@ -3788,25 +3677,22 @@ public class SWBUtils
                 HtmlEmail email = new HtmlEmail();
                 if(SWBUtils.EMAIL.smtpssl)
                 {
-                    //System.out.println("smtpssl:"+SWBUtils.EMAIL.smtpssl+")");
                     email.setSSLOnConnect(SWBUtils.EMAIL.smtpssl);
                 }
 
                 if (attachments != null && attachments.size() > 0)
                 {
-                    Iterator itAttaches = attachments.iterator();
+                    Iterator<EmailAttachment> itAttaches = attachments.iterator();
                     while (itAttaches.hasNext())
                     {
-                        EmailAttachment attchment = (EmailAttachment) itAttaches.next();
+                        EmailAttachment attchment = itAttaches.next();
                         email.attach(attchment);
                     }
                 }
 
                 email.setHostName(SWBUtils.EMAIL.smtpserver);
-                //System.out.println("smtpserver:"+SWBUtils.EMAIL.smtpserver+")");
                 if (SWBUtils.EMAIL.smtpport > 0)
                 {
-                    //System.out.println("smtpport:"+smtpport+")");
                     if(SWBUtils.EMAIL.smtpssl)
                     {
                         email.setSslSmtpPort(""+SWBUtils.EMAIL.smtpport+")");
@@ -3817,8 +3703,6 @@ public class SWBUtils
                     }
                 }
                 email.setFrom(fromEmail, fromName);
-                //System.out.println("fromEmail:"+fromEmail+")");
-                //System.out.println("fromName:"+fromName+")");
                 email.setTo(address);
                 if (ccEmail != null)
                 {
@@ -3832,30 +3716,23 @@ public class SWBUtils
 
                 if (contentType != null && contentType.toLowerCase().indexOf("html") != -1)
                 {
-                    //System.out.println("data Html:"+data+")");
                     email.setHtmlMsg(data); // set the html message
                 }
                 else
                 {
-                    //System.out.println("data:"+data+")");
                     email.setMsg(data);
                 }
                 //Set authentication default to config, as in sendBGEmail method
                 if( null != SWBUtils.EMAIL.smtpuser && null != SWBUtils.EMAIL.smtppassword) 
                 {
                     email.setAuthenticator(new DefaultAuthenticator(EMAIL.smtpuser, EMAIL.smtppassword));
-                    //System.out.println("User:"+EMAIL.smtpuser+")");
-                    //System.out.println("passwd:"+EMAIL.smtppassword+")");
                 }
                 if (login != null && password != null)
                 {
                     email.setAuthenticator(new DefaultAuthenticator(login, password));
-                    //System.out.println("User2:"+login+")");
-                    //System.out.println("passwd2:"+password+")");
                 }
                 if (SWBUtils.EMAIL.smtptls)
                 {
-                    //System.out.println("smtptls:"+SWBUtils.EMAIL.smtptls+")");
                     email.setStartTLSEnabled(true);
                 }
                 ret = email.send();
@@ -3891,7 +3768,7 @@ public class SWBUtils
                 HtmlEmail email = new HtmlEmail();
                 email.setSSL(SWBUtils.EMAIL.smtpssl);
 
-                Iterator itAttaches = message.getAttachments().iterator();
+                Iterator<EmailAttachment> itAttaches = message.getAttachments().iterator();
                 while (itAttaches.hasNext())
                 {
                     EmailAttachment attchment = (EmailAttachment) itAttaches.next();
@@ -3970,8 +3847,8 @@ public class SWBUtils
         {
             try
             {
-                ArrayList acol = new ArrayList();
-                if (toEmail != null && toEmail.indexOf(";") > 0)
+                ArrayList<InternetAddress> acol = new ArrayList<>();
+                if (toEmail != null && toEmail.indexOf(';') > 0)
                 {
                     StringTokenizer strTokens = new StringTokenizer(toEmail, ";");
                     while (strTokens.hasMoreTokens())
@@ -3981,14 +3858,14 @@ public class SWBUtils
                         {
                             continue;
                         }
-                        javax.mail.internet.InternetAddress address = new javax.mail.internet.InternetAddress();
+                        InternetAddress address = new InternetAddress();
                         address.setAddress(token);
                         acol.add(address);
                     }
                 }
                 else if (toEmail != null)
                 {
-                    javax.mail.internet.InternetAddress address = new javax.mail.internet.InternetAddress();
+                    InternetAddress address = new InternetAddress();
                     address.setAddress(toEmail);
                     acol.add(address);
                 }
@@ -4029,8 +3906,8 @@ public class SWBUtils
                 throws java.net.SocketException
         {
 
-            ArrayList acol = new ArrayList();
-            if (toEmail != null && toEmail.indexOf(";") > 0)
+            ArrayList<InternetAddress> acol = new ArrayList<>();
+            if (toEmail != null && toEmail.indexOf(';') > 0)
             {
                 StringTokenizer strTokens = new StringTokenizer(toEmail, ";");
                 while (strTokens.hasMoreTokens())
@@ -4040,14 +3917,14 @@ public class SWBUtils
                     {
                         continue;
                     }
-                    javax.mail.internet.InternetAddress address = new javax.mail.internet.InternetAddress();
+                    InternetAddress address = new InternetAddress();
                     address.setAddress(token);
                     acol.add(address);
                 }
             }
             else if (toEmail != null)
             {
-                javax.mail.internet.InternetAddress address = new javax.mail.internet.InternetAddress();
+                InternetAddress address = new InternetAddress();
                 address.setAddress(toEmail);
                 acol.add(address);
             }
@@ -4101,7 +3978,7 @@ public class SWBUtils
          * @throws SocketException the socket exception
          */
         public static void sendBGEmail(String fromEmail, String fromName,
-                Collection address, Collection ccEmail, Collection bccEmail,
+                Collection<InternetAddress> address, Collection<InternetAddress> ccEmail, Collection<InternetAddress> bccEmail,
                 String subject, String contentType, String data, String login,
                 String password, ArrayList<EmailAttachment> attachments)
                 throws java.net.SocketException
@@ -4122,7 +3999,7 @@ public class SWBUtils
             }
             if (address != null)
             {
-                message.setAddress((ArrayList) address);
+                message.setAddress((ArrayList<InternetAddress>) address);
             }
             if (ccEmail != null)
             {
@@ -4236,7 +4113,6 @@ public class SWBUtils
          */
         public static boolean isValidEmailAddress(String emailAddress)
         {
-            //String  expression="^[\\w\\-]([\\.\\w])+[\\w]+@([\\w\\-]+\\.)+[A-Z]{2,4}$";
             String expression = "^[\\w]([\\.\\w\\-])+[\\w]+@([\\w\\-]+\\.)+[A-Z]{2,4}$";
 
             CharSequence inputStr = emailAddress;
@@ -4392,11 +4268,6 @@ public class SWBUtils
         {
             try
             {
-//                m_dbf = DocumentBuilderFactory.newInstance();
-//                m_dbf.setNamespaceAware(true);
-//                m_dbf.setIgnoringElementContentWhitespace(true);
-                //db=dbf.newDocumentBuilder();
-                //xpath
                 xpath_factory = javax.xml.xpath.XPathFactory.newInstance();
                 xpathObj = xpath_factory.newXPath();
 
@@ -4550,7 +4421,7 @@ public class SWBUtils
          * operaciones DOM.</p>
          * @throws SWBException the sWB exception
          */
-        public static Document copyDom(Document dom) throws SWBException
+        public static Document copyDom(Document dom)
         {
             Document n = getNewDocument();
             if (dom != null && dom.hasChildNodes())
@@ -4606,7 +4477,6 @@ public class SWBUtils
             try
             {
                 dom = xmlToDom(new InputSource(xml));
-                //xml.close();
             }
             catch (Exception e)
             {
@@ -4643,12 +4513,7 @@ public class SWBUtils
                 {
                     dom = db.parse(xml);
                     //MAPS74 si no se puede copiar se deberia avisar...
-//                    try
-//                    {
                     dom = copyDom(dom);
-//                    } catch (Exception e)
-//                    {
-//                    }
                 }
             }
             catch (Exception e)
@@ -4666,7 +4531,7 @@ public class SWBUtils
          * @return a brand new (empty) DOM document.
          *
          */
-        public static Document getNewDocument() //throws SWBException
+        public static Document getNewDocument()
         {
             DocumentBuilderFactory dbf = getDocumentBuilderFactory();
             DocumentBuilder db = null;
@@ -4682,7 +4547,6 @@ public class SWBUtils
             catch (Exception e)
             {
                 SWBUtils.log.error(e);
-                //throw new SWBException("Error getting new XML Document", e);
             }
             return dom;
         }
@@ -4735,7 +4599,7 @@ public class SWBUtils
          */
         public static String transformDom(Templates tpl, Document doc) throws TransformerException
         {
-            ByteArrayOutputStream sw = new java.io.ByteArrayOutputStream();
+            ByteArrayOutputStream sw = new ByteArrayOutputStream();
             Transformer trans = tpl.newTransformer();
             trans.transform(new DOMSource(doc), new StreamResult(sw));
             return sw.toString();
@@ -4852,8 +4716,8 @@ public class SWBUtils
          * documento DOM recibido es o no v&aacute;lido, de acuerdo al esquema
          * proporcionado.
          */
-        public static boolean xmlVerifier(String idschema, java.io.InputStream schema,
-                java.io.InputStream xml)
+        public static boolean xmlVerifier(String idschema, InputStream schema,
+                InputStream xml)
         {
 
             boolean bOk = false;
@@ -4916,37 +4780,37 @@ public class SWBUtils
             org.iso_relax.verifier.Schema schema = null;
             try
             {
-                if (objschema instanceof java.io.File)
+                if (objschema instanceof File)
                 {
-                    schema = factory.compileSchema((java.io.File) objschema);
+                    schema = factory.compileSchema((File) objschema);
                 }
                 else if (objschema instanceof org.xml.sax.InputSource)
                 {
                     schema = factory.compileSchema((org.xml.sax.InputSource) objschema);
                 }
-                else if (objschema instanceof java.io.InputStream)
+                else if (objschema instanceof InputStream)
                 {
                     if (sysid != null && !sysid.trim().equals(""))
                     {
-                        schema = factory.compileSchema((java.io.InputStream) objschema, sysid);
+                        schema = factory.compileSchema((InputStream) objschema, sysid);
                     }
                     else
                     {
-                        schema = factory.compileSchema((java.io.InputStream) objschema);
+                        schema = factory.compileSchema((InputStream) objschema);
                     }
                 }
-                else if (objschema instanceof java.lang.String)
+                else if (objschema instanceof String)
                 {
-                    schema = factory.compileSchema((java.lang.String) objschema);
+                    schema = factory.compileSchema((String) objschema);
                 }
                 try
                 {
                     org.iso_relax.verifier.Verifier verifier = schema.newVerifier();
                     verifier.setErrorHandler(SWBUtils.XML.silentErrorHandler);
 
-                    if (objxml instanceof java.io.File)
+                    if (objxml instanceof File)
                     {
-                        bOk = verifier.verify((java.io.File) objxml);
+                        bOk = verifier.verify((File) objxml);
                     }
                     else if (objxml instanceof org.xml.sax.InputSource)
                     {
@@ -4956,9 +4820,9 @@ public class SWBUtils
                     {
                         bOk = verifier.verify((org.w3c.dom.Node) objxml);
                     }
-                    else if (objxml instanceof java.lang.String)
+                    else if (objxml instanceof String)
                     {
-                        bOk = verifier.verify((java.lang.String) objxml);
+                        bOk = verifier.verify((String) objxml);
                     }
                 }
                 catch (org.iso_relax.verifier.VerifierConfigurationException e)
@@ -5087,10 +4951,10 @@ public class SWBUtils
         public static void domToFile(Document dom, String file, String encode)
         {
 
-            java.io.FileOutputStream osw = null;
+            FileOutputStream osw = null;
             try
             {
-                osw = new FileOutputStream(new java.io.File(file));
+                osw = new FileOutputStream(new File(file));
                 StreamResult streamResult = new StreamResult(osw);
 
                 Transformer transformer = null;
@@ -5173,7 +5037,7 @@ public class SWBUtils
             {
                 return null;
             }
-            StringBuffer ret = new StringBuffer(500);
+            StringBuilder ret = new StringBuilder(500);
 
             // split tokens
             StringTokenizer tokenizer = new StringTokenizer(str, " \t@%^&()-+=|\\{}[].;\"<>", true);
@@ -5241,7 +5105,7 @@ public class SWBUtils
             {
                 return null;
             }
-            StringBuffer str = new StringBuffer(txt);
+            StringBuilder str = new StringBuilder(txt);
             for (int x = 0; x < str.length(); x++)
             {
                 char ch = str.charAt(x);
@@ -5707,7 +5571,6 @@ public class SWBUtils
         public static Connection getConnection(String poolName, String description)
         {
             return getConnectionManager().getConnection(poolName, description);
-            //return dbPool.getNoPoolConnection(name);
         }
 
         /**
@@ -5836,8 +5699,6 @@ public class SWBUtils
             if (ret.toLowerCase().indexOf("hsql") > - 1)
             {
                 ret = SWBUtils.DB.DBTYPE_HSQLDB;
-//            } else if (ret.toLowerCase().indexOf("hsql") >- 1) {
-//                ret = SWBUtils.DB.DBTYPE_HSQLDB; //MAPS74 Forcing to use HSQLDB as DB
             }
             else if (ret.toLowerCase().indexOf("mysql") > - 1)
             {
@@ -5985,7 +5846,6 @@ public class SWBUtils
                 return toEncode;
             }
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-512");
-            //return "{SHA-512}" + new BASE64Encoder().encode(messageDigest.digest(toEncode.getBytes()));
             return "{SHA-512}"
                     + SFBase64.encodeBytes(messageDigest.digest(toEncode.getBytes("ISO8859-1")),
                             false);
@@ -6055,7 +5915,6 @@ public class SWBUtils
             {
                 throw new NoSuchAlgorithmException("Can't get bytes from string in ISO8859-1", uee);
             }
-            //return "{SHA-512}" + new BASE64Encoder().encode(messageDigest.digest(toEncode.getBytes()));
             return "{" + digestAlgorithm + "}"
                     + SFBase64.encodeBytes(messageDigest.digest(bits),
                             false);
@@ -6182,7 +6041,6 @@ public class SWBUtils
         {
             try
             {
-                String seed = java.lang.management.ManagementFactory.getRuntimeMXBean().getName() + System.currentTimeMillis();
                 KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
                 keyGen.initialize(1024);
                 KeyPair keypair = keyGen.genKeyPair();
@@ -6210,13 +6068,6 @@ public class SWBUtils
             return llaves;
         }
 
-//        /**
-//         * returns a 512 bit RSA KeyPair, it changes every restart
-//         * @return 512 RSA KeyPair
-//         */
-//        public static KeyPair getRSAKey(){
-//            return RSA512key;
-//        }
         /**
          * Converts an Hex String into a byte array
          *
@@ -6243,12 +6094,15 @@ public class SWBUtils
          */
         public static String byteArrayToHexString(byte[] arr)
         {
+        		String ret = "";
             Formatter formatter = new Formatter();
             for (byte b : arr)
             {
                 formatter.format("%02x", b);
             }
-            return formatter.toString();
+            ret = formatter.toString();
+            formatter.close();
+            return ret;
         }
 
         /**
