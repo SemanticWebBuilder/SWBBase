@@ -6,7 +6,7 @@
  * procesada por personas y/o sistemas, es una creación original del Fondo de Información y Documentación
  * para la Industria INFOTEC, cuyo registro se encuentra actualmente en trámite.
  *
- * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público (‘open source’),
+ * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público ('open source'),
  * en virtud del cual, usted podrá usarlo en las mismas condiciones con que INFOTEC lo ha diseñado y puesto a su disposición;
  * aprender de él; distribuirlo a terceros; acceder a su código fuente y modificarlo, y combinarlo o enlazarlo con otro software,
  * todo ello de conformidad con los términos y condiciones de la LICENCIA ABIERTA AL PÚBLICO que otorga INFOTEC para la utilización
@@ -18,11 +18,13 @@
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
  * dirección electrónica:
- *  http://www.semanticwebbuilder.org
+ *  http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb.base.util;
 
-// TODO: Auto-generated Javadoc
+import java.io.IOException;
+import java.util.Base64;
+
 /**
  * Encodes and decodes to and from Base64 notation.
  *
@@ -114,9 +116,6 @@ public class SFBase64 {
     -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9         // Decimal 244 - 255 */
     };
     
-    /** The Constant BAD_ENCODING. */
-    private final static byte BAD_ENCODING = -9; // Indicates error in encoding
-    
     /** The Constant WHITE_SPACE_ENC. */
     private final static byte WHITE_SPACE_ENC = -5; // Indicates white space in encoding
     
@@ -144,18 +143,8 @@ public class SFBase64 {
                 {
                     (byte) 2, (byte) 2, (byte) 3, (byte) 0, (byte) 9
                 }; // My zip code
-                byte[] bytes2 =
-                {
-                    (byte) 99, (byte) 2, (byte) 2, (byte) 3, (byte) 0, (byte) 9
-                };
-                //System.out.println("Bytes 2,2,3,0,9 as Base64: " + encodeBytes(bytes1));
-                //System.out.println("Bytes 2,2,3,0,9 w/ offset: " + encodeBytes(bytes2, 1, bytes2.length - 1));
+                
                 byte[] dbytes = decode(encodeBytes(bytes1));
-                System.out.print(encodeBytes(bytes1) + " decoded: ");
-                for (int i = 0; i < dbytes.length; i++)
-                {
-                    System.out.print(dbytes[i] + (i < dbytes.length - 1 ? "," : "\n"));
-                }
             }   // end testing byte arrays
             // Test Input Stream
             {
