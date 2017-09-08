@@ -62,7 +62,7 @@ public class SWBProperties extends Properties {
     private static final String whiteSpaceChars = " \t\r\n\f";
     
     /** The arr. */
-    private Vector arr = new Vector();
+    private Vector<String> arr = new Vector<>();
     
     /** The change. */
     private boolean change = false;
@@ -143,7 +143,7 @@ public class SWBProperties extends Properties {
     public synchronized Object setProperty(String key, String value, String comment)
     {
         setChange(true);
-        StringBuffer com = new StringBuffer();
+        StringBuilder com = new StringBuilder();
         if (!arr.contains(key))
         {
             arr.add(key);
@@ -434,11 +434,7 @@ public class SWBProperties extends Properties {
                     // Skip over one non whitespace key value separators if any
                     if (valueIndex < len && strictKeyValueSeparators.indexOf(line.charAt(valueIndex)) != -1)
                     {
-                        //MAPS74 If redundante
-//                        if (strictKeyValueSeparators.indexOf(line.charAt(valueIndex)) != -1)
-//                        {
                             valueIndex++;
-//                        }
                     }
 
                     // Skip over white space after other separators if any
@@ -461,26 +457,19 @@ public class SWBProperties extends Properties {
                         arr.add(key);
                     }
                     put(key, value);
-                    //if(buf.length()>2)buf=buf.substring(0,buf.length()-2);
                     put(PREFIX + key, buf);
                     buf = "";
                 } else
                 {
                     buf += line + "\r\n";
-                    //System.out.println("No:"+line);
                 }
             } else
             {
                 buf += "\r\n";
-                //System.out.println("No:");
             }
         }
     }
 
-    /*
-     * Converts encoded &#92;uxxxx to unicode chars
-     * and changes special saved chars to their original forms
-     */
     /**
      * Load convert.
      * 
