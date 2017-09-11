@@ -6,7 +6,7 @@
  * procesada por personas y/o sistemas, es una creación original del Fondo de Información y Documentación
  * para la Industria INFOTEC, cuyo registro se encuentra actualmente en trámite.
  *
- * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público (‘open source’),
+ * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público ('open source'),
  * en virtud del cual, usted podrá usarlo en las mismas condiciones con que INFOTEC lo ha diseñado y puesto a su disposición;
  * aprender de él; distribuirlo a terceros; acceder a su código fuente y modificarlo, y combinarlo o enlazarlo con otro software,
  * todo ello de conformidad con los términos y condiciones de la LICENCIA ABIERTA AL PÚBLICO que otorga INFOTEC para la utilización
@@ -18,7 +18,7 @@
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
  * dirección electrónica:
- *  http://www.semanticwebbuilder.org
+ *  http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb.base.util;
 
@@ -26,22 +26,18 @@ package org.semanticwb.base.util;
  *
  * @author jorge.jimenez
  */
-import java.util.*;
-import org.apache.commons.mail.EmailAttachment;
-import javax.mail.internet.InternetAddress;
-import org.semanticwb.Logger;
-import org.semanticwb.SWBUtils;
+import java.util.ArrayList;
+import java.util.Collection;
 
-// TODO: Auto-generated Javadoc
+import javax.mail.internet.InternetAddress;
+
+import org.apache.commons.mail.EmailAttachment;
+
 /**
  * The Class SWBMail.
  */
 public class SWBMail 
 {
-    
-    /** The log. */
-    private static Logger log=SWBUtils.getLogger(SWBMail.class);
-
     /** The from email. */
     private String fromEmail = null;
     
@@ -49,19 +45,19 @@ public class SWBMail
     private String fromName = null;
     
     /** The to email. */
-    private Collection toEmail = null;
+    private Collection<InternetAddress> toEmail = null;
     
     /** The cc email. */
-    private Collection ccEmail = null;
+    private Collection<InternetAddress> ccEmail = null;
     
     /** The bcc email. */
-    private Collection bccEmail = null;
+    private Collection<InternetAddress> bccEmail = null;
     
     /** The attachments. */
-    private ArrayList<EmailAttachment> attachments = new ArrayList();
+    private ArrayList<EmailAttachment> attachments = new ArrayList<>();
     
     /** The addresses. */
-    private ArrayList<InternetAddress> addresses = new ArrayList();
+    private ArrayList<InternetAddress> addresses = new ArrayList<>();
     
     /** The login. */
     private String login;
@@ -94,7 +90,7 @@ public class SWBMail
      * @param subject the subject
      * @param description the description
      */
-    public SWBMail(Collection toEmail, String subject, String description) {
+    public SWBMail(Collection<InternetAddress> toEmail, String subject, String description) {
         this.fromEmail = "webmail.infotec.com.mx";
         this.toEmail = toEmail;
         this.subject = subject;
@@ -111,7 +107,7 @@ public class SWBMail
      * @param subject the subject
      * @param data the data
      */
-    public SWBMail(String fromEmail, Collection toEmail, Collection ccEmail, Collection bccEmail,
+    public SWBMail(String fromEmail, Collection<InternetAddress> toEmail, Collection<InternetAddress> ccEmail, Collection<InternetAddress> bccEmail,
             String subject, String data) {
         this.fromEmail = fromEmail;
         this.toEmail = toEmail;
@@ -188,7 +184,7 @@ public class SWBMail
      * @return Value of property fromEmail.
      *
      */
-    public java.lang.String getFromEmail() {
+    public String getFromEmail() {
         return fromEmail;
     }
 
@@ -196,7 +192,7 @@ public class SWBMail
      * @param fromEmail New value of property fromEmail.
      *
      */
-    public void setFromEmail(java.lang.String fromEmail) {
+    public void setFromEmail(String fromEmail) {
         this.fromEmail = fromEmail;
     }
     
@@ -204,7 +200,7 @@ public class SWBMail
      * @return Value of property fromName.
      *
      */
-    public java.lang.String getFromName() {
+    public String getFromName() {
         return fromName;
     }
 
@@ -213,7 +209,7 @@ public class SWBMail
      * 
      * @param fromName the new from name
      */
-    public void setFromName(java.lang.String fromName) {
+    public void setFromName(String fromName) {
         this.fromName = fromName;
     }
     
@@ -222,7 +218,7 @@ public class SWBMail
      * @return Value of property toEmail.
      *
      */
-    public Collection getToEmail() {
+    public Collection<InternetAddress> getToEmail() {
         return toEmail;
     }
 
@@ -230,7 +226,7 @@ public class SWBMail
      * @param toEmail New value of property toEmail.
      *
      */
-    public void setToEmail(Collection toEmail) {
+    public void setToEmail(Collection<InternetAddress> toEmail) {
         this.toEmail = toEmail;
     }
 
@@ -238,7 +234,7 @@ public class SWBMail
      * @return Value of property ccEmail.
      *
      */
-    public Collection getCcEmail() {
+    public Collection<InternetAddress> getCcEmail() {
         return ccEmail;
     }
 
@@ -246,7 +242,7 @@ public class SWBMail
      * @param ccEmail New value of property ccEmail.
      *
      */
-    public void setCcEmail(Collection ccEmail) {
+    public void setCcEmail(Collection<InternetAddress> ccEmail) {
         this.ccEmail = ccEmail;
     }
 
@@ -254,7 +250,7 @@ public class SWBMail
      * @return Value of property bccEmail.
      *
      */
-    public Collection getBccEmail() {
+    public Collection<InternetAddress> getBccEmail() {
         return bccEmail;
     }
 
@@ -262,7 +258,7 @@ public class SWBMail
      * @param bccEmail New value of property bccEmail.
      *
      */
-    public void setBccEmail(Collection bccEmail) {
+    public void setBccEmail(Collection<InternetAddress> bccEmail) {
         this.bccEmail = bccEmail;
     }
 
@@ -270,7 +266,7 @@ public class SWBMail
      * @return Value of property data.
      *
      */
-    public java.lang.String getData() {
+    public String getData() {
         return data;
     }
 
@@ -278,7 +274,7 @@ public class SWBMail
      * @param data New value of property data.
      *
      */
-    public void setData(java.lang.String data) {
+    public void setData(String data) {
         this.data = data;
     }
 
@@ -286,7 +282,7 @@ public class SWBMail
      * @return Value of property login.
      *
      */
-    public java.lang.String getLogin() {
+    public String getLogin() {
         return login;
     }
 
@@ -295,7 +291,7 @@ public class SWBMail
      * 
      * @param login the new login
      */
-    public void setLogin(java.lang.String login) {
+    public void setLogin(String login) {
         this.login = login;
     }
 
@@ -303,7 +299,7 @@ public class SWBMail
      * @return Value of property password.
      *
      */
-    public java.lang.String getPassword() {
+    public String getPassword() {
         return password;
     }
 
@@ -312,7 +308,7 @@ public class SWBMail
      * 
      * @param password the new password
      */
-    public void setPassword(java.lang.String password) {
+    public void setPassword(String password) {
         this.password = password;
     }
 
@@ -320,7 +316,7 @@ public class SWBMail
      * @return Value of property contentType.
      *
      */
-    public java.lang.String getContentType() {
+    public String getContentType() {
         return contentType;
     }
 
@@ -329,7 +325,7 @@ public class SWBMail
      * 
      * @param contentType the new content type
      */
-    public void setContentType(java.lang.String contentType) {
+    public void setContentType(String contentType) {
         this.contentType = contentType;
     }
 
@@ -337,7 +333,7 @@ public class SWBMail
      * @return Value of property subject.
      *
      */
-    public java.lang.String getSubject() {
+    public String getSubject() {
         return subject;
     }
 
@@ -345,7 +341,7 @@ public class SWBMail
      * @param subject New value of property subject.
      *
      */
-    public void setSubject(java.lang.String subject) {
+    public void setSubject(String subject) {
         this.subject = subject;
     }
     
@@ -354,7 +350,7 @@ public class SWBMail
      * 
      * @param smtpserver the new host name
      */
-    public void setHostName(java.lang.String smtpserver) {
+    public void setHostName(String smtpserver) {
         this.smtpserver = smtpserver;
     }
     
@@ -366,43 +362,4 @@ public class SWBMail
     public String getHostName() {
         return smtpserver;
     }
-    
-    /*
-    public String sendMail() {
-        try {
-            HtmlEmail email = new HtmlEmail();
-
-            Iterator itAttaches = attachments.iterator();
-            while (itAttaches.hasNext()) {
-                EmailAttachment attchment = (EmailAttachment) itAttaches.next();
-                email.attach(attchment);
-            }
-
-            email.setHostName(smtpserver);
-            email.setFrom(fromEmail, fromName);
-            email.setTo(addresses);
-            if (ccEmail != null) {
-                email.setCc(ccEmail);
-            }
-            if (bccEmail != null) {
-                email.setBcc(bccEmail);
-            }
-            email.setSubject(subject);
-
-            if (contentType.equalsIgnoreCase("HTML")) {
-                email.setHtmlMsg(data); // set the html message
-            } else {
-                email.setMsg(data);
-            }
-
-            if (login != null && password != null) {
-                email.setAuthentication(login, password);
-            }
-            return email.send();
-        } catch (Exception e) {
-            log.error(e);
-        }
-        return null;
-    }
-     * */
 }

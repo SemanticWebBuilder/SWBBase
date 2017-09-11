@@ -6,7 +6,7 @@
  * procesada por personas y/o sistemas, es una creación original del Fondo de Información y Documentación
  * para la Industria INFOTEC, cuyo registro se encuentra actualmente en trámite.
  *
- * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público (‘open source’),
+ * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público ('open source'),
  * en virtud del cual, usted podrá usarlo en las mismas condiciones con que INFOTEC lo ha diseñado y puesto a su disposición;
  * aprender de él; distribuirlo a terceros; acceder a su código fuente y modificarlo, y combinarlo o enlazarlo con otro software,
  * todo ello de conformidad con los términos y condiciones de la LICENCIA ABIERTA AL PÚBLICO que otorga INFOTEC para la utilización
@@ -18,22 +18,27 @@
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
  * dirección electrónica:
- *  http://www.semanticwebbuilder.org
+ *  http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb.base.util;
 
-import org.semanticwb.SWBUtils;
-import org.semanticwb.Logger;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.BufferedReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.BufferedWriter;
-import java.util.*;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Properties;
+import java.util.Vector;
 
-// TODO: Auto-generated Javadoc
+import org.semanticwb.Logger;
+import org.semanticwb.SWBUtils;
+
 /**
  * Objeto: para el manejo de archivos de propiedades.
  * @author Javier Solis Gonzalez
@@ -62,7 +67,7 @@ public class SWBProperties extends Properties {
     private static final String whiteSpaceChars = " \t\r\n\f";
     
     /** The arr. */
-    private Vector arr = new Vector();
+    private Vector<String> arr = new Vector<>();
     
     /** The change. */
     private boolean change = false;
@@ -143,7 +148,7 @@ public class SWBProperties extends Properties {
     public synchronized Object setProperty(String key, String value, String comment)
     {
         setChange(true);
-        StringBuffer com = new StringBuffer();
+        StringBuilder com = new StringBuilder();
         if (!arr.contains(key))
         {
             arr.add(key);
@@ -434,11 +439,7 @@ public class SWBProperties extends Properties {
                     // Skip over one non whitespace key value separators if any
                     if (valueIndex < len && strictKeyValueSeparators.indexOf(line.charAt(valueIndex)) != -1)
                     {
-                        //MAPS74 If redundante
-//                        if (strictKeyValueSeparators.indexOf(line.charAt(valueIndex)) != -1)
-//                        {
                             valueIndex++;
-//                        }
                     }
 
                     // Skip over white space after other separators if any
@@ -461,26 +462,19 @@ public class SWBProperties extends Properties {
                         arr.add(key);
                     }
                     put(key, value);
-                    //if(buf.length()>2)buf=buf.substring(0,buf.length()-2);
                     put(PREFIX + key, buf);
                     buf = "";
                 } else
                 {
                     buf += line + "\r\n";
-                    //System.out.println("No:"+line);
                 }
             } else
             {
                 buf += "\r\n";
-                //System.out.println("No:");
             }
         }
     }
 
-    /*
-     * Converts encoded &#92;uxxxx to unicode chars
-     * and changes special saved chars to their original forms
-     */
     /**
      * Load convert.
      * 
@@ -491,7 +485,7 @@ public class SWBProperties extends Properties {
     {
         char aChar;
         int len = theString.length();
-        StringBuffer outBuffer = new StringBuffer(len);
+        StringBuilder outBuffer = new StringBuilder(len);
 
         for (int x = 0; x < len;)
         {
@@ -662,7 +656,7 @@ public class SWBProperties extends Properties {
     private String saveConvert(String theString, boolean escapeSpace)
     {
         int len = theString.length();
-        StringBuffer outBuffer = new StringBuffer(len * 2);
+        StringBuilder outBuffer = new StringBuilder(len * 2);
 
         for (int x = 0; x < len; x++)
         {

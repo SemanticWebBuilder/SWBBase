@@ -6,7 +6,7 @@
  * procesada por personas y/o sistemas, es una creación original del Fondo de Información y Documentación
  * para la Industria INFOTEC, cuyo registro se encuentra actualmente en trámite.
  *
- * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público (‘open source’),
+ * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público ('open source'),
  * en virtud del cual, usted podrá usarlo en las mismas condiciones con que INFOTEC lo ha diseñado y puesto a su disposición;
  * aprender de él; distribuirlo a terceros; acceder a su código fuente y modificarlo, y combinarlo o enlazarlo con otro software,
  * todo ello de conformidad con los términos y condiciones de la LICENCIA ABIERTA AL PÚBLICO que otorga INFOTEC para la utilización
@@ -18,25 +18,30 @@
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
  * dirección electrónica:
- *  http://www.semanticwebbuilder.org
+ *  http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb.base.db;
 
-import java.io.*;
-import java.sql.*;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import java.util.Vector;
-import javax.sql.DataSource;
-import javax.naming.InitialContext;
-import javax.naming.Context;
-import org.semanticwb.Logger;
-import org.semanticwb.base.util.SWBProperties;
-import org.semanticwb.SWBUtils;
 
-// TODO: Auto-generated Javadoc
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
+
+import org.semanticwb.Logger;
+import org.semanticwb.SWBUtils;
+import org.semanticwb.base.util.SWBProperties;
+
 /**
  * Esta clase proporciona acceso a uno o más connection pools
  * definidos en el archivo de propiedades db.properties. 
@@ -49,10 +54,10 @@ public class DBConnectionManager {
     private static Logger log = SWBUtils.getLogger(DBConnectionManager.class);
     
     /** The drivers. */
-    private Vector drivers = new Vector();
+    private ArrayList<Driver> drivers = new ArrayList<>();
     
     /** The pools. */
-    private Hashtable pools = new Hashtable();
+    private Hashtable<String, Object> pools = new Hashtable<>();
     
     /** The is jndi. */
     private boolean isJNDI;
@@ -189,7 +194,7 @@ public class DBConnectionManager {
      * Regresa una conexión que no se registra en el pool, pero que se auto restablece si se piede la conexion.
      * 
      * @param name the name
-     * @return  Connection  La conexi�n o nulo.
+     * @return  Connection  La conexión o nulo.
      */
     public Connection getAutoConnection(String name)
     {
@@ -203,8 +208,8 @@ public class DBConnectionManager {
     }
 
     /**
-     * Regresa una conexi�n abierta. Si ninguna otra conexi�n est� disponible y el n�mero m�ximo
-     * de conexiones no se ha alcanzado, una nueva conexi�n es creada.
+     * Regresa una conexión abierta. Si ninguna otra conexión está disponible y el número máximo
+     * de conexiones no se ha alcanzado, una nueva conexión es creada.
      * 
      * @param name the name
      * @return  Connection  La conexi�n o nulo.
@@ -215,12 +220,12 @@ public class DBConnectionManager {
     }
 
     /**
-     * Regresa una conexi�n abierta. Si ninguna otra conexi�n est� disponible y el n�mero m�ximo
-     * de conexiones no se ha alcanzado, una nueva conexi�n es creada.
+     * Regresa una conexión abierta. Si ninguna otra conexión está disponible y el número máximo
+     * de conexiones no se ha alcanzado, una nueva conexión es creada.
      * 
      * @param name the name
      * @param description the description
-     * @return  Connection  La conexi�n o nulo.
+     * @return  Connection  La conexión o nulo.
      */
     public Connection getConnection(String name, String description)
     {
@@ -231,30 +236,6 @@ public class DBConnectionManager {
             if (pool != null)
             {
                 PoolConnection con = (PoolConnection) pool.getConnection();
-//                if (con != null)
-//                {
-//                    if (description == null)
-//                    {                        
-//                        description = "NoDesc";                        
-//                        try
-//                        {
-//                            StringBuffer buf=new StringBuffer();
-//                            buf.append("Trace detail:\n");
-//                            //System.out.print(" getConnection 1");
-//                            StackTraceElement eles[]=Thread.currentThread().getStackTrace();
-//                            //System.out.print(" 2");
-//                            for(int i=0;i<eles.length;i++)
-//                            {
-//                                buf.append(eles[i].toString());
-//                                buf.append("\n");
-//                            }
-//                            description=buf.toString();
-//                        }catch(Throwable noe){}
-//                        //System.out.println(" 3");
-//                    }
-//                    con.setDescription(description);
-//                }
-                //System.out.println("getConnection("+con.getId()+","+name+","+description+")");
                 ret = con;
             }
         } else
@@ -266,7 +247,6 @@ public class DBConnectionManager {
                 {
                     ds = (DataSource) initCtx.lookup(JNDIPatern + name);
                     pools.put(name, ds);
-                    //ds.setLogWriter(log);
                     log.info("Initialized JNDI Connection Pool " + name);
                 } catch (Exception ex)
                 {
@@ -281,19 +261,18 @@ public class DBConnectionManager {
                 log.error("Error to get JNDI Pool Connection...", ex);
             }
         }
-        //System.out.println("getConnections:"+ret);
         return ret;
     }
 
     /**
-     * Regresa una conexi�n abierta. Si ninguna otra conexi�n est� disponible y el n�mero m�ximo
-     * de conexiones no se ha alcanzado, una nueva conexi�n es creada. Si el n�mero m�ximo ha sido
-     * alcanzado espera hasta que una conexi�n este disponible o el tiempo especificado haya
+     * Regresa una conexión abierta. Si ninguna otra conexión está disponible y el número máximo
+     * de conexiones no se ha alcanzado, una nueva conexión es creada. Si el número máximo ha sido
+     * alcanzado espera hasta que una conexión este disponible o el tiempo especificado haya
      * transcurrido.
      * 
      * @param name the name
      * @param time the time
-     * @return  Connection  La conexi�n o nulo.
+     * @return  Connection  La conexión o nulo.
      */
     public Connection getConnection(String name, long time)
     {
@@ -314,8 +293,6 @@ public class DBConnectionManager {
                 {
                     ds = (DataSource) initCtx.lookup(JNDIPatern + name);
                     pools.put(name, ds);
-                    //TODO:
-                    //ds.setLogWriter(log);
                     log.info("Initialized JNDI Pool [" + name + "]");
                 } catch (Exception ex)
                 {
@@ -351,13 +328,13 @@ public class DBConnectionManager {
     }
 
     /**
-     * Crea instancias del DBConnectionPool bas�ndose en el archivo de propiedades.
+     * Crea instancias del DBConnectionPool basandose en el archivo de propiedades.
      * Un DBConnectionPool puede ser definido con las siguientes propiedades:
      * <PRE>
      * &lt;poolname&gt;.url         El URL JDBC de la base de datos.
      * &lt;poolname&gt;.user        Un usuario de la base de datos (opcional)
      * &lt;poolname&gt;.password    El password del usuario de la base de datos. (Si el usuario se especifica)
-     * &lt;poolname&gt;.maxconn     El n�mero m�ximo de conexiones (opcional)
+     * &lt;poolname&gt;.maxconn     El número máximo de conexiones (opcional)
      * </PRE>
      * 
      * @param props the props
@@ -460,7 +437,7 @@ public class DBConnectionManager {
     }
 
     /**
-     * Carga y registra todos los drivers JDBC. Esto lo realiza el DBConnectionManager, en comparaci�n
+     * Carga y registra todos los drivers JDBC. Esto lo realiza el DBConnectionManager, en comparación
      * con el DBConnectionPool, puesto que muchos pools pueden compartir el mismo driver.
      * 
      * @param props the props
@@ -476,7 +453,7 @@ public class DBConnectionManager {
             {
                 Driver driver = (Driver) Class.forName(driverClassName).newInstance();
                 DriverManager.registerDriver(driver);
-                drivers.addElement(driver);
+                drivers.add(driver);
                 log.info("Registered JDBC driver " + driverClassName);
             } catch (Exception e)
             {
@@ -498,9 +475,9 @@ public class DBConnectionManager {
      * @return Value of property pools.
      *
      */
-    public java.util.Hashtable getPools()
+    public Hashtable getPools()
     {
-        java.util.Hashtable map = new java.util.Hashtable();
+        Hashtable map = new Hashtable();
         Enumeration en = pools.keys();
         while (en.hasMoreElements())
         {

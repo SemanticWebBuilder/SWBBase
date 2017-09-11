@@ -6,7 +6,7 @@
  * procesada por personas y/o sistemas, es una creación original del Fondo de Información y Documentación
  * para la Industria INFOTEC, cuyo registro se encuentra actualmente en trámite.
  *
- * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público (‘open source’),
+ * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público ('open source'),
  * en virtud del cual, usted podrá usarlo en las mismas condiciones con que INFOTEC lo ha diseñado y puesto a su disposición;
  * aprender de él; distribuirlo a terceros; acceder a su código fuente y modificarlo, y combinarlo o enlazarlo con otro software,
  * todo ello de conformidad con los términos y condiciones de la LICENCIA ABIERTA AL PÚBLICO que otorga INFOTEC para la utilización
@@ -18,11 +18,12 @@
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
  * dirección electrónica:
- *  http://www.semanticwebbuilder.org
+ *  http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb.base.util;
 
-// TODO: Auto-generated Javadoc
+import java.util.Date;
+
 /**
  * Objeto: Representa y contiene una exception junto con un identificador y la
  * fecha en la que se genero.
@@ -110,7 +111,7 @@ public class ErrorElement {
      * Getter for property date.
      * @return Value of property date.
      */
-    public java.util.Date getDate()
+    public Date getDate()
     {
         return date;
     }
@@ -119,7 +120,7 @@ public class ErrorElement {
      * Getter for property throwable.
      * @return Value of property throwable.
      */
-    public java.lang.Throwable getThrowable()
+    public Throwable getThrowable()
     {
         return throwable;
     }
@@ -156,7 +157,7 @@ public class ErrorElement {
      */
     private String printThrowable(Throwable th)
     {
-        StringBuffer bug = new StringBuffer();
+        StringBuilder bug = new StringBuilder();
         if (th != null)
         {
             bug.append(date + ": " + th.getMessage() + "\n");

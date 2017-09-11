@@ -53,7 +53,7 @@ public class DBConnectionPool {
     private String name;
     
     /** The password. */
-    private String password;
+    private String password = "";
     
     /** The URL. */
     private String URL;
@@ -370,8 +370,9 @@ public class DBConnectionPool {
 
     public void setPassword(String password)
     {
-        if(password==null)password="";
-        this.password=password;
+        if(password!=null) {
+        		this.password=password;
+        }
     }
 
     /** Getter for property name.
