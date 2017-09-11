@@ -6,7 +6,7 @@
  * procesada por personas y/o sistemas, es una creación original del Fondo de Información y Documentación
  * para la Industria INFOTEC, cuyo registro se encuentra actualmente en trámite.
  *
- * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público (‘open source’),
+ * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público ('open source'),
  * en virtud del cual, usted podrá usarlo en las mismas condiciones con que INFOTEC lo ha diseñado y puesto a su disposición;
  * aprender de él; distribuirlo a terceros; acceder a su código fuente y modificarlo, y combinarlo o enlazarlo con otro software,
  * todo ello de conformidad con los términos y condiciones de la LICENCIA ABIERTA AL PÚBLICO que otorga INFOTEC para la utilización
@@ -18,22 +18,27 @@
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
  * dirección electrónica:
- *  http://www.semanticwebbuilder.org
+ *  http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb.base.util;
 
-import org.semanticwb.SWBUtils;
-import org.semanticwb.Logger;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.BufferedReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.BufferedWriter;
-import java.util.*;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Properties;
+import java.util.Vector;
 
-// TODO: Auto-generated Javadoc
+import org.semanticwb.Logger;
+import org.semanticwb.SWBUtils;
+
 /**
  * Objeto: para el manejo de archivos de propiedades.
  * @author Javier Solis Gonzalez
@@ -480,7 +485,7 @@ public class SWBProperties extends Properties {
     {
         char aChar;
         int len = theString.length();
-        StringBuffer outBuffer = new StringBuffer(len);
+        StringBuilder outBuffer = new StringBuilder(len);
 
         for (int x = 0; x < len;)
         {
@@ -651,7 +656,7 @@ public class SWBProperties extends Properties {
     private String saveConvert(String theString, boolean escapeSpace)
     {
         int len = theString.length();
-        StringBuffer outBuffer = new StringBuffer(len * 2);
+        StringBuilder outBuffer = new StringBuilder(len * 2);
 
         for (int x = 0; x < len; x++)
         {
