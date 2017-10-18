@@ -6,7 +6,7 @@
  * procesada por personas y/o sistemas, es una creación original del Fondo de Información y Documentación
  * para la Industria INFOTEC, cuyo registro se encuentra actualmente en trámite.
  *
- * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público (‘open source’),
+ * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público ('open source'),
  * en virtud del cual, usted podrá usarlo en las mismas condiciones con que INFOTEC lo ha diseñado y puesto a su disposición;
  * aprender de él; distribuirlo a terceros; acceder a su código fuente y modificarlo, y combinarlo o enlazarlo con otro software,
  * todo ello de conformidad con los términos y condiciones de la LICENCIA ABIERTA AL PÚBLICO que otorga INFOTEC para la utilización
@@ -18,25 +18,40 @@
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
  * dirección electrónica:
- *  http://www.semanticwebbuilder.org
+ *  http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb.base.db;
 
 import java.io.PrintStream;
-import java.sql.*;
-import java.util.*;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.NClob;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLClientInfoException;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.SQLXML;
+import java.sql.Statement;
+import java.sql.Struct;
+import java.util.ArrayList;
+import java.util.Properties;
 import java.util.concurrent.Executor;
+
 import org.semanticwb.Logger;
 import org.semanticwb.SWBUtils;
 
-// TODO: Auto-generated Javadoc
 /**
- * Una conexi�n (sesi�n) con una base de datos. Sentencias SQL son ejecutadas y los resultados se
- * obtienen dentro del contexto de la conexi�n.
+ * Una conexión (sesión) con una base de datos. Sentencias SQL son ejecutadas y los resultados se
+ * obtienen dentro del contexto de la conexión.
  *
- * Un objeto PoolConnection con una base de datos puede proporcionar la informaci�n que describe sus
- * tablas, soporta la gram�tica SQL, los procedimientos almacenados, las capacidades de esta conexi�n,
- * etc. Esta informaci�n se obtiene con el m�todo getMetaData().}
+ * Un objeto PoolConnection con una base de datos puede proporcionar la información que describe sus
+ * tablas, soporta la gramática SQL, los procedimientos almacenados, las capacidades de esta conexión,
+ * etc. Esta información se obtiene con el método getMetaData().}
  *
  * @author  Javier Solis Gonzalez (jsolis@infotec.com.mx) 
  *
@@ -51,7 +66,7 @@ public class PoolConnection implements java.sql.Connection {
     private java.sql.Connection con = null;
     
     /** The vec. */
-    private Vector vec = new Vector();
+    private ArrayList<Object> vec = new ArrayList<>();
     
     /** The pool. */
     private DBConnectionPool pool;
@@ -65,8 +80,8 @@ public class PoolConnection implements java.sql.Connection {
     /** The id. */
     private long id = 0;
     
-    /** The idle_time. */
-    private long idle_time = 0;
+    /** The idleTime. */
+    private long idleTime = 0;
     
     /** The destroy. */
     private boolean destroy = false;
@@ -75,7 +90,7 @@ public class PoolConnection implements java.sql.Connection {
     private volatile boolean isdestroyed = false;
     
     /** The stack. */
-    private StackTraceElement stack[] = null;
+    private StackTraceElement []stack = null;
     private String threadName = null;
     
     public PoolConnection(Connection con)
@@ -92,8 +107,7 @@ public class PoolConnection implements java.sql.Connection {
      */
     public PoolConnection(Connection con, DBConnectionPool pool)
     {
-        //System.out.println("PoolConnection:"+this+" "+pool);
-        idle_time = System.currentTimeMillis();
+    		idleTime = System.currentTimeMillis();
         this.con = con;
         this.pool = pool;
         if(pool!=null)
@@ -220,7 +234,7 @@ public class PoolConnection implements java.sql.Connection {
         boolean noerrors = true;
         while (!vec.isEmpty())
         {
-            PoolStatement st = (PoolStatement) vec.elementAt(0);
+            PoolStatement st = (PoolStatement) vec.get(0);
             if (st != null)
             {
                 try
@@ -241,7 +255,7 @@ public class PoolConnection implements java.sql.Connection {
 
                 }
             }
-            vec.removeElementAt(0);
+            vec.remove(0);
         }
         return noerrors;
     }
@@ -249,17 +263,16 @@ public class PoolConnection implements java.sql.Connection {
     /**
      * _close.
      * 
-     * @throws SQLException the sQL exception
      */
-    public void _close() throws SQLException
+    public void _close()
     {
         destroyConnection();
     }
 
     /**
-     * Cierra la conexi�n con la base de datos en vez de esperar. Una conexi�n puede ser cerrada
-     * autom�ticamente cuando es garbage collected. Tambi�n ciertos errores fatales puden cerrar la
-     * conexi�n.
+     * Cierra la conexión con la base de datos en vez de esperar. Una conexión puede ser cerrada
+     * automáticamente cuando es garbage collected. También ciertos errores fatales puden cerrar la
+     * conexión.
      * 
      * @throws SQLException the sQL exception
      * @exception java.sql.SQLException
@@ -267,9 +280,7 @@ public class PoolConnection implements java.sql.Connection {
      */
     public void close() throws SQLException
     {
-        //System.out.println("close:"+this+" "+isclosed);
-        
-        if (isclosed == false)
+        if (!isclosed)
         {
             if (destroy)
             {
@@ -285,7 +296,7 @@ public class PoolConnection implements java.sql.Connection {
             }
             isclosed = true;
             if(pool!=null)pool.getConnectionManager().getTimeLock().removeConnection(this);
-            idle_time = System.currentTimeMillis();
+            idleTime = System.currentTimeMillis();
             try
             {
                 closeStatements();
@@ -305,11 +316,11 @@ public class PoolConnection implements java.sql.Connection {
     }
 
     /**
-     * Configura el modo auto-commit de la conexi�n en el estado determinado. Si una conexi�n est� en
-     * auto-commit, entonces cada sentencia SQL ser� procesada y el commit se ejecutar� por cada una
-     * como una transacci�n individual. De lo contrario, sus sentencias SQL se agrupan en una transacci�n
-     * que finalizar� por una llamada al m�todo <code>commit</code> o al m�todo <code>rollback</code>.
-     * Por default un nuevo objeto PoolConnection est� en modo auto-commit.
+     * Configura el modo auto-commit de la conexión en el estado determinado. Si una conexión está en
+     * auto-commit, entonces cada sentencia SQL será procesada y el commit se ejecutará por cada una
+     * como una transacción individual. De lo contrario, sus sentencias SQL se agrupan en una transacción
+     * que finalizará por una llamada al método <code>commit</code> o al método <code>rollback</code>.
+     * Por default un nuevo objeto PoolConnection está en modo auto-commit.
      * 
      * @param param the new auto commit
      * @throws SQLException the sQL exception
@@ -319,7 +330,7 @@ public class PoolConnection implements java.sql.Connection {
      */
     public void setAutoCommit(boolean param) throws SQLException
     {
-        if (param == false)
+        if (!param)
         {
             destroy = true;
         }
@@ -364,7 +375,6 @@ public class PoolConnection implements java.sql.Connection {
      */
     public int getTransactionIsolation() throws SQLException
     {
-        //destroy=true;
         return con.getTransactionIsolation();
     }
 
@@ -439,7 +449,6 @@ public class PoolConnection implements java.sql.Connection {
      */
     public boolean isClosed() throws SQLException
     {
-        //Thread.dumpStack();
         return isclosed || con.isClosed();
     }
 
@@ -449,8 +458,7 @@ public class PoolConnection implements java.sql.Connection {
     public Statement createStatement() throws SQLException
     {
         Statement st = new PoolStatement(con.createStatement(), this);
-        vec.addElement(st);
-        //System.out.println("New Statement was Created...");
+        vec.add(st);
         return st;
     }
 
@@ -460,7 +468,7 @@ public class PoolConnection implements java.sql.Connection {
     public Statement createStatement(int param, int param1) throws SQLException
     {
         Statement st = new PoolStatement(con.createStatement(param, param1), this);
-        vec.addElement(st);
+        vec.add(st);
         return st;
     }
 
@@ -469,8 +477,7 @@ public class PoolConnection implements java.sql.Connection {
      */
     public PreparedStatement prepareStatement(String str) throws SQLException
     {
-        PreparedStatement st = new PoolPreparedStatement(con.prepareStatement(str), str, this);
-        return st;
+        return new PoolPreparedStatement(con.prepareStatement(str), str, this);
     }
 
     /* (non-Javadoc)
@@ -494,7 +501,6 @@ public class PoolConnection implements java.sql.Connection {
      */
     public void commit() throws SQLException
     {
-        //destroy=true;
         con.commit();
     }
 
@@ -511,7 +517,6 @@ public class PoolConnection implements java.sql.Connection {
      */
     public void rollback() throws SQLException
     {
-        //destroy=true;
         con.rollback();
     }
 
@@ -531,8 +536,6 @@ public class PoolConnection implements java.sql.Connection {
             }
             try
             {
-                //System.out.println("******************close****************");
-                //printTrackTrace(System.out);
                 if(!con.isClosed())con.close();
             } catch (Exception e)
             {
@@ -548,8 +551,6 @@ public class PoolConnection implements java.sql.Connection {
     @Override
     protected void finalize() throws Throwable
     {
-        //System.out.println("finalize:"+this+" "+isclosed+" "+isdestroyed);
-
         // We are no longer referenced by anyone (including the
         // connection pool). Time to close down.
         try
@@ -559,8 +560,6 @@ public class PoolConnection implements java.sql.Connection {
                 log.warn("finalize(" + getId() + ")..., connection was not closed, " + description);
                 destroyConnection();
             }
-            //Thread.dumpStack();
-            //printTrackTrace(System.out);
         } finally
         {
             super.finalize();
@@ -675,7 +674,7 @@ public java.sql.Savepoint setSavepoint() throws java.sql.SQLException
      */
     public long getIdleTime()
     {
-        return idle_time;
+        return idleTime;
     }
 //********************************* JAVA 1.6   
     
