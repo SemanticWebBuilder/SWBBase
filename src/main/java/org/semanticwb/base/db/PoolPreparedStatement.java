@@ -6,7 +6,7 @@
  * procesada por personas y/o sistemas, es una creación original del Fondo de Información y Documentación
  * para la Industria INFOTEC, cuyo registro se encuentra actualmente en trámite.
  *
- * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público (‘open source’),
+ * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público ('open source'),
  * en virtud del cual, usted podrá usarlo en las mismas condiciones con que INFOTEC lo ha diseñado y puesto a su disposición;
  * aprender de él; distribuirlo a terceros; acceder a su código fuente y modificarlo, y combinarlo o enlazarlo con otro software,
  * todo ello de conformidad con los términos y condiciones de la LICENCIA ABIERTA AL PÚBLICO que otorga INFOTEC para la utilización
@@ -18,23 +18,43 @@
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
  * dirección electrónica:
- *  http://www.semanticwebbuilder.org
+ *  http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb.base.db;
 
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.*;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.NClob;
+import java.sql.ParameterMetaData;
+import java.sql.PreparedStatement;
+import java.sql.Ref;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.RowId;
+import java.sql.SQLException;
+import java.sql.SQLXML;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Calendar;
 
-// TODO: Auto-generated Javadoc
+import org.semanticwb.Logger;
+import org.semanticwb.SWBUtils;
+
 /**
  * Objeto que sobrescribe la clase Statement para poder tener control la misma desde el Pool de conexiones.
  * @author  Javier Solis Gonzalez (jsolis@infotec.com.mx) 
  */
 public class PoolPreparedStatement implements java.sql.PreparedStatement {
+	
+	private static final Logger LOG = SWBUtils.getLogger(PoolPreparedStatement.class);
 
     /** The st. */
     private PreparedStatement st;
@@ -128,7 +148,7 @@ public class PoolPreparedStatement implements java.sql.PreparedStatement {
     {
         if (debug)
         {
-            System.out.println("execute:" + str);
+            LOG.debug("execute:" + str);
         }
         return st.execute(str);
     }
@@ -140,7 +160,7 @@ public class PoolPreparedStatement implements java.sql.PreparedStatement {
     {
         if (debug)
         {
-            System.out.println("executeBatch():");
+        		LOG.debug("executeBatch():");
         }
         return st.executeBatch();
     }
@@ -152,7 +172,7 @@ public class PoolPreparedStatement implements java.sql.PreparedStatement {
     {
         if (debug)
         {
-            System.out.println("executeQuery:" + str);
+        		LOG.debug("executeQuery:" + str);
         }
         return st.executeQuery(str);
     }
@@ -164,7 +184,7 @@ public class PoolPreparedStatement implements java.sql.PreparedStatement {
     {
         if (debug)
         {
-            System.out.println("executeUpdate:" + str);
+        		LOG.debug("executeUpdate:" + str);
         }
         return st.executeUpdate(str);
     }
@@ -233,7 +253,7 @@ public class PoolPreparedStatement implements java.sql.PreparedStatement {
     {
         if (debug)
         {
-            System.out.println("getResultSet");
+        		LOG.debug("getResultSet");
         }
         return st.getResultSet();
     }
@@ -344,7 +364,7 @@ public boolean execute(String str, String[] str1) throws java.sql.SQLException
     {
         if (debug)
         {
-            System.out.println("execute:" + str + " " + str1);
+        		LOG.debug("execute:" + str + " " + str1);
         }
         return st.execute(str, str1);
     }
@@ -356,7 +376,7 @@ public boolean execute(String str, String[] str1) throws java.sql.SQLException
     {
         if (debug)
         {
-            System.out.println("execute:" + str + " " + values);
+        		LOG.debug("execute:" + str + " " + values);
         }
         return st.execute(str, values);
     }
@@ -368,7 +388,7 @@ public boolean execute(String str, String[] str1) throws java.sql.SQLException
     {
         if (debug)
         {
-            System.out.println("execute:" + str + " " + param);
+        		LOG.debug("execute:" + str + " " + param);
         }
         return st.execute(str, param);
     }
@@ -396,7 +416,7 @@ public boolean execute(String str, String[] str1) throws java.sql.SQLException
     {
         if (debug)
         {
-            System.out.println("executeUpdate():" + str + " " + str1);
+        		LOG.debug("executeUpdate():" + str + " " + str1);
         }
         return st.executeUpdate(str, str1);
     }
@@ -408,7 +428,7 @@ public boolean execute(String str, String[] str1) throws java.sql.SQLException
     {
         if (debug)
         {
-            System.out.println("executeUpdate():" + str + " " + param);
+        		LOG.debug("executeUpdate():" + str + " " + param);
         }
         return st.executeUpdate(str, param);
     }
@@ -420,7 +440,7 @@ public boolean execute(String str, String[] str1) throws java.sql.SQLException
     {
         if (debug)
         {
-            System.out.println("executeUpdate():" + str + " " + values);
+        		LOG.debug("executeUpdate():" + str + " " + values);
         }
         return st.executeUpdate(str, values);
     }
@@ -440,7 +460,7 @@ public boolean execute(String str, String[] str1) throws java.sql.SQLException
     {
         if (debug)
         {
-            System.out.println("executeQuery():" + query);
+        		LOG.debug("executeQuery():" + query);
         }
         return st.executeQuery();
     }
@@ -452,7 +472,7 @@ public boolean execute(String str, String[] str1) throws java.sql.SQLException
     {
         if (debug)
         {
-            System.out.println("executeUpdate():" + query);
+        		LOG.debug("executeUpdate():" + query);
         }
         return st.executeUpdate();
     }
@@ -639,7 +659,8 @@ public boolean execute(String str, String[] str1) throws java.sql.SQLException
      */
     public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException
     {
-        st.setUnicodeStream(parameterIndex, x, length);
+    		st.setCharacterStream(parameterIndex, new InputStreamReader(x), length);
+        //st.setUnicodeStream(parameterIndex, x, length);
     }
 
     /* (non-Javadoc)
@@ -692,16 +713,15 @@ public boolean execute(String str, String[] str1) throws java.sql.SQLException
         if (debug)
         {
             time = System.currentTimeMillis();
-            System.out.println("----------------------------------------------");
-            System.out.println("--> execute():" + query);
-            System.out.println("--> args:" + args);
+            LOG.debug("----------------------------------------------");
+            LOG.debug("--> execute():" + query);
+            LOG.debug("--> args:" + args);
             args = "";
-            //new Exception().printStackTrace();
         }
         ret = st.execute();
         if (debug)
         {
-            System.out.println("------------------" + (System.currentTimeMillis() - time) + "-----------------------");
+        		LOG.debug("------------------" + (System.currentTimeMillis() - time) + "-----------------------");
         }
         return ret;
     }
