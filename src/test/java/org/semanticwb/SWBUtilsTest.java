@@ -44,16 +44,4 @@ public class SWBUtilsTest {
 			log.error(ioex);
 		}
 	}
-	
-	@Test
-	public void TestLocaleDates() {
-		DateTimeFormatter fmt = DateTimeFormatter.ofPattern("EEEE", new Locale("es"));
-		//DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, new Locale("en"));
-		SimpleDateFormat sdf = new SimpleDateFormat("ss", new Locale("es"));
-		System.out.println(fmt.format(new Date().toInstant()));
-		//System.out.println(SWBUtils.TEXT.getStrDate(new Date(), "en", null));
-		System.out.println(SWBUtils.TEXT.getStrDate(new Date(), "es", "ss"));
-		//System.out.println(sdf.format(new Date()));
-	}
-
 }
