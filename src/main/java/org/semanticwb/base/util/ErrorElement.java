@@ -161,7 +161,7 @@ public class ErrorElement {
         if (th != null)
         {
             bug.append(date + ": " + th.getMessage() + "\n");
-            StackTraceElement elements[] = th.getStackTrace();
+            StackTraceElement []elements = th.getStackTrace();
             bug.append("// " + th + "\n");
             for (int x = 0; x < elements.length; x++)
             {

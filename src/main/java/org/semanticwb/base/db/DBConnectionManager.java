@@ -212,7 +212,7 @@ public class DBConnectionManager {
      * de conexiones no se ha alcanzado, una nueva conexión es creada.
      * 
      * @param name the name
-     * @return  Connection  La conexi�n o nulo.
+     * @return  Connection  La conexión o nulo.
      */
     public Connection getConnection(String name)
     {
@@ -347,7 +347,7 @@ public class DBConnectionManager {
             String name = (String) propNames.nextElement();
             if (name.endsWith(".url"))
             {
-                String poolName = name.substring(0, name.lastIndexOf("."));
+                String poolName = name.substring(0, name.lastIndexOf('.'));
                 String url = props.getProperty(poolName + ".url");
                 if (url == null)
                 {
@@ -357,7 +357,7 @@ public class DBConnectionManager {
                 String user = props.getProperty(poolName + ".user");
                 String password = props.getProperty(poolName + ".password");
                 String maxconn = props.getProperty(poolName + ".maxconn", "0");
-                String sidle_time = props.getProperty(poolName + ".idle_time", "0");
+                String sidleTime = props.getProperty(poolName + ".idle_time", "0");
                 if (user != null)
                 {
                     user = user.trim();
@@ -375,17 +375,17 @@ public class DBConnectionManager {
                     log.warn("Invalid maxconn value " + maxconn + " for " + poolName);
                     max = 0;
                 }
-                long idle_time = 0;
+                long idleTime = 0;
                 try
                 {
-                    idle_time = Long.parseLong(sidle_time.trim());
+                		idleTime = Long.parseLong(sidleTime.trim());
                 } catch (NumberFormatException e)
                 {
-                    log.warn("Invalid idle_time value " + sidle_time + " for " + poolName);
-                    idle_time = 0;
+                    log.warn("Invalid idle_time value " + sidleTime + " for " + poolName);
+                    idleTime = 0;
                 }
                 DBConnectionPool pool =
-                        new DBConnectionPool(this, poolName, url, user, password, max, idle_time);
+                        new DBConnectionPool(this, poolName, url, user, password, max, idleTime);
                 pools.put(poolName, pool);
                 log.info("Initialized Connection Pool [" + poolName + "]");
             }

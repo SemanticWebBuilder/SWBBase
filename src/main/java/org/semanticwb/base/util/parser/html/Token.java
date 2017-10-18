@@ -6,7 +6,7 @@
  * procesada por personas y/o sistemas, es una creación original del Fondo de Información y Documentación
  * para la Industria INFOTEC, cuyo registro se encuentra actualmente en trámite.
  *
- * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público (‘open source’),
+ * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público ('open source'),
  * en virtud del cual, usted podrá usarlo en las mismas condiciones con que INFOTEC lo ha diseñado y puesto a su disposición;
  * aprender de él; distribuirlo a terceros; acceder a su código fuente y modificarlo, y combinarlo o enlazarlo con otro software,
  * todo ello de conformidad con los términos y condiciones de la LICENCIA ABIERTA AL PÚBLICO que otorga INFOTEC para la utilización
@@ -18,11 +18,10 @@
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
  * dirección electrónica:
- *  http://www.semanticwebbuilder.org
+ *  http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb.base.util.parser.html;
 
-// TODO: Auto-generated Javadoc
 /**
  * Describes the input token stream.
  */
@@ -86,13 +85,13 @@ public class Token
     /**
      * Returns a new Token object, by default. However, if you want, you
      * can create and return subclass objects based on the value of ofKind.
-     * Simply add the cases to the switch for all those special cases.
+     * Simply add the cases to a switch for all those special cases.
      * For example, if you have a subclass of Token called IDToken that
      * you want to create if ofKind is ID, simlpy add something like :
      * 
      * case MyParserConstants.ID : return new IDToken();
      * 
-     * to the following switch statement. Then you can cast matchedToken
+     * to a switch statement inside this method. Then you can cast matchedToken
      * variable to the appropriate type and use it in your lexical actions.
      * 
      * @param ofKind the of kind
@@ -100,11 +99,7 @@ public class Token
      */
     public static final Token newToken(int ofKind)
     {
-        switch (ofKind)
-        {
-            default :
-                return new Token();
-        }
+        return new Token();
     }
 
 }

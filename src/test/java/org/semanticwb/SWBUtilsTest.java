@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Locale;
 
@@ -46,9 +47,10 @@ public class SWBUtilsTest {
 	
 	@Test
 	public void TestLocaleDates() {
+		DateTimeFormatter fmt = DateTimeFormatter.ofPattern("EEEE", new Locale("es"));
 		//DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, new Locale("en"));
 		SimpleDateFormat sdf = new SimpleDateFormat("ss", new Locale("es"));
-		System.out.println(sdf.format(new Date()));
+		System.out.println(fmt.format(new Date().toInstant()));
 		//System.out.println(SWBUtils.TEXT.getStrDate(new Date(), "en", null));
 		System.out.println(SWBUtils.TEXT.getStrDate(new Date(), "es", "ss"));
 		//System.out.println(sdf.format(new Date()));

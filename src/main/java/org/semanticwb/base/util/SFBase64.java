@@ -54,17 +54,17 @@ import java.util.Base64;
 public class SFBase64 {
 
     /** Specify encoding (value is <tt>true</tt>). */
-    public final static boolean ENCODE = true;
+    public static final boolean ENCODE = true;
     /** Specify decoding (value is <tt>false</tt>). */
-    public final static boolean DECODE = false;
+    public static final boolean DECODE = false;
     /** Maximum line length (76) of Base64 output. */
-    private final static int MAX_LINE_LENGTH = 76;
+    private static final int MAX_LINE_LENGTH = 76;
     /** The equals sign (=) as a byte. */
-    private final static byte EQUALS_SIGN = (byte) '=';
+    private static final byte EQUALS_SIGN = (byte) '=';
     /** The new line character (\n) as a byte. */
-    private final static byte NEW_LINE = (byte) '\n';
+    private static final byte NEW_LINE = (byte) '\n';
     /** The 64 valid Base64 values. */
-    private final static byte[] ALPHABET =
+    private static final byte[] ALPHABET =
     {
         (byte) 'A', (byte) 'B', (byte) 'C', (byte) 'D', (byte) 'E', (byte) 'F', (byte) 'G',
         (byte) 'H', (byte) 'I', (byte) 'J', (byte) 'K', (byte) 'L', (byte) 'M', (byte) 'N',
@@ -81,7 +81,7 @@ public class SFBase64 {
      * Translates a Base64 value to either its 6-bit reconstruction value
      * or a negative number indicating some other meaning.
      **/
-    private final static byte[] DECODABET =
+    private static final byte[] DECODABET =
     {
         -9, -9, -9, -9, -9, -9, -9, -9, -9, // Decimal  0 -  8
         -5, -5, // Whitespace: Tab and Linefeed
@@ -117,10 +117,10 @@ public class SFBase64 {
     };
     
     /** The Constant WHITE_SPACE_ENC. */
-    private final static byte WHITE_SPACE_ENC = -5; // Indicates white space in encoding
+    private static final byte WHITE_SPACE_ENC = -5; // Indicates white space in encoding
     
     /** The Constant EQUALS_SIGN_ENC. */
-    private final static byte EQUALS_SIGN_ENC = -1; // Indicates equals sign in encoding
+    private static final byte EQUALS_SIGN_ENC = -1; // Indicates equals sign in encoding
 
     /** Defeats instantiation. */
     private SFBase64()
@@ -278,6 +278,7 @@ public class SFBase64 {
             }   // end: Test Output Stream
             // Test wagner's files
             {
+            	//TODO: Revisar estas rutas absolutas de Windows
                 java.io.FileInputStream fis = new java.io.FileInputStream("D:\\temp\\testencoding.txt");
                 SFBase64.InputStream b64is = new SFBase64.InputStream(fis, DECODE);
                 java.io.FileOutputStream fos = new java.io.FileOutputStream("D:\\temp\\file.zip");

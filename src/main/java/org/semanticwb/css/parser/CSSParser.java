@@ -6,7 +6,7 @@
  * procesada por personas y/o sistemas, es una creación original del Fondo de Información y Documentación
  * para la Industria INFOTEC, cuyo registro se encuentra actualmente en trámite.
  *
- * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público (‘open source’),
+ * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público ('open source'),
  * en virtud del cual, usted podrá usarlo en las mismas condiciones con que INFOTEC lo ha diseñado y puesto a su disposición;
  * aprender de él; distribuirlo a terceros; acceder a su código fuente y modificarlo, y combinarlo o enlazarlo con otro software,
  * todo ello de conformidad con los términos y condiciones de la LICENCIA ABIERTA AL PÚBLICO que otorga INFOTEC para la utilización
@@ -18,7 +18,7 @@
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
  * dirección electrónica:
- *  http://www.semanticwebbuilder.org
+ *  http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb.css.parser;
 
@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.StringTokenizer;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class CSSParser.
  * 
@@ -39,7 +38,7 @@ public class CSSParser
 {
 
     /** The selectors. */
-    private ArrayList<Selector> selectors = new ArrayList<Selector>();
+    private ArrayList<Selector> selectors = new ArrayList<>();
 
     /**
      * Instantiates a new cSS parser.
@@ -49,14 +48,12 @@ public class CSSParser
     public CSSParser(String data)
     {        
         data = cleanComments(data);
-        String header = null;
         if (data.startsWith("@"))
         {
             data = data.substring(1);
-            int pos = data.indexOf(";");
+            int pos = data.indexOf(';');
             if (pos != -1)
             {
-                header = data.substring(0, pos);
                 data = data.substring(pos + 1);
             }
         }
@@ -65,7 +62,7 @@ public class CSSParser
         while (pos != -1)
         {
             String selectorrow = data.substring(0, pos).trim();
-            HashSet<Attribute> atts = new HashSet<Attribute>();
+            HashSet<Attribute> atts = new HashSet<>();
             data = data.substring(pos + 1);
             int pos2 = data.indexOf('}');
             if (pos2 != -1)
@@ -76,7 +73,7 @@ public class CSSParser
                 while (st.hasMoreTokens())
                 {
                     String attribute = st.nextToken();
-                    pos=attribute.indexOf(":");
+                    pos=attribute.indexOf(':');
                     if(pos!=-1)
                     {
                         String name=attribute.substring(0,pos);
@@ -91,27 +88,6 @@ public class CSSParser
                         Attribute att = new Attribute(name, value);
                         atts.add(att);
                     }
-                    /*StringTokenizer st2 = new StringTokenizer(attribute, ":");
-                    if (st2.countTokens() == 2)
-                    {
-                        String name = st2.nextToken().trim();
-                        String value = st2.nextToken().trim();
-                        Attribute att = new Attribute(name, value);
-                        atts.add(att);
-                    }
-                    else if(st2.countTokens() == 1)
-                    {
-                        String name = "";
-                        String value = st2.nextToken();
-                        Attribute att = new Attribute(name, value);
-                        atts.add(att);
-                    }
-                    else
-                    {
-                        System.out.println("attribute: "+attribute);
-                        System.out.println("st2.countTokens(): "+st2.countTokens());
-                        throw new IllegalArgumentException("The css is invalid");
-                    }*/
                 }
             }
             else
@@ -136,7 +112,7 @@ public class CSSParser
      */
     private String[] getSelectors(String selector)
     {
-        HashSet<String> getSelectors=new HashSet<String>();
+        HashSet<String> getSelectors=new HashSet<>();
         selector=selector.replace(' ',',');
         StringTokenizer st=new StringTokenizer(selector,",");
         while(st.hasMoreTokens())
@@ -178,7 +154,6 @@ public class CSSParser
             int pos2 = data.indexOf("*/");
             if (pos2 != -1)
             {
-                //System.out.println(data.substring(0, pos2));
                 data = data.substring(pos2 + 2);
             }
             pos = data.indexOf("/*");
@@ -212,9 +187,9 @@ public class CSSParser
      * 
      * @param args the arguments
      */
+    //TODO: Revisar este código y verificar si es necesario aquí o moverlo a una clase de prueba
     public static void main(String[] args)
     {
-        //String path = "C:\\Documents and Settings\\victor.lorenzana\\Escritorio\\estilos.css";
         String path = "C:\\Documents and Settings\\victor.lorenzana\\Escritorio\\SEGOB XHTML Strict\\images\\estilos.css";
         File file = new File(path);
         StringBuilder css = new StringBuilder();
