@@ -6,7 +6,7 @@
  * procesada por personas y/o sistemas, es una creación original del Fondo de Información y Documentación
  * para la Industria INFOTEC, cuyo registro se encuentra actualmente en trámite.
  *
- * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público (‘open source’),
+ * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público ('open source'),
  * en virtud del cual, usted podrá usarlo en las mismas condiciones con que INFOTEC lo ha diseñado y puesto a su disposición;
  * aprender de él; distribuirlo a terceros; acceder a su código fuente y modificarlo, y combinarlo o enlazarlo con otro software,
  * todo ello de conformidad con los términos y condiciones de la LICENCIA ABIERTA AL PÚBLICO que otorga INFOTEC para la utilización
@@ -18,11 +18,12 @@
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
  * dirección electrónica:
- *  http://www.semanticwebbuilder.org
+ *  http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb.base.util.parser.html;
 
-// TODO: Auto-generated Javadoc
+import java.io.IOException;
+
 /**
  * An implementation of interface CharStream, where the stream is assumed to
  * contain only ASCII characters (without unicode processing).
@@ -45,10 +46,10 @@ public class SimpleCharStream {
     public int bufpos = -1;
     
     /** The bufline. */
-    protected int bufline[];
+    protected int []bufline;
     
     /** The bufcolumn. */
-    protected int bufcolumn[];
+    protected int []bufcolumn;
     
     /** The column. */
     protected int column = 0;
@@ -82,8 +83,8 @@ public class SimpleCharStream {
     protected void ExpandBuff(boolean wrapAround)
     {
         char[] newbuffer = new char[bufsize + 2048];
-        int newbufline[] = new int[bufsize + 2048];
-        int newbufcolumn[] = new int[bufsize + 2048];
+        int [] newbufline = new int[bufsize + 2048];
+        int [] newbufcolumn = new int[bufsize + 2048];
 
         try
         {
@@ -116,7 +117,7 @@ public class SimpleCharStream {
 
                 maxNextCharInd = (bufpos -= tokenBegin);
             }
-        } catch (Throwable t)
+        } catch (Exception t)
         {
             throw new Error(t.getMessage());
         }

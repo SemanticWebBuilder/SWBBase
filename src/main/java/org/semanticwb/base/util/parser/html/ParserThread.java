@@ -6,7 +6,7 @@
  * procesada por personas y/o sistemas, es una creación original del Fondo de Información y Documentación
  * para la Industria INFOTEC, cuyo registro se encuentra actualmente en trámite.
  *
- * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público (‘open source’),
+ * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público ('open source'),
  * en virtud del cual, usted podrá usarlo en las mismas condiciones con que INFOTEC lo ha diseñado y puesto a su disposición;
  * aprender de él; distribuirlo a terceros; acceder a su código fuente y modificarlo, y combinarlo o enlazarlo con otro software,
  * todo ello de conformidad con los términos y condiciones de la LICENCIA ABIERTA AL PÚBLICO que otorga INFOTEC para la utilización
@@ -18,7 +18,7 @@
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
  * dirección electrónica:
- *  http://www.semanticwebbuilder.org
+ *  http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb.base.util.parser.html;
 
@@ -75,58 +75,49 @@ package org.semanticwb.base.util.parser.html;
  * information on the Apache Software Foundation, please see
  * <http://www.apache.org/>.
  */
+import java.io.IOException;
 
-import java.io.*;
-
-// TODO: Auto-generated Javadoc
 /**
  * The Class ParserThread.
  */
-class ParserThread extends Thread
-{
-    
-    /** The parser. */
-    HTMLParser parser;
+class ParserThread extends Thread {
 
-    /**
-     * Instantiates a new parser thread.
-     * 
-     * @param p the p
-     */
-    ParserThread(HTMLParser p)
-    {
-        parser = p;
-    }
+	/** The parser. */
+	HTMLParser parser;
 
-    /* (non-Javadoc)
-     * @see java.lang.Thread#run()
-     */
-    public void run()
-    {				  // convert pipeOut to pipeIn
-        try
-        {
-            try
-            {					  // parse document to pipeOut
-                parser.HTMLDocument();
-            } catch (ParseException e)
-            {
-                System.out.println("Parse Aborted: " + e.getMessage());
-            } catch (TokenMgrError e)
-            {
-                System.out.println("Parse Aborted: " + e.getMessage());
-            } finally
-            {
-                parser.pipeOut.close();
-                synchronized (parser)
-                {
-                    parser.summary.setLength(parser.SUMMARY_LENGTH);
-                    parser.titleComplete = true;
-                    parser.notifyAll();
-                }
-            }
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-    }
+	/**
+	 * Instantiates a new parser thread.
+	 * 
+	 * @param p
+	 *            the p
+	 */
+	ParserThread(HTMLParser p) {
+		parser = p;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Thread#run()
+	 */
+	public void run() { // convert pipeOut to pipeIn
+		try {
+			try { // parse document to pipeOut
+				parser.HTMLDocument();
+			} catch (ParseException e) {
+				System.out.println("Parse Aborted: " + e.getMessage());
+			} catch (TokenMgrError e) {
+				System.out.println("Parse Aborted: " + e.getMessage());
+			} finally {
+				parser.pipeOut.close();
+				synchronized (parser) {
+					parser.summary.setLength(HTMLParser.SUMMARY_LENGTH);
+					parser.titleComplete = true;
+					parser.notifyAll();
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

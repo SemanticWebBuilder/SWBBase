@@ -6,7 +6,7 @@
  * procesada por personas y/o sistemas, es una creación original del Fondo de Información y Documentación
  * para la Industria INFOTEC, cuyo registro se encuentra actualmente en trámite.
  *
- * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público (‘open source’),
+ * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público ('open source'),
  * en virtud del cual, usted podrá usarlo en las mismas condiciones con que INFOTEC lo ha diseñado y puesto a su disposición;
  * aprender de él; distribuirlo a terceros; acceder a su código fuente y modificarlo, y combinarlo o enlazarlo con otro software,
  * todo ello de conformidad con los términos y condiciones de la LICENCIA ABIERTA AL PÚBLICO que otorga INFOTEC para la utilización
@@ -18,21 +18,23 @@
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
  * dirección electrónica:
- *  http://www.semanticwebbuilder.org
+ *  http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb.base.util;
 
-import java.io.ByteArrayOutputStream;
 import java.io.BufferedWriter;
-import java.io.OutputStreamWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.BitSet;
+import java.net.URLDecoder;
 import java.security.AccessController;
+import java.util.BitSet;
+
 import org.semanticwb.SWBUtils;
+
 import sun.security.action.GetPropertyAction;
 
-// TODO: Auto-generated Javadoc
 /**
  * Utility class for HTML form encoding. This class contains static methods
  * for converting a String to the <CODE>application/x-www-form-urlencoded</CODE> MIME
@@ -155,7 +157,6 @@ public class URLEncoder
         {
             dfltEncName=SWBUtils.TEXT.getDafaultEncoding();
         }
-        //System.out.println("dfltEncName:"+dfltEncName);
     }
 
     /**
@@ -219,7 +220,7 @@ public class URLEncoder
         boolean needToChange = false;
         boolean wroteUnencodedChar = false;
         int maxBytesPerChar = 10; // rather arbitrary limit, but safe for now
-        StringBuffer out = new StringBuffer(s.length());
+        StringBuilder out = new StringBuilder(s.length());
         ByteArrayOutputStream buf = new ByteArrayOutputStream(maxBytesPerChar);
 
         BufferedWriter writer =
@@ -228,7 +229,6 @@ public class URLEncoder
         for (int i = 0; i < s.length(); i++)
         {
             int c = (int) s.charAt(i);
-            //System.out.println("Examining character: " + c);
             if (dontNeedEncoding.get(c))
             {
                 if (c == ' ')
@@ -236,7 +236,6 @@ public class URLEncoder
                     c = '+';
                     needToChange = true;
                 }
-                //System.out.println("Storing: " + c);
                 out.append((char) c);
                 wroteUnencodedChar = true;
             } else
@@ -260,24 +259,11 @@ public class URLEncoder
                      */
                     if (c >= 0xD800 && c <= 0xDBFF)
                     {
-                        /*
-                          System.out.println(Integer.toHexString(c)
-                          + " is high surrogate");
-                        */
                         if ((i + 1) < s.length())
                         {
                             int d = (int) s.charAt(i + 1);
-                            /*
-                              System.out.println("\tExamining "
-                              + Integer.toHexString(d));
-                            */
                             if (d >= 0xDC00 && d <= 0xDFFF)
                             {
-                                /*
-                                  System.out.println("\t"
-                                  + Integer.toHexString(d)
-                                  + " is low surrogate");
-                                */
                                 writer.write(d);
                                 i++;
                             }
