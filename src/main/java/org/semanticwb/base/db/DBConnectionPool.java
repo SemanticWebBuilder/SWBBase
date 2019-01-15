@@ -22,102 +22,67 @@
  */
 package org.semanticwb.base.db;
 
-import java.sql.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import org.semanticwb.Logger;
 import org.semanticwb.SWBUtils;
 import org.semanticwb.base.util.SFBase64;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 /**
- * Esta clase interna representa un connection pool. Crea nuevas conexiones con
- * base en la demanda, hasta un numero máximo si esta especificado. Tambien se
- * cerciora de que una conexión todavia esté abierta antes de que se regrese a
- * un cliente.
- * 
+ * Connection Pool implementation. Creates connections on demand up to a defined limit if specified.
+ * This implementation checks if the connection is open before returning it to clients.
+ *
  * @author Javier Solis Gonzalez (jsolis@infotec.com.mx)
  */
 public class DBConnectionPool {
 
-	/** The log. */
+	private static final String KEY = "akdhfyehe38";
 	private static Logger log = SWBUtils.getLogger(DBConnectionPool.class);
-
-	/** The checked out. */
 	protected int checkedOut;
-
-	/** The free connections. */
 	protected ConcurrentLinkedQueue freeConnections = new ConcurrentLinkedQueue();
-
-	/** The max conn. */
 	private int maxConn;
-
-	/** The name. */
 	private String name;
-
-	/** The password. */
 	private String password = "";
-
-	/** The URL. */
 	private String url;
-
-	/** The user. */
 	private String user;
-
-	/** The idle_time. */
-	private long idle_time = 0;
-
-	/** The manager. */
+	private long idleTime = 0;
 	private DBConnectionManager manager;
-
-	/** The hits. */
 	private long hits = 0;
-
-	/** The hits time. */
 	private long hitsTime = 0;
 
-	private static final String KEY = "akdhfyehe38";
-
 	/**
-	 * Crea un nuevo objeto connection pool.
-	 * 
-	 * @param manager
-	 *            the manager
-	 * @param name
-	 *            El nombre del pool
-	 * @param theURL
-	 *            El URL JDBC de la base de datos.
-	 * @param user
-	 *            Un usuario de la base de datos o nulo.
-	 * @param password
-	 *            El password del usuario de la base de datos o nulo.
-	 * @param maxConn
-	 *            El número máximo de conexiones o 0 para definir que no tenga
-	 *            límite.
-	 * @param idle_time
-	 *            the idle_time
+	 * Creates a new instance of a {@link DBConnectionPool}.
+	 * @param manager {@link DBConnectionManager} object responsible for managing pools.
+	 * @param name Pool name.
+	 * @param jdbcURL URL connection String for the pool.
+	 * @param user User for the connection. Can be null.
+	 * @param password Password for the connection. Can be null.
+	 * @param maxConn Maximum number of connections. A value of 0 means no limit.
+	 * @param idleTime Connection idle time in seconds.
 	 */
-	public DBConnectionPool(DBConnectionManager manager, String name, String theURL, String user, String password,
-			int maxConn, long idle_time) {
+	public DBConnectionPool(DBConnectionManager manager, String name, String jdbcURL, String user, String password, int maxConn, long idleTime) {
 		this.manager = manager;
 		this.name = name;
-		setURL(theURL);
+		setURL(jdbcURL);
 		this.user = user;
 		setPassword(password);
 		this.maxConn = maxConn;
-		this.idle_time = idle_time * 1000;
+		this.idleTime = idleTime * 1000;
 	}
 
 	/**
-	 * Libera una conexión del pool. Notifica a otros Threads que pudieran estar
-	 * esperando una conexión.
-	 *
-	 * @param con
-	 *            La conexión a liberar.
+	 * Disposes a connection from the pool. Notifies threads waiting for connections.
+	 * @param con {@link Connection} to dispose.
 	 */
 	public void freeConnection(Connection con) {
 		boolean add = true;
 		// Put the connection at the end of the Vector
 		try {
-			if (idle_time > 0 && (System.currentTimeMillis() - ((PoolConnection) con).getIdleTime()) > idle_time) {
+			if (idleTime > 0 && (System.currentTimeMillis() - ((PoolConnection) con).getIdleTime()) > idleTime) {
 				((PoolConnection) con).destroyConnection();
 				add = false;
 			}
@@ -129,18 +94,15 @@ public class DBConnectionPool {
 				freeConnections.add(con);
 			}
 		} catch (Exception e) {
-			log.warn("To return connection to pool", e);
+			log.warn("Exception when returning connection to pool", e);
 		}
 	}
 
 	/**
-	 * Obtiene una conexión del pool. Si ninguna conexión esté disponible, una nueva
-	 * conexión es creada al menos que el número máximo de conexiones haya sido
-	 * alcanzado. Si una conexión libre ha sido cerrada por la base de datos, se
-	 * elimina del pool y este método es llamado otra vez recursivamente.
-	 * 
-	 * @return the connection
-	 * @return
+	 * Gets a {@link Connection} from the {@link DBConnectionPool}. If no connections are
+	 * available, a new one is created.
+	 *
+	 * @return new {@link Connection} object.
 	 */
 	public Connection getConnection() {
 		// Escoje la primera conexión en el vector o utiliza round-robin.
@@ -148,7 +110,7 @@ public class DBConnectionPool {
 
 		if (con != null) {
 			try {
-				if (idle_time > 0 && (System.currentTimeMillis() - con.getIdleTime()) > idle_time) {
+				if (idleTime > 0 && (System.currentTimeMillis() - con.getIdleTime()) > idleTime) {
 					log.warn("Removed bad connection " + con.getId() + " (idle_time) from " + name + ", "
 							+ con.getDescription());
 					con.destroyConnection();
@@ -192,18 +154,11 @@ public class DBConnectionPool {
 	}
 
 	/**
-	 * Obtiene una conexión del pool. Si ninguna conexión está disponible, una nueva
-	 * conexión es creada al menos que el número máximo de conexiones haya sido
-	 * alcanzado. Si una conexión libre ha sido cerrada por la base de datos, se
-	 * elimina del pool y este métdo es llamado otra vez recursivamente.
-	 * <P>
-	 * Si ninguna conexión está disponible y el número máximo ha sido alcanzado,
-	 * este método espera por una conexión liberada el tiempo especificado.
-	 * 
-	 * @param timeout
-	 *            El valor del timeout en milisegundos.
-	 * @return the connection
-	 * @return
+	 * Gets a {@link Connection} from the {@link DBConnectionPool}. This method returns null
+	 * after <code>timeout</code> milliseconds if no connection can be established.
+	 *
+	 * @param timeout timeout in milliseconds.
+	 * @return new connection or null after timeout.
 	 */
 	public Connection getConnection(long timeout) {
 		long startTime = System.currentTimeMillis();
@@ -218,10 +173,10 @@ public class DBConnectionPool {
 	}
 
 	/**
-	 * Cierra todas las conexiones disponibles.
+	 * Closes all available connections.
 	 */
 	public void release() {
-		PoolConnection con = null;
+		PoolConnection con;
 		while ((con = (PoolConnection) freeConnections.poll()) != null) {
 			try {
 				con.destroyConnection();
@@ -233,19 +188,16 @@ public class DBConnectionPool {
 	}
 
 	/**
-	 * Crea una nueva conexión usando un identificador de usuario y passsword si son
-	 * especificados.
-	 * 
-	 * @return the connection
-	 * @return
+	 * Creates a new {@link Connection} with instance parameters.
+	 * @return new Database connection or null.
 	 */
-	public Connection newNoPoolConnection() {
-		Connection con = null;
+	private Connection createConnection() {
+		Connection con;
 		try {
 			if (user == null) {
 				con = DriverManager.getConnection(url);
 			} else {
-				con = DriverManager.getConnection(url, user, getDescriptedPassword());
+				con = DriverManager.getConnection(url, user, getDecryptedPassword());
 			}
 			log.debug("Created a new connection in pool " + name);
 		} catch (SQLException e) {
@@ -256,24 +208,20 @@ public class DBConnectionPool {
 	}
 
 	/**
-	 * Crea una nueva conexión que se auto conecta si se piede la conexion.
-	 * 
-	 * @return the connection
-	 * @return
+	 * Creates a new {@link Connection}.
+	 * @return Database connection or null.
+	 */
+	public Connection newNoPoolConnection() {
+		return createConnection();
+	}
+
+	/**
+	 * Creates a new {@link AutoConnection}.
+	 * @return Database autoconnection or null.
 	 */
 	public Connection newAutoConnection() {
-		Connection con = null;
-		try {
-			if (user == null) {
-				con = DriverManager.getConnection(url);
-			} else {
-				con = DriverManager.getConnection(url, user, getDescriptedPassword());
-			}
-			log.debug("Created a new connection in pool " + name);
-		} catch (SQLException e) {
-			log.error("Can't create a new connection for " + url, e);
-			return null;
-		}
+		Connection con = createConnection();
+
 		if (con != null) {
 			return new AutoConnection(con, this);
 		} else {
@@ -282,24 +230,11 @@ public class DBConnectionPool {
 	}
 
 	/**
-	 * Crea una nueva conexión usando un identificador de usuario y passsword si son
-	 * especificados.
-	 * 
-	 * @return the connection
+	 * Creates a new {@link PoolConnection}.
+	 * @return the pool connection or null.
 	 */
 	private Connection newConnection() {
-		Connection con = null;
-		try {
-			if (user == null) {
-				con = DriverManager.getConnection(url);
-			} else {
-				con = DriverManager.getConnection(url, user, getDescriptedPassword());
-			}
-			log.debug("Created a new connection in pool " + name);
-		} catch (SQLException e) {
-			log.error("Can't create a new connection for " + url, e);
-			return null;
-		}
+		Connection con = createConnection();
 		if (con != null) {
 			return new PoolConnection(con, this);
 		} else {
@@ -308,28 +243,20 @@ public class DBConnectionPool {
 	}
 
 	/**
-	 * Getter for property name.
-	 * 
-	 * @return Value of property name.
+	 * Gets the Pool name
+	 * @return pool name.
 	 *
 	 */
-	public java.lang.String getName() {
+	public String getName() {
 		return name;
 	}
 
-	public void setPassword(String password) {
-		if (password != null) {
-			this.password = password;
-		}
-	}
-
 	/**
-	 * Getter for property name.
-	 * 
-	 * @return Value of property name.
+	 * Gets the Pool password.
+	 * @return pool password.
 	 *
 	 */
-	public java.lang.String getPassword() {
+	public String getPassword() {
 		if (password.startsWith("{") && password.endsWith("}")) {
 			return password;
 		} else {
@@ -343,7 +270,21 @@ public class DBConnectionPool {
 		}
 	}
 
-	private String getDescriptedPassword() {
+	/**
+	 * Sets the Pool password.
+	 * @param password password string.
+	 */
+	public void setPassword(String password) {
+		if (password != null) {
+			this.password = password;
+		}
+	}
+
+	/**
+	 * Gets decrypted password string.
+	 * @return plain string for password.
+	 */
+	private String getDecryptedPassword() {
 		if (password.startsWith("{") && password.endsWith("}")) {
 			String pwd = password.substring(1, password.length() - 1);
 			try {
@@ -358,9 +299,8 @@ public class DBConnectionPool {
 	}
 
 	/**
-	 * Getter for property maxConn.
-	 * 
-	 * @return Value of property maxConn.
+	 * Gets maximum number of connections allowed.
+	 * @return maximum connection number.
 	 *
 	 */
 	public int getMaxConn() {
@@ -368,62 +308,51 @@ public class DBConnectionPool {
 	}
 
 	/**
-	 * Setter for property maxConn.
-	 * 
-	 * @param maxConn
-	 *            New value of property maxConn.
-	 *
+	 * Sets maximum number of connections allowed.
+	 * @param maxConn connections allowed.
 	 */
 	public void setMaxConn(int maxConn) {
 		this.maxConn = maxConn;
 	}
 
 	/**
-	 * Getter for property URL.
-	 * 
-	 * @return Value of property URL.
+	 * Gets the URL connection String for this pool.
+	 * @return URL connection String.
 	 *
 	 */
-	public java.lang.String getURL() {
+	public String getURL() {
 		return url;
 	}
 
 	/**
-	 * Setter for property URL.
-	 * 
-	 * @param url
-	 *            New value of property URL.
-	 *
+	 * Sets the URL connection String for this pool. Special tag <code>apppath</code> is replaced
+	 * by application path.
+	 * @param url URL connection String.
 	 */
-	public void setURL(java.lang.String url) {
+	public void setURL(String url) {
 		this.url = SWBUtils.TEXT.replaceAll(url, "{apppath}", SWBUtils.getApplicationPath());
 	}
 
 	/**
-	 * Getter for property user.
-	 * 
-	 * @return Value of property user.
+	 * Gets the connection user.
+	 * @return connection user.
 	 *
 	 */
-	public java.lang.String getUser() {
+	public String getUser() {
 		return user;
 	}
 
 	/**
-	 * Setter for property user.
-	 * 
-	 * @param user
-	 *            New value of property user.
-	 *
+	 * Sets the connection user.
+	 * @param user user.
 	 */
-	public void setUser(java.lang.String user) {
+	public void setUser(String user) {
 		this.user = user;
 	}
 
 	/**
-	 * Gets the hits.
-	 * 
-	 * @return Regresa las total de solicitudes de conexiones
+	 * Gets total count of connection requests.
+	 * @return connection request count.
 	 */
 	public long getHits() {
 		return hits;
@@ -431,18 +360,15 @@ public class DBConnectionPool {
 
 	/**
 	 * Gets the hits time.
-	 * 
-	 * @return Regresa las total de solicitudes de conexiones
+	 * @return hits time.
 	 */
 	public long getHitsTime() {
 		return hitsTime / 100;
 	}
 
 	/**
-	 * Adds the hit.
-	 * 
-	 * @param time
-	 *            the time
+	 * Adds a hit.
+	 * @param time hit time.
 	 */
 	public void addHit(long time) {
 		long ttime = time * 100;
@@ -451,17 +377,18 @@ public class DBConnectionPool {
 	}
 
 	/**
-	 * Gets the connection manager.
-	 * 
-	 * @return the connection manager
-	 * @return
+	 * Gets the {@link DBConnectionManager} object managed by the Pool.
+	 * @return the connection manager.
 	 */
 	public DBConnectionManager getConnectionManager() {
 		return manager;
 	}
 
+	/**
+	 * Gets the Pool idle time.
+	 * @return idle time.
+	 */
 	public long getIdleTime() {
-		return idle_time;
+		return idleTime;
 	}
-
 }

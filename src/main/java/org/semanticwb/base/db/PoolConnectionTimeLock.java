@@ -22,17 +22,14 @@
  */
 package org.semanticwb.base.db;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.semanticwb.Logger;
 import org.semanticwb.SWBUtils;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
+ * Manages connection time to avoid resource usage locking.
  * Administra la duración de las conexiones con el fin de identificar cuando una
  * conexión excedio el tiempo limite permitido (300sg) de duración, al estar
  * siendo utilizada por un recurso.
@@ -40,29 +37,20 @@ import org.semanticwb.SWBUtils;
  * @author Javier Solis Gonzalez (jsolis@infotec.com.mx)
  */
 public class PoolConnectionTimeLock extends TimerTask {
-
-	/** The log. */
 	private static Logger log = SWBUtils.getLogger(PoolConnectionTimeLock.class);
-
-	/** The timer. */
 	private Timer timer = null;
-	/** The pools. */
 	private ConcurrentHashMap pools = new ConcurrentHashMap();
-
-	/** The last time. */
 	private volatile long lastTime = System.nanoTime();
 
 	/**
-	 * Creates a new instance of PoolConnectionTimeLock.
+	 * Constructor. Creates a new instance of {@link PoolConnectionTimeLock}.
 	 */
 	public PoolConnectionTimeLock() {
 	}
 
 	/**
-	 * Adds the connection.
-	 * 
-	 * @param con
-	 *            the con
+	 * Adds a {@link PoolConnection} to the list of managed connections.
+	 * @param con connection to add.
 	 */
 	public void addConnection(PoolConnection con) {
 		if (con != null) {
@@ -78,7 +66,7 @@ public class PoolConnectionTimeLock extends TimerTask {
 					pool = new ConcurrentHashMap();
 					pools.put(con.getPool().getName(), pool);
 				}
-				pool.put(Long.valueOf(con.getId()), con.getDescription());
+				pool.put(con.getId(), con.getDescription());
 			} catch (Exception e) {
 				log.error(e);
 			}
@@ -86,17 +74,15 @@ public class PoolConnectionTimeLock extends TimerTask {
 	}
 
 	/**
-	 * Removes the connection.
-	 * 
-	 * @param con
-	 *            the con
+	 * Removes a {@link PoolConnection} from the list of managed connections.
+	 * @param con connection to remove.
 	 */
 	public void removeConnection(PoolConnection con) {
 		if (con != null) {
 			try {
 				ConcurrentHashMap pool = (ConcurrentHashMap) pools.get(con.getPool().getName());
 				if (pool != null) {
-					pool.remove(Long.valueOf(con.getId()));
+					pool.remove(con.getId());
 					con.getPool().addHit(System.currentTimeMillis() - con.getIdleTime());
 				}
 			} catch (Exception e) {
@@ -129,7 +115,7 @@ public class PoolConnectionTimeLock extends TimerTask {
 	}
 
 	/**
-	 * Destroy.
+	 * Destroys {@link PoolConnectionTimeLock}.
 	 */
 	public void destroy() {
 		log.info("PoolConnectionTimeLock Finished" + "...");
@@ -141,7 +127,7 @@ public class PoolConnectionTimeLock extends TimerTask {
 	}
 
 	/**
-	 * Inits the.
+	 * Inits the {@link PoolConnectionTimeLock}.
 	 */
 	public void init() {
 		log.info("PoolConnectionTimeLock Started" + "...");
@@ -150,10 +136,10 @@ public class PoolConnectionTimeLock extends TimerTask {
 	}
 
 	/**
-	 * Stop.
+	 * Stops the {@link PoolConnectionTimeLock}.
 	 */
 	public void stop() {
-		log.info("PoolConnectionTimeLock Stoped" + "...");
+		log.info("PoolConnectionTimeLock Stopped" + "...");
 		if (timer != null) {
 			timer.cancel();
 			this.cancel();
@@ -162,9 +148,8 @@ public class PoolConnectionTimeLock extends TimerTask {
 	}
 
 	/**
-	 * Getter for property pools.
-	 * 
-	 * @return Value of property pools.
+	 * Gets a map with the managed connections.
+	 * @return map of managed connections.
 	 *
 	 */
 	public HashMap getPools() {

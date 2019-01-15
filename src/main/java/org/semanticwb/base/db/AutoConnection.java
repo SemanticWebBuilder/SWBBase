@@ -30,40 +30,23 @@ import java.util.Properties;
 import java.util.concurrent.Executor;
 
 /**
- * The Class AutoConnection.
+ * Wrapper class for a {@link Connection} object with methods to perform SWB specific actions
+ * on a {@link DBConnectionPool}.
  *
  * @author javier.solis
  */
 public class AutoConnection implements Connection {
-
-	/** The log. */
 	private static final Logger log = SWBUtils.getLogger(AutoConnection.class);
-
-	/** The con. */
 	private java.sql.Connection con;
-
-	/** The pool. */
 	private DBConnectionPool pool;
-
-	/** The description. */
 	private String description = "";
-
-	/** The id. */
 	private long id = 0;
-
-	/** The isclosed. */
-	private boolean isclosed = false;
-
-	/** The debug. */
-	private boolean debug = false;
+	private boolean isClosed = false;
 
 	/**
-	 * Instantiates a new auto connection.
-	 *
-	 * @param con
-	 *            the con
-	 * @param pool
-	 *            the pool
+	 * Creates a new {@link AutoConnection} instance.
+	 * @param con {@link Connection} object to wrap.
+	 * @param pool {@link DBConnectionPool} object responsible for managing the connections.
 	 */
 	public AutoConnection(Connection con, DBConnectionPool pool) {
 		this.con = con;
@@ -72,25 +55,20 @@ public class AutoConnection implements Connection {
 	}
 
 	/**
-	 * Check connection.
-	 *
-	 * @return true, if successful
+	 * Checks the connection.
+	 * @return true, if connection is open.
 	 */
 	public boolean checkConnection() {
-		if (debug) {
-			log.debug("checkConnection");
-		}
 		boolean ret = false;
-		if (!isclosed) {
+		if (!isClosed) {
 			if (con != null) {
 				try {
-					boolean closed = con.isClosed();
-					if (closed) {
+					if (con.isClosed()) {
 						changeConnection();
 						ret = true;
 					}
 				} catch (SQLException e) {
-					log.error("SQLException:" + e.getMessage());
+					log.error("AutoConnection: Error accessing database.", e);
 					changeConnection();
 					ret = true;
 				}
@@ -102,93 +80,67 @@ public class AutoConnection implements Connection {
 	}
 
 	/**
-	 * Change connection.
+	 * Creates a new {@link Connection} object managed by the {@link AutoConnection}.
 	 */
 	public void changeConnection() {
-		if (debug) {
-			log.debug("changeConnection");
-		}
-		log.error("Error checking connection, Auto Reconnect...");
 		con = pool.newNoPoolConnection();
 	}
 
 	/**
-	 * Getter for property id.
-	 *
-	 * @return Value of property id.
-	 *
+	 * Gets the id property.
+	 * @return ID for this object.
 	 */
 	public long getId() {
 		return id;
 	}
 
 	/**
-	 * Setter for property id.
-	 *
-	 * @param id
-	 *            New value of property id.
-	 *
+	 * Sets the id property.
+	 * @param id Identifier for this object.
 	 */
 	public void setId(long id) {
 		this.id = id;
 	}
 
 	/**
-	 * Gets the native connection.
-	 *
-	 * @return the native connection
-	 * @return
+	 * Gets the wrapped {@link Connection} object.
+	 * @return {@link Connection} object wrapped by this class.
 	 */
 	public java.sql.Connection getNativeConnection() {
 		return con;
 	}
 
 	/**
-	 * Getter for property pool.
-	 *
-	 * @return Value of property pool.
-	 *
+	 * Gets the {@link DBConnectionPool} associated to this object.
+	 * @return {@link DBConnectionPool} object.
 	 */
 	public DBConnectionPool getPool() {
 		return pool;
 	}
 
 	/**
-	 * Getter for property description.
-	 *
-	 * @return Value of property description.
-	 *
+	 * Gets the description of this object.
+	 * @return description of this object.
 	 */
-	public java.lang.String getDescription() {
+	public String getDescription() {
 		return description;
 	}
 
 	/**
-	 * Setter for property description.
-	 *
-	 * @param description
-	 *            New value of property description.
-	 *
+	 * Sets the description of this object.
+	 * @param description object description.
 	 */
-	public void setDescription(java.lang.String description) {
+	public void setDescription(String description) {
 		this.description = description;
 	}
 
 	/**
-	 * Cierra la conexión con la base de datos en vez de esperar. Una conexión puede
-	 * ser cerrada automáticamente cuando es garbage collected. También ciertos
-	 * errores fatales puden cerrar la conexión.
-	 *
-	 * @throws SQLException
-	 *             the sQL exception
-	 * @exception java.sql.SQLException
-	 *                Si un error de acceso a kla base de datos ocurre.
+	 * Closes connection without waiting. A connection can be automatically closed when
+	 * garbage collected or by certain errors.
+	 * @throws SQLException when a database error occurs closing the connection.
 	 */
 	public void close() throws SQLException {
-		if (debug) {
-			log.debug("close");
-		}
-		isclosed = true;
+		isClosed = true;
 		con.close();
 		log.trace("close:(" + getId() + "," + pool.getName() + "):" + pool.checkedOut);
 	}
@@ -199,9 +151,6 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#getWarnings()
 	 */
 	public SQLWarning getWarnings() throws SQLException {
-		if (debug) {
-			log.debug("getWarnings");
-		}
 		checkConnection();
 		return con.getWarnings();
 	}
@@ -212,9 +161,6 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#getCatalog()
 	 */
 	public String getCatalog() throws SQLException {
-		if (debug) {
-			log.debug("getCatalog");
-		}
 		checkConnection();
 		return con.getCatalog();
 	}
@@ -224,12 +170,9 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#setCatalog(java.lang.String)
 	 */
-	public void setCatalog(String str) throws SQLException {
-		if (debug) {
-			log.debug("setCatalog");
-		}
+	public void setCatalog(String catalog) throws SQLException {
 		checkConnection();
-		con.setCatalog(str);
+		con.setCatalog(catalog);
 	}
 
 	/*
@@ -238,9 +181,6 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#getTypeMap()
 	 */
 	public java.util.Map getTypeMap() throws SQLException {
-		if (debug) {
-			log.debug("getTypeMap");
-		}
 		checkConnection();
 		return con.getTypeMap();
 	}
@@ -251,9 +191,6 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#setTypeMap(java.util.Map)
 	 */
 	public void setTypeMap(java.util.Map map) throws SQLException {
-		if (debug) {
-			log.debug("setTypeMap");
-		}
 		checkConnection();
 		con.setTypeMap(map);
 	}
@@ -264,9 +201,6 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#getTransactionIsolation()
 	 */
 	public int getTransactionIsolation() throws SQLException {
-		if (debug) {
-			log.debug("getTransactionIsolation");
-		}
 		checkConnection();
 		return con.getTransactionIsolation();
 	}
@@ -276,12 +210,9 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#setTransactionIsolation(int)
 	 */
-	public void setTransactionIsolation(int param) throws SQLException {
-		if (debug) {
-			log.debug("setTransactionIsolation");
-		}
+	public void setTransactionIsolation(int level) throws SQLException {
 		checkConnection();
-		con.setTransactionIsolation(param);
+		con.setTransactionIsolation(level);
 	}
 
 	/*
@@ -290,9 +221,6 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#isReadOnly()
 	 */
 	public boolean isReadOnly() throws SQLException {
-		if (debug) {
-			log.debug("isReadOnly");
-		}
 		checkConnection();
 		return con.isReadOnly();
 	}
@@ -302,12 +230,9 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#setReadOnly(boolean)
 	 */
-	public void setReadOnly(boolean param) throws SQLException {
-		if (debug) {
-			log.debug("setReadOnly");
-		}
+	public void setReadOnly(boolean readOnly) throws SQLException {
 		checkConnection();
-		con.setReadOnly(param);
+		con.setReadOnly(readOnly);
 	}
 
 	/*
@@ -316,9 +241,6 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#getMetaData()
 	 */
 	public DatabaseMetaData getMetaData() throws SQLException {
-		if (debug) {
-			log.debug("getMetaData");
-		}
 		checkConnection();
 		return con.getMetaData();
 	}
@@ -329,9 +251,6 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#clearWarnings()
 	 */
 	public void clearWarnings() throws SQLException {
-		if (debug) {
-			log.debug("clearWarnings");
-		}
 		checkConnection();
 		con.clearWarnings();
 	}
@@ -341,12 +260,9 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#nativeSQL(java.lang.String)
 	 */
-	public String nativeSQL(String str) throws SQLException {
-		if (debug) {
-			log.debug("nativeSQL");
-		}
+	public String nativeSQL(String sql) throws SQLException {
 		checkConnection();
-		return con.nativeSQL(str);
+		return con.nativeSQL(sql);
 	}
 
 	/*
@@ -354,12 +270,9 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#prepareStatement(java.lang.String, int, int)
 	 */
-	public PreparedStatement prepareStatement(String str, int param, int param2) throws SQLException {
-		if (debug) {
-			log.debug("prepareStatement");
-		}
+	public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
 		checkConnection();
-		return con.prepareStatement(str, param, param2);
+		return con.prepareStatement(sql, resultSetType, resultSetConcurrency);
 	}
 
 	/*
@@ -368,9 +281,6 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#isClosed()
 	 */
 	public boolean isClosed() throws SQLException {
-		if (debug) {
-			log.debug("isClosed");
-		}
 		checkConnection();
 		return con.isClosed();
 	}
@@ -381,9 +291,6 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#createStatement()
 	 */
 	public Statement createStatement() throws SQLException {
-		if (debug) {
-			log.debug("createStatement");
-		}
 		checkConnection();
 		return new AutoStatement(this);
 	}
@@ -394,9 +301,6 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#createStatement(int, int)
 	 */
 	public Statement createStatement(int param, int param1) throws SQLException {
-		if (debug) {
-			log.debug("createStatement");
-		}
 		checkConnection();
 		return new AutoStatement(this, param, param1);
 	}
@@ -407,9 +311,6 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#prepareStatement(java.lang.String)
 	 */
 	public PreparedStatement prepareStatement(String str) throws SQLException {
-		if (debug) {
-			log.debug("prepareStatement");
-		}
 		checkConnection();
 		return new AutoPreparedStatement(this, str);
 	}
@@ -420,36 +321,23 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#getAutoCommit()
 	 */
 	public boolean getAutoCommit() throws SQLException {
-		if (debug) {
-			log.debug("getAutoCommit");
-		}
 		checkConnection();
 		return con.getAutoCommit();
 	}
 
 	/**
-	 * Configura el modo auto-commit de la conexión en el estado determinado. Si una
-	 * conexión está en auto-commit, entonces cada sentencia SQL será procesada y el
-	 * commit se ejecutará por cada una como una transacción individual. De lo
-	 * contrario, sus sentencias SQL se agrupan en una transacción que finalizará
-	 * por una llamada al método <code>commit</code> o al método
-	 * <code>rollback</code>. Por default un nuevo objeto PoolConnection está en
-	 * modo auto-commit.
+	 * Sets connection auto-commit mode. On auto-commit enabled connections, each SQL
+	 * sentence will be processed and committed as a separate transaction. When connection
+	 * is not in auto-commit mode, all SQL sentences are grouped in a single transaction
+	 * that will be committed using <code>commit</code> or <code>rollback</code> methods.
+	 * New instances of {@link PoolConnection} class are auto-commit enabled by default.
 	 *
-	 * @param param
-	 *            the new auto commit
-	 * @throws SQLException
-	 *             the sQL exception
-	 * @exception java.sql.SQLException
-	 *                Si un error de acceso a kla base de datos ocurre.
-	 * @see getAutoCommit()
+	 * @param enable boolean value to set auto-commit. TRUE for enable, FALSE for disable.
+	 * @throws SQLException if value setting fails.
 	 */
-	public void setAutoCommit(boolean param) throws SQLException {
-		if (debug) {
-			log.debug("setAutoCommit");
-		}
+	public void setAutoCommit(boolean enable) throws SQLException {
 		checkConnection();
-		con.setAutoCommit(param);
+		con.setAutoCommit(enable);
 	}
 
 	/*
@@ -457,12 +345,9 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#prepareCall(java.lang.String)
 	 */
-	public CallableStatement prepareCall(String str) throws SQLException {
-		if (debug) {
-			log.debug("prepareCall");
-		}
+	public CallableStatement prepareCall(String sql) throws SQLException {
 		checkConnection();
-		return con.prepareCall(str);
+		return con.prepareCall(sql);
 	}
 
 	/*
@@ -471,9 +356,6 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#commit()
 	 */
 	public void commit() throws SQLException {
-		if (debug) {
-			log.debug("commit");
-		}
 		checkConnection();
 		con.commit();
 	}
@@ -483,12 +365,9 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#prepareCall(java.lang.String, int, int)
 	 */
-	public CallableStatement prepareCall(String str, int param, int param2) throws SQLException {
-		if (debug) {
-			log.debug("prepareCall");
-		}
+	public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
 		checkConnection();
-		return con.prepareCall(str, param, param2);
+		return con.prepareCall(sql, resultSetType, resultSetConcurrency);
 	}
 
 	/*
@@ -497,9 +376,6 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#rollback()
 	 */
 	public void rollback() throws SQLException {
-		if (debug) {
-			log.debug("rollback");
-		}
 		checkConnection();
 		con.rollback();
 	}
@@ -511,9 +387,6 @@ public class AutoConnection implements Connection {
 	 */
 	@Override
 	protected void finalize() throws Throwable {
-		if (debug) {
-			log.debug("finalize");
-		}
 		log.warn("finalize()..., connection was not closed, " + description);
 	}
 
@@ -524,10 +397,7 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#setSavepoint()
 	 */
-	public java.sql.Savepoint setSavepoint() throws java.sql.SQLException {
-		if (debug) {
-			log.debug("setSavepoint");
-		}
+	public Savepoint setSavepoint() throws SQLException {
 		checkConnection();
 		return con.setSavepoint();
 	}
@@ -537,12 +407,9 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#prepareStatement(java.lang.String, int)
 	 */
-	public java.sql.PreparedStatement prepareStatement(java.lang.String str, int param) throws java.sql.SQLException {
-		if (debug) {
-			log.debug("prepareStatement");
-		}
+	public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
 		checkConnection();
-		return con.prepareStatement(str, param);
+		return con.prepareStatement(sql, autoGeneratedKeys);
 	}
 
 	/*
@@ -550,13 +417,9 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#prepareStatement(java.lang.String, int, int, int)
 	 */
-	public java.sql.PreparedStatement prepareStatement(java.lang.String str, int param, int param2, int param3)
-			throws java.sql.SQLException {
-		if (debug) {
-			log.debug("prepareStatement");
-		}
+	public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
 		checkConnection();
-		return con.prepareStatement(str, param, param2, param3);
+		return con.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
 	}
 
 	/*
@@ -564,13 +427,9 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#prepareStatement(java.lang.String, int[])
 	 */
-	public java.sql.PreparedStatement prepareStatement(java.lang.String str, int[] values)
-			throws java.sql.SQLException {
-		if (debug) {
-			log.debug("prepareStatement");
-		}
+	public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
 		checkConnection();
-		return con.prepareStatement(str, values);
+		return con.prepareStatement(sql, columnIndexes);
 	}
 
 	/*
@@ -578,10 +437,7 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#getHoldability()
 	 */
-	public int getHoldability() throws java.sql.SQLException {
-		if (debug) {
-			log.debug("getHoldability");
-		}
+	public int getHoldability() throws SQLException {
 		checkConnection();
 		return con.getHoldability();
 	}
@@ -591,12 +447,9 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#setHoldability(int)
 	 */
-	public void setHoldability(int param) throws java.sql.SQLException {
-		if (debug) {
-			log.debug("setHoldability");
-		}
+	public void setHoldability(int holdability) throws SQLException {
 		checkConnection();
-		con.setHoldability(param);
+		con.setHoldability(holdability);
 	}
 
 	/*
@@ -604,10 +457,7 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#setSavepoint(java.lang.String)
 	 */
-	public java.sql.Savepoint setSavepoint(java.lang.String str) throws java.sql.SQLException {
-		if (debug) {
-			log.debug("setSavepoint");
-		}
+	public Savepoint setSavepoint(java.lang.String str) throws SQLException {
 		checkConnection();
 		return con.setSavepoint(str);
 	}
@@ -617,12 +467,9 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#createStatement(int, int, int)
 	 */
-	public java.sql.Statement createStatement(int param, int param1, int param2) throws java.sql.SQLException {
-		if (debug) {
-			log.debug("createStatement");
-		}
+	public java.sql.Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
 		checkConnection();
-		return con.createStatement(param, param1, param2);
+		return con.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
 	}
 
 	/*
@@ -630,13 +477,9 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#prepareCall(java.lang.String, int, int, int)
 	 */
-	public java.sql.CallableStatement prepareCall(java.lang.String str, int param, int param2, int param3)
-			throws java.sql.SQLException {
-		if (debug) {
-			log.debug("prepareCall");
-		}
+	public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
 		checkConnection();
-		return con.prepareCall(str, param, param2, param3);
+		return con.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
 	}
 
 	/*
@@ -644,10 +487,7 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#releaseSavepoint(java.sql.Savepoint)
 	 */
-	public void releaseSavepoint(java.sql.Savepoint savepoint) throws java.sql.SQLException {
-		if (debug) {
-			log.debug("releaseSavepoint");
-		}
+	public void releaseSavepoint(Savepoint savepoint) throws SQLException {
 		checkConnection();
 		con.releaseSavepoint(savepoint);
 	}
@@ -658,13 +498,9 @@ public class AutoConnection implements Connection {
 	 * @see java.sql.Connection#prepareStatement(java.lang.String,
 	 * java.lang.String[])
 	 */
-	public java.sql.PreparedStatement prepareStatement(java.lang.String str, java.lang.String[] str1)
-			throws java.sql.SQLException {
-		if (debug) {
-			log.debug("prepareStatement");
-		}
+	public java.sql.PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
 		checkConnection();
-		return con.prepareStatement(str, str1);
+		return con.prepareStatement(sql, columnNames);
 	}
 
 	/*
@@ -672,10 +508,7 @@ public class AutoConnection implements Connection {
 	 *
 	 * @see java.sql.Connection#rollback(java.sql.Savepoint)
 	 */
-	public void rollback(java.sql.Savepoint savepoint) throws java.sql.SQLException {
-		if (debug) {
-			log.debug("rollback");
-		}
+	public void rollback(java.sql.Savepoint savepoint) throws SQLException {
 		checkConnection();
 		con.rollback(savepoint);
 	}
