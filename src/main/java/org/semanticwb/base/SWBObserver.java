@@ -23,20 +23,15 @@
 package org.semanticwb.base;
 
 /**
- * objeto: indica que el objeto puede recibir notificaciones de otro objeto.
- * 
+ * Interface for observer objects allowed to send notifications.
  * @author Javier Solis Gonzalez
  * @version 1.1
  */
 public interface SWBObserver {
-
 	/**
-	 * Avisa al observador de un cambio.
-	 * 
-	 * @param s
-	 *            the s
-	 * @param obj
-	 *            the obj
+	 * Notifies of changes.
+	 * @param message notification message.
+	 * @param reference reference object.
 	 */
-	public void sendDBNotify(String s, Object obj);
+	public void sendDBNotify(String message, Object reference);
 }

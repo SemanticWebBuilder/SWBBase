@@ -23,7 +23,7 @@
 package org.semanticwb.base;
 
 /**
- * Application object that need to perform some operations constantly in time or
+ * Interface for an Application object that need to perform some operations constantly in time or
  * by events that are very common in the entire application, hence will remain
  * alive while the application is running.
  * <p>
