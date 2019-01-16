@@ -110,7 +110,6 @@ import org.semanticwb.base.db.DBConnectionManager;
 import org.semanticwb.base.db.DBConnectionPool;
 import org.semanticwb.base.db.PoolConnectionTimeLock;
 import org.semanticwb.base.util.ErrorElement;
-import org.semanticwb.base.util.FilterRule;
 import org.semanticwb.base.util.GenericFilterRule;
 import org.semanticwb.base.util.SFBase64;
 import org.semanticwb.base.util.SWBMail;
@@ -5843,25 +5842,6 @@ public class SWBUtils {
 				size++;
 			}
 			return size;
-		}
-
-		/**
-		 * Filtra iterador por medio de la interface FilterRule, la cual hay que
-		 * implementar cuando se utilice
-		 *
-		 * @param it
-		 * @param rule
-		 * @return
-		 */
-		public static List filterIterator(Iterator it, FilterRule rule) {
-			List ret = new ArrayList();
-			while (it.hasNext()) {
-				Object object = it.next();
-				if (!rule.filter(object)) {
-					ret.add(object);
-				}
-			}
-			return ret;
 		}
 
 		public static List filterIterator(Iterator it, GenericFilterRule rule) {
