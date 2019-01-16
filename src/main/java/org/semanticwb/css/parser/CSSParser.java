@@ -22,104 +22,82 @@
  */
 package org.semanticwb.css.parser;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.StringTokenizer;
 
 /**
- * The Class CSSParser.
- * 
+ * CSS Parser utility class.
  * @author victor.lorenzana
  */
-public class CSSParser
-{
-
-    /** The selectors. */
+//TODO: Migrate to use a maintained library instead of custom parsing because CSS grammar evolves
+public class CSSParser {
     private ArrayList<Selector> selectors = new ArrayList<>();
 
     /**
-     * Instantiates a new cSS parser.
-     * 
-     * @param data the data
+     * Constructor. Creates a new instance of a {@link CSSParser}.
+     * Provided css string is parsed immediately.
+     * @param css CSS string.
      */
-    public CSSParser(String data)
-    {        
-        data = cleanComments(data);
-        if (data.startsWith("@"))
-        {
-            data = data.substring(1);
-            int pos = data.indexOf(';');
-            if (pos != -1)
-            {
-                data = data.substring(pos + 1);
+    public CSSParser(String css) {
+        css = cleanComments(css);
+        if (css.startsWith("@")) {
+            css = css.substring(1);
+            int pos = css.indexOf(';');
+            if (pos != -1) {
+                css = css.substring(pos + 1);
             }
         }
-        data = removeNewLines(data);
-        int pos = data.indexOf('{');
-        while (pos != -1)
-        {
-            String selectorrow = data.substring(0, pos).trim();
+
+        css = css.replace("\r", " ").replace("\n", " ");
+        int pos = css.indexOf('{');
+        while (pos != -1) {
+            String selectorrow = css.substring(0, pos).trim();
             HashSet<Attribute> atts = new HashSet<>();
-            data = data.substring(pos + 1);
-            int pos2 = data.indexOf('}');
-            if (pos2 != -1)
-            {
-                String values = data.substring(0, pos2).trim();
-                data = data.substring(pos2 + 1);
+            css = css.substring(pos + 1);
+            int pos2 = css.indexOf('}');
+            if (pos2 != -1) {
+                String values = css.substring(0, pos2).trim();
+                css = css.substring(pos2 + 1);
                 StringTokenizer st = new StringTokenizer(values, ";");
-                while (st.hasMoreTokens())
-                {
+                while (st.hasMoreTokens()) {
                     String attribute = st.nextToken();
-                    pos=attribute.indexOf(':');
-                    if(pos!=-1)
-                    {
-                        String name=attribute.substring(0,pos);
-                        String value=attribute.substring(pos+1);
+                    pos = attribute.indexOf(':');
+                    if(pos != -1) {
+                        String name = attribute.substring(0,pos);
+                        String value = attribute.substring(pos + 1);
                         Attribute att = new Attribute(name, value);
                         atts.add(att);
-                    }
-                    else
-                    {
+                    } else {
                         String name = attribute;
                         String value = "";
                         Attribute att = new Attribute(name, value);
                         atts.add(att);
                     }
                 }
-            }
-            else
-            {
+            } else {
                 throw new IllegalArgumentException("The css is invalid");
             }
             
-            for(String selector : getSelectors(selectorrow))
-            {
+            for(String selector : getSelectors(selectorrow)) {
                 selectors.add(new Selector(selector, atts));
             }
-
-            pos = data.indexOf('{');
+            pos = css.indexOf('{');
         }
     }
     
     /**
-     * Gets the selectors.
-     * 
-     * @param selector the selector
-     * @return the selectors
+     * Gets the selectors of the CSS parsed string.
+     * @param selector the selector.
+     * @return the selectors.
      */
-    private String[] getSelectors(String selector)
-    {
-        HashSet<String> getSelectors=new HashSet<>();
-        selector=selector.replace(' ',',');
-        StringTokenizer st=new StringTokenizer(selector,",");
-        while(st.hasMoreTokens())
-        {
-            String nselector= st.nextToken().trim();
-            if(!nselector.equals(""))
-            {
+    private String[] getSelectors(String selector) {
+        HashSet<String> getSelectors = new HashSet<>();
+        selector = selector.replace(' ',',');
+        StringTokenizer st = new StringTokenizer(selector,",");
+        while(st.hasMoreTokens()) {
+            String nselector = st.nextToken().trim();
+            if(!nselector.equals("")) {
                 getSelectors.add(nselector);                
             }            
         }
@@ -129,118 +107,30 @@ public class CSSParser
 
     /**
      * Gets the selectors.
-     * 
-     * @return the selectors
+     * @return the selectors.
      */
-    public Selector[] getSelectors()
-    {
+    public Selector[] getSelectors() {
         return selectors.toArray(new Selector[selectors.size()]);
     }
 
     /**
-     * Clean comments.
-     * 
-     * @param data the data
-     * @return the string
+     * Strips block comments from a CSS string.
+     * @param css the css string.
+     * @return css string without block comments.
      */
-    private String cleanComments(String data)
-    {
+    private String cleanComments(String css) {
         StringBuilder cssclean = new StringBuilder();
-        int pos = data.indexOf("/*");
-        while (pos != -1)
-        {
-            cssclean.append(data.substring(0, pos));
-            data = data.substring(pos + 2);
-            int pos2 = data.indexOf("*/");
-            if (pos2 != -1)
-            {
-                data = data.substring(pos2 + 2);
+        int pos = css.indexOf("/*");
+        while (pos != -1) {
+            cssclean.append(css.substring(0, pos));
+            css = css.substring(pos + 2);
+            int pos2 = css.indexOf("*/");
+            if (pos2 != -1) {
+                css = css.substring(pos2 + 2);
             }
-            pos = data.indexOf("/*");
+            pos = css.indexOf("/*");
         }
-        cssclean.append(data);
+        cssclean.append(css);
         return cssclean.toString().trim();
-    }
-
-    /**
-     * Removes the new lines.
-     * 
-     * @param data the data
-     * @return the string
-     */
-    private String removeNewLines(String data)
-    {
-        StringBuilder cs = new StringBuilder();
-        char[] values = data.toCharArray();
-        for (char value : values)
-        {
-            if (!(value == '\r' || value == '\n'))
-            {
-                cs.append(value);
-            }
-        }
-        return cs.toString();
-    }
-
-    /**
-     * The main method.
-     * 
-     * @param args the arguments
-     */
-    //TODO: Revisar este código y verificar si es necesario aquí o moverlo a una clase de prueba
-    public static void main(String[] args)
-    {
-        String path = "C:\\Documents and Settings\\victor.lorenzana\\Escritorio\\SEGOB XHTML Strict\\images\\estilos.css";
-        File file = new File(path);
-        StringBuilder css = new StringBuilder();
-        try
-        {
-            FileReader fr = new FileReader(file);
-            BufferedReader bf = new BufferedReader(fr);
-            String line = bf.readLine();
-            while (line != null)
-            {
-                css.append(line);
-                css.append("\r\n");
-                line = bf.readLine();
-            }
-            CSSParser p = new CSSParser(css.toString());
-            for (Selector selector : p.getSelectors())
-            {
-                for (Attribute att : selector.getAttributes())
-                {
-                    if (att.getName().equals("background-image") || att.getName().equals("background") || att.getName().equals("list-style"))
-                    {
-                        for (String value : att.getValues())
-                        {
-                            if (value.startsWith("url("))
-                            {
-                                value = value.substring(4);                                
-                                int pos = value.indexOf(")");
-                                if (pos != -1)
-                                {
-                                    value = value.substring(0, pos).trim();
-                                    
-                                    if (value.indexOf(".") != -1 && !value.startsWith("http://") && !value.toLowerCase().startsWith("wbrelpath://") && !value.startsWith("https://") && !value.startsWith("mailto:") && !value.startsWith("javascript:") && !value.startsWith("ftp:") && !value.startsWith("rtsp:") && !value.startsWith("telnet:") && !value.startsWith("#") && !value.startsWith("/") && !value.startsWith("../"))
-                                    {
-                                        if(value.startsWith("\"") && value.endsWith("\""))
-                                        {
-                                            value=value.substring(1,value.length()-1);
-                                        }
-                                        System.out.println(value);
-                                    }
-
-                                }
-
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
     }
 }

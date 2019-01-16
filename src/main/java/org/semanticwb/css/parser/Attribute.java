@@ -23,55 +23,44 @@
 package org.semanticwb.css.parser;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.StringTokenizer;
 
 /**
- * The Class Attribute.
- * 
+ * Class to encapsulate information about a CSS attribute. Used in a {@link CSSParser}.
  * @author victor.lorenzana
  */
 public class Attribute {
-    
-    /** The name. */
     private String name;
-    
-    /** The values. */
-    private ArrayList<String> values=new ArrayList<>();
-    
+    private ArrayList<String> values = new ArrayList<>();
+
     /**
-     * Instantiates a new attribute.
-     * 
-     * @param name the name
-     * @param value the value
+     * Constructor. Creates a new instance of {@link Attribute}.
+     * @param name css attribute name
+     * @param value css attribute value
      */
-    public Attribute(String name,String value)
-    {
-        this.name=name;
-        StringTokenizer st=new StringTokenizer(value," ");        
-        while(st.hasMoreTokens())
-        {
-            String nvalue=st.nextToken().trim();            
+    public Attribute(String name, String value) {
+        this.name = name;
+        StringTokenizer st = new StringTokenizer(value," ");
+        while(st.hasMoreTokens()) {
+            String nvalue = st.nextToken().trim();
             values.add(nvalue);
         }
     }
-    
+
     /**
-     * Gets the name.
-     * 
-     * @return the name
+     * Gets the attribute name.
+     * @return attribute name.
      */
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
-    
+
     /**
-     * Gets the values.
-     * 
-     * @return the values
+     * Gets an array with the values for an attribute.
+     * @return the values array.
      */
-    public String[] getValues()
-    {
+    public String[] getValues() {
         return values.toArray(new String[values.size()]);
     }
 
@@ -79,8 +68,7 @@ public class Attribute {
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         return name;
     }
 
@@ -88,28 +76,21 @@ public class Attribute {
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
-    public boolean equals(Object obj)
-    {
-        if (obj == null)
+    public boolean equals(Object obj) {
+        if (obj == null || getClass() != obj.getClass()) {
             return false;
-        if (getClass() != obj.getClass())
-            return false;
-        final Attribute other = (Attribute) obj;
-        if ((this.name == null) ? (other.name != null) : !this.name.equals(other.name))
-            return false;
-        return true;
+        }
+
+        return Objects.equals(this, (Attribute)obj);
     }
 
     /* (non-Javadoc)
      * @see java.lang.Object#hashCode()
      */
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         int hash = 3;
         hash = 37 * hash + (this.name != null ? this.name.hashCode() : 0);
         return hash;
     }
-    
-
 }
