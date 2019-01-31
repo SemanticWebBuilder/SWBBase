@@ -22,265 +22,371 @@
  */
 package org.semanticwb.base.util;
 
-/**
- *
- * @author jorge.jimenez
- */
-import java.util.ArrayList;
-import java.util.Collection;
-
-import javax.mail.internet.InternetAddress;
-
 import org.apache.commons.mail.EmailAttachment;
 
+import javax.mail.internet.InternetAddress;
+import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /**
- * The Class SWBMail.
+ * Wrapper class to hold e-mail message information.
+ * @author jorge.jimenez
  */
-public class SWBMail 
-{
-    /** The from email. */
-    private String fromEmail = null;
-    
-    /** The from name. */
-    private String fromName = null;
-    
-    /** The to email. */
+public class SWBMail {
+    private String senderEmail = null;
+    private String senderName = null;
     private Collection<InternetAddress> toEmail = null;
-    
-    /** The cc email. */
     private Collection<InternetAddress> ccEmail = null;
-    
-    /** The bcc email. */
     private Collection<InternetAddress> bccEmail = null;
-    
-    /** The attachments. */
-    private ArrayList<EmailAttachment> attachments = new ArrayList<>();
-    
-    /** The addresses. */
-    private ArrayList<InternetAddress> addresses = new ArrayList<>();
-    
-    /** The login. */
+    private List<EmailAttachment> attachments = new ArrayList<>();
+    private List<InternetAddress> addresses = new ArrayList<>();
     private String login;
-    
-    /** The password. */
     private String password;
-    
-    /** The subject. */
     private String subject = null;
-    
-    /** The data. */
-    private String data = null;
-    
-    /** The content type. */
+    private String message = null;
     private String contentType = null;
-    
-    /** The smtpserver. */
     private String smtpserver = null;
 
     /**
-     * Creates a new instance of AFMailData.
+     * Constructor. Creates a new instance of {@link SWBMail}.
      */
-    public SWBMail() {
-    }
+    public SWBMail() { }
 
     /**
-     * Creates a new instance of AFMailData.
+     * Constructor. Creates a new instance of {@link SWBMail}.
      * 
-     * @param toEmail the to email
-     * @param subject the subject
-     * @param description the description
+     * @param recipients List of {@link InternetAddress} objects holding destination addresses.
+     * @param subject E-mail subject.
+     * @param body E-mail body.
      */
-    public SWBMail(Collection<InternetAddress> toEmail, String subject, String description) {
-        this.fromEmail = "webmail.infotec.com.mx";
-        this.toEmail = toEmail;
+    public SWBMail(@NotNull Collection<InternetAddress> recipients, @NotNull String subject, @NotNull String body) {
+        this.senderEmail = "webmail.infotec.com.mx";
+        this.toEmail = recipients;
         this.subject = subject;
-        this.data = description;
+        this.message = body;
     }
 
     /**
-     * Instantiates a new sWB mail.
+     * Constructor. Creates a new instance of {@link SWBMail}.
      * 
-     * @param fromEmail the from email
-     * @param toEmail the to email
-     * @param ccEmail the cc email
-     * @param bccEmail the bcc email
-     * @param subject the subject
-     * @param data the data
+     * @param sender Sender e-mail address.
+     * @param recipients List of {@link InternetAddress} objects holding destination addresses.
+     * @param ccRecipients List of {@link InternetAddress} objects holding copy addresses.
+     * @param bccRecipients List of {@link InternetAddress} objects holding carbon copy addresses.
+     * @param subject E-mail subject.
+     * @param body E-mail boody.
      */
-    public SWBMail(String fromEmail, Collection<InternetAddress> toEmail, Collection<InternetAddress> ccEmail, Collection<InternetAddress> bccEmail,
-            String subject, String data) {
-        this.fromEmail = fromEmail;
-        this.toEmail = toEmail;
-        this.ccEmail = ccEmail;
-        this.bccEmail = bccEmail;
+    public SWBMail(@NotNull String sender, @NotNull Collection<InternetAddress> recipients,
+                   Collection<InternetAddress> ccRecipients,
+                   Collection<InternetAddress> bccRecipients, @NotNull String subject, @NotNull String body) {
+        this.senderEmail = sender;
+        this.toEmail = recipients;
+        this.ccEmail = ccRecipients;
+        this.bccEmail = bccRecipients;
         this.subject = subject;
-        this.data = data;
+        this.message = body;
     }
 
     /**
-     * Setter for property addresses.
-     * 
-     * @param addresses the new address
+     * @deprecated Use {@link #setAddresses(List)} method instead.
+     * Sets addresses.
+     * @param addresses the new addresses list.
      */
+    @Deprecated
     public void setAddress(ArrayList<InternetAddress> addresses) {
         this.addresses = addresses;
     }
 
-    /** Getter for property addresses.
-     * @return Value of property addresses.
-     *
+    /**
+     * Sets recipient addresses for the e-mail.
+     * @param addresses List of {@link InternetAddress} objects.
      */
-    public ArrayList<InternetAddress> getAddresses() {
+    public void setAddresses(@NotNull List<InternetAddress> addresses) {
+        this.addresses = addresses;
+    }
+
+    /**
+     * Gets the addresses list.
+     * @return Value of property addresses.
+     */
+    public List<InternetAddress> getAddresses() {
         return addresses;
     }
 
     /**
-     * Adds the address.
-     * 
-     * @param address the address
+     * Adds an address to the list as an {@link InternetAddress} object.
+     * @param address the address.
      */
-    public void addAddress(InternetAddress address) {
+    public void addAddress(@NotNull InternetAddress address) {
         addresses.add(address);
     }
 
     /**
-     * Adds the address.
-     * 
+     * Adds an address to the list as a String.
      * @param address the address
      */
     public void addAddress(String address) {
-        InternetAddress inetAddress = new InternetAddress();
-        inetAddress.setAddress(address);
-        addresses.add(inetAddress);
+        if (null != address && !address.isEmpty()) {
+            InternetAddress inetAddress = new InternetAddress();
+            inetAddress.setAddress(address);
+            addresses.add(inetAddress);
+        }
     }
 
     /**
-     * Setter for property attachments.
-     * 
+     * @deprecated Use {@link #setAddresses(List)} instead.
+     * Sets e-mail attachments.
      * @param attachments the new attachments
      */
+    @Deprecated
     public void setAttachments(ArrayList<EmailAttachment> attachments) {
         this.attachments = attachments;
     }
 
-    /** Getter for property attachments.
-     * @return Value of property attachments.
-     *
+    /**
+     * Sets e-mail attachments.
+     * @param attachments List of {@link EmailAttachment} objects.
      */
-    public ArrayList<EmailAttachment> getAttachments() {
+    public void setAttachments(@NotNull List<EmailAttachment> attachments) {
+        this.attachments = attachments;
+    }
+
+    /** Gets the list of attachments.
+     * @return List of attachments.
+     */
+    public List<EmailAttachment> getAttachments() {
         return attachments;
     }
 
     /**
-     * Adds the attachment.
-     * 
+     * Adds an attachment.
      * @param attachment the attachment
      */
-    public void addAttachment(EmailAttachment attachment) {
+    public void addAttachment(@NotNull EmailAttachment attachment) {
         attachments.add(attachment);
     }
 
-    /** Getter for property fromEmail.
-     * @return Value of property fromEmail.
-     *
+    /**
+     * @deprecated Use getSenderEmail instead for naming consistency.
+     * Gets e-mail sender.
+     * @return E-mail address of sender.
      */
+    @Deprecated
     public String getFromEmail() {
-        return fromEmail;
-    }
-
-    /** Setter for property fromEmail.
-     * @param fromEmail New value of property fromEmail.
-     *
-     */
-    public void setFromEmail(String fromEmail) {
-        this.fromEmail = fromEmail;
-    }
-    
-    /** Getter for property fromName.
-     * @return Value of property fromName.
-     *
-     */
-    public String getFromName() {
-        return fromName;
+        return senderEmail;
     }
 
     /**
-     * Setter for property fromName.
-     * 
-     * @param fromName the new from name
+     * Gets the sender e-mail.
+     * @return E-mail address of sender.
      */
-    public void setFromName(String fromName) {
-        this.fromName = fromName;
+    public String getSenderEmail() {
+        return senderEmail;
+    }
+
+    /**
+     * @deprecated use {@link #setSenderEmail(String)} method instead.
+     * Sets the sender e-mail.
+     * @param senderMail sender e-mail.
+     */
+    @Deprecated
+    public void setFromEmail(String senderMail) {
+        this.senderEmail = senderMail;
+    }
+
+    /**
+     * Sets the sender e-mail.
+     * @param senderMail Sender e-mail.
+     */
+    public void setSenderEmail(@NotNull String senderMail) {
+        this.senderEmail = senderMail;
+    }
+    
+    /**
+     * @deprecated Use {@link #getSenderName()} method instead.
+     * Gets sender name.
+     * @return Sender name.
+     */
+    @Deprecated
+    public String getFromName() {
+        return senderName;
+    }
+
+    /**
+     * Gets the sender name.
+     * @return Sender name.
+     */
+    public String getSenderName() {
+        return senderName;
+    }
+
+    /**
+     * @deprecated Use {@link #setSenderName(String)} method instead.
+     * Sets the sender name.
+     * @param senderName sender name.
+     */
+    @Deprecated
+    public void setFromName(String senderName) {
+        this.senderName = senderName;
+    }
+
+    /**
+     * Sets the sender name.
+     * @param senderName Sender name.
+     */
+    public void setSenderName(@NotNull String senderName) {
+        this.senderName = senderName;
     }
     
 
-    /** Getter for property toEmail.
-     * @return Value of property toEmail.
-     *
+    /**
+     * @deprecated Use {@link #getRecipients()} method instead.
+     * Gets recipient e-mail list.
+     * @return List of {@link InternetAddress} objects of recipients.
      */
+    @Deprecated
     public Collection<InternetAddress> getToEmail() {
         return toEmail;
     }
 
-    /** Setter for property toEmail.
-     * @param toEmail New value of property toEmail.
-     *
+    /**
+     * Gets recipients list.
+     * @return Recipients list.
      */
-    public void setToEmail(Collection<InternetAddress> toEmail) {
-        this.toEmail = toEmail;
+    public Collection<InternetAddress> getRecipients() {
+        return toEmail;
     }
 
-    /** Getter for property ccEmail.
-     * @return Value of property ccEmail.
-     *
+    /**
+     * @deprecated Use {@link #setRecipients(Collection)} method instead.
+     * Sets recipient e-mail list
+     * @param recipients List of {@link InternetAddress} objects of recipients.
      */
+    @Deprecated
+    public void setToEmail(Collection<InternetAddress> recipients) {
+        this.toEmail = recipients;
+    }
+
+    /**
+     * Sets recipient e-mail list
+     * @param recipients List of {@link InternetAddress} objects of recipients.
+     */
+    public void setRecipients(@NotNull Collection<InternetAddress> recipients) {
+        this.toEmail = recipients;
+    }
+
+    /**
+     * @deprecated Use {@link #getCcRecipients()} method instead.
+     * Gets list of copy recipients.
+     * @return List of copy recipients..
+     */
+    @Deprecated
     public Collection<InternetAddress> getCcEmail() {
         return ccEmail;
     }
 
-    /** Setter for property ccEmail.
-     * @param ccEmail New value of property ccEmail.
-     *
+    /**
+     * Gets list of copy recipients.
+     * @return List of copy recipients..
      */
-    public void setCcEmail(Collection<InternetAddress> ccEmail) {
-        this.ccEmail = ccEmail;
+    public Collection<InternetAddress> getCcRecipients() {
+        return ccEmail;
     }
 
-    /** Getter for property bccEmail.
-     * @return Value of property bccEmail.
-     *
+    /**
+     * @deprecated Use {@link #setCcRecipients(Collection)}
+     * Sets list of copy recipients.
+     * @param copyRecipients List of {@link InternetAddress} objects of copy recipients.
      */
+    @Deprecated
+    public void setCcEmail(Collection<InternetAddress> copyRecipients) {
+        this.ccEmail = copyRecipients;
+    }
+
+    /**
+     * Sets list of copy recipients.
+     * @param copyRecipients List of {@link InternetAddress} objects of copy recipients.
+     */
+    public void setCcRecipients(@NotNull Collection<InternetAddress> copyRecipients) {
+        this.ccEmail = copyRecipients;
+    }
+
+    /**
+     * @deprecated Use {@link #getBccRecipients()} method instead.
+     * Gets list of copy recipients.
+     * @return List of copy recipients.
+     */
+    @Deprecated
     public Collection<InternetAddress> getBccEmail() {
         return bccEmail;
     }
 
-    /** Setter for property bccEmail.
-     * @param bccEmail New value of property bccEmail.
-     *
+    /**
+     * Gets list of copy recipients.
+     * @return List of copy recipients.
      */
-    public void setBccEmail(Collection<InternetAddress> bccEmail) {
-        this.bccEmail = bccEmail;
+    public Collection<InternetAddress> getBccRecipients() {
+        return bccEmail;
     }
 
-    /** Getter for property data.
-     * @return Value of property data.
-     *
+    /**
+     * @deprecated Use {@link #setBccRecipients(Collection)} method instead.
+     * Sets list of carbon copy recipients.
+     * @param carbonCopyRecipients New value of property bccEmail.
      */
+    @Deprecated
+    public void setBccEmail(Collection<InternetAddress> carbonCopyRecipients) {
+        this.bccEmail = carbonCopyRecipients;
+    }
+
+    /**
+     * Sets list of carbon copy recipients.
+     * @param carbonCopyRecipients New value of property bccEmail.
+     */
+    public void setBccRecipients(@NotNull Collection<InternetAddress> carbonCopyRecipients) {
+        this.bccEmail = carbonCopyRecipients;
+    }
+
+    /**
+     * @deprecated Use {@link #getMessage()} method instead.
+     * Gets e-mail body.
+     * @return e-mail body
+     */
+    @Deprecated
     public String getData() {
-        return data;
+        return message;
     }
 
-    /** Setter for property data.
-     * @param data New value of property data.
-     *
+    /***
+     * Gets e-mail body.
+     * @return e-mail body
      */
+    public String getMessage() {
+        return message;
+    }
+
+    /**
+     * @deprecated Use {@link #setMessage(String)} method instead.
+     * Setter for property data.
+     * @param data New value of property data.
+     */
+    @Deprecated
     public void setData(String data) {
-        this.data = data;
+        this.message = data;
+    }
+
+    /**
+     * Sets e-mail boy.
+     * @param message Message String
+     */
+    public void setMessage(@NotNull String message) {
+        this.message = message;
     }
 
     /** Getter for property login.
      * @return Value of property login.
-     *
      */
     public String getLogin() {
         return login;
@@ -288,16 +394,14 @@ public class SWBMail
 
     /**
      * Setter for property login.
-     * 
      * @param login the new login
      */
-    public void setLogin(String login) {
+    public void setLogin(@NotNull String login) {
         this.login = login;
     }
 
     /** Getter for property password.
      * @return Value of property password.
-     *
      */
     public String getPassword() {
         return password;
@@ -305,33 +409,29 @@ public class SWBMail
 
     /**
      * Setter for property password.
-     * 
      * @param password the new password
      */
-    public void setPassword(String password) {
+    public void setPassword(@NotNull String password) {
         this.password = password;
     }
 
     /** Getter for property contentType.
      * @return Value of property contentType.
-     *
      */
     public String getContentType() {
         return contentType;
     }
 
     /**
-     * Setter for property data.
-     * 
+     * Setter for property contentType.
      * @param contentType the new content type
      */
-    public void setContentType(String contentType) {
+    public void setContentType(@NotNull String contentType) {
         this.contentType = contentType;
     }
 
     /** Getter for property subject.
      * @return Value of property subject.
-     *
      */
     public String getSubject() {
         return subject;
@@ -339,26 +439,27 @@ public class SWBMail
 
     /** Setter for property subject.
      * @param subject New value of property subject.
-     *
      */
-    public void setSubject(String subject) {
+    public void setSubject(@NotNull String subject) {
         this.subject = subject;
     }
     
     /**
+     * @deprecated Not intended to be used anymore.
      * Setter for property smtpserver.
-     * 
      * @param smtpserver the new host name
      */
+    @Deprecated
     public void setHostName(String smtpserver) {
         this.smtpserver = smtpserver;
     }
     
     /**
-     * Setter for property smtpserver.
-     * 
+     * @deprecated Not intended to be used anymore.
+     * Getter for property smtpserver.
      * @return the host name
      */
+    @Deprecated
     public String getHostName() {
         return smtpserver;
     }
