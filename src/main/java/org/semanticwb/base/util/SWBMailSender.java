@@ -22,32 +22,23 @@
  */
 package org.semanticwb.base.util;
 
-import java.net.SocketException;
-import java.util.LinkedList;
-
 import org.semanticwb.Logger;
 import org.semanticwb.SWBUtils;
 
+import java.util.LinkedList;
+
 /**
- * objecto: encargado de procesar y enviar correos electronicos.
- * 
+ * Tread responsible for sending queued e-mails.
  * @author Javier Solís
  */
 public class SWBMailSender extends java.lang.Thread {
-
-	/** The log. */
-	private static Logger log = SWBUtils.getLogger(SWBMailSender.class);
-
-	/** The emails. */
-	LinkedList<SWBMail> emails = null;
+	private static Logger LOG = SWBUtils.getLogger(SWBMailSender.class);
+	LinkedList<SWBMail> emails;
 
 	/**
-	 * Creates a new instance of WBMessageServer.
-	 * 
-	 * @throws SocketException
-	 *             the socket exception
+	 * Constructor. Creates a new instance of {@link SWBMailSender}.
 	 */
-	public SWBMailSender() throws java.net.SocketException {
+	public SWBMailSender() {
 		emails = new LinkedList<>();
 	}
 
@@ -61,20 +52,18 @@ public class SWBMailSender extends java.lang.Thread {
 		try {
 			while (!emails.isEmpty()) {
 				SWBMail email = emails.removeLast();
-				SWBUtils.EMAIL.sendMail(email.getFromEmail(), email.getFromName(), email.getAddresses(),
-						email.getCcEmail(), email.getBccEmail(), email.getSubject(), email.getContentType(),
-						email.getData(), email.getLogin(), email.getPassword(), email.getAttachments());
+				SWBUtils.EMAIL.sendMail(email.getSenderEmail(), email.getSenderName(), email.getAddresses(),
+						email.getCcRecipients(), email.getBccRecipients(), email.getSubject(), email.getContentType(),
+						email.getMessage(), email.getLogin(), email.getPassword(), email.getAttachments());
 			}
 		} catch (Exception e) {
-			log.error(e);
+			LOG.error(e);
 		}
 	}
 
 	/**
-	 * Adds the e mail.
-	 * 
-	 * @param email
-	 *            the email
+	 * Adds a {@link SWBMail} to the queue.
+	 * @param email {@link SWBMail}.
 	 */
 	public void addEMail(SWBMail email) {
 		emails.addFirst(email);

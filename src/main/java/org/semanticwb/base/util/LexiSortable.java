@@ -17,37 +17,38 @@
  * de la misma.
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
- * dirección electrónica:
- *  http://www.semanticwebbuilder.org.mx
+ * dirección electrónica: http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb.base.util;
-
+//TODO: Check usage rights on this code. See https://gist.github.com/jfager/490768
 public class LexiSortable {
 
     // Lookup table to find hex digits from bytes.
-    private final static char[] HEX_DIGITS = {
-        '0', '1', '2', '3', '4', '5', '6', '7',
-        '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+    private static final char[] HEX_DIGITS = {
+            '0', '1', '2', '3', '4', '5', '6', '7',
+            '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
     };
 
     // Lookup table to find bytes from hex digits.
     private static final byte[] BYTE_LOOKUP = new byte['F' + 1];
+    // 16 chars to represent a long in hex, plus a type token.
+    private static final int LEXI_STRING_LEN = 17;
+    // All zeroes except the sign bit.
+    private static final long SIGN_MASK = 0x8000000000000000L;
+
     static {
         for (int i = 0; i < HEX_DIGITS.length; i++) {
             BYTE_LOOKUP[HEX_DIGITS[i]] = (byte) i;
         }
     }
 
-    // 16 chars to represent a long in hex, plus a type token.
-    private static final int LEXI_STRING_LEN = 17;
-
-    // Utility method converts a long to a hex string and prepends 
+    // Utility method converts a long to a hex string and prepends
     // a type token
     private static String toHexString(char type, long i) {
         final char[] buf = new char[LEXI_STRING_LEN];
         int charPos = LEXI_STRING_LEN;
         do {
-            // read bottom 4 bits to lookup hex char for 
+            // read bottom 4 bits to lookup hex char for
             // current position
             buf[--charPos] = HEX_DIGITS[(int) (i & 0xf)];
             // shift so we can do it again for the next.
@@ -57,30 +58,27 @@ public class LexiSortable {
         return new String(buf);
     }
 
-    // Utility method converts a hex string to a long.  
-    // It ignores the leading type token; verification 
+    // Utility method converts a hex string to a long.
+    // It ignores the leading type token; verification
     // needs to be handled by the calling function.
     private static long fromHexString(final String s) {
         final byte[] bytes = s.getBytes();
         long out = 0L;
         for (int i = 1; i < LEXI_STRING_LEN; i++) {
-            // first shift is wasted, but after that, 
-            // move previously xor'd bits out of the 
-            // way so they don't get clobbered by 
+            // first shift is wasted, but after that,
+            // move previously xor'd bits out of the
+            // way so they don't get clobbered by
             // subsequent chars.
             out <<= 4;
-            // Note that we shifted 4 bits b/c we're 
-            // using hex, but we have to XOR a byte 
-            // at a time.  This is fine, b/c the high 
-            // bits of the bytes stored in the lookup 
+            // Note that we shifted 4 bits b/c we're
+            // using hex, but we have to XOR a byte
+            // at a time.  This is fine, b/c the high
+            // bits of the bytes stored in the lookup
             // table are zeroed out.
             out ^= BYTE_LOOKUP[bytes[i]];
         }
         return out;
     }
-
-    // All zeroes except the sign bit.
-    private static final long SIGN_MASK = 0x8000000000000000L;
 
     /**
      * Returns a string s for long l such that for any long l' 
@@ -115,7 +113,7 @@ public class LexiSortable {
         // long back.
         return tmp ^ SIGN_MASK;
     }
-    
+
     public static String toLexiSortable(final double d) {
         long tmp = Double.doubleToRawLongBits(d);
         return toHexString('d', (tmp < 0) ? ~tmp : (tmp ^ SIGN_MASK));
@@ -129,5 +127,5 @@ public class LexiSortable {
         long tmp = fromHexString(s);
         tmp = (tmp < 0) ? (tmp ^ SIGN_MASK) : ~tmp;
         return Double.longBitsToDouble(tmp);
-    }    
+    }
 }

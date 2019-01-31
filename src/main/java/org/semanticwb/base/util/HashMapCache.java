@@ -17,8 +17,7 @@
  * de la misma.
  *
  * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
- * dirección electrónica:
- *  http://www.semanticwebbuilder.org.mx
+ * dirección electrónica: http://www.semanticwebbuilder.org.mx
  */
 package org.semanticwb.base.util;
 
@@ -29,126 +28,122 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- *
+ * Cached HashMap implementation. Uses a cropped linked list internally to keep cache.
  * @author javier.solis.g
  */
-public class HashMapCache<K extends Object, V extends Object> implements Map<K,V>
-{
+public class HashMapCache<K extends Object, V extends Object> implements Map<K,V> {
     private int maxSize;
     ConcurrentHashMap<K,V> map;
     LinkedList<K> linked;
-    
-    public HashMapCache(int maxSize)
-    {
-        map=new ConcurrentHashMap();
-        linked= new LinkedList();
-        this.maxSize=maxSize;
+
+    /**
+     * Constructor. Creates a new {@link HashMapCache} with <code>maxSize</code> elements.
+     * @param maxSize maximum number of elements in the cached Hash Map.
+     */
+    public HashMapCache(int maxSize) {
+        map = new ConcurrentHashMap();
+        linked = new LinkedList();
+        this.maxSize = maxSize;
     }
 
     /**
-     * @return the maxSize
+     * Gets the maximum number of elements in the cached Hash Map.
+     * @return maximum number of elements.
      */
-    public int getMaxSize()
-    {
+    public int getMaxSize() {
         return maxSize;
     }
 
     /**
-     * @param maxSize the maxSize to set
+     * Sets the maximum number of elements in the cached Hash Map.
+     * @param maxSize maximum number of elements.
      */
-    public void setMaxSize(int maxSize)
-    {
+    public void setMaxSize(int maxSize) {
         this.maxSize = maxSize;
     }
 
     @Override
-    public int size()
-    {
+    public int size() {
         return map.size();
     }
 
     @Override
-    public boolean isEmpty()
-    {
+    public boolean isEmpty() {
         return map.isEmpty();
     }
 
     @Override
-    public boolean containsKey(Object obj)
-    {
+    public boolean containsKey(Object obj) {
         return map.containsKey(obj);
     }
 
     @Override
-    public boolean containsValue(Object obj)
-    {
+    public boolean containsValue(Object obj) {
         return map.containsValue(obj);
     }
 
     @Override
-    public V get(Object o)
-    {
-        if(o==null)return null;
-        return map.get(o);
+    public V get(Object key) {
+        if(key == null) {
+            return null;
+        }
+        return map.get(key);
     }
 
     @Override
-    public V put(K k, V v)
-    {
-        if(k==null)return null;
-        V r=map.put(k, v);
-        linked.add(k);
-        if(map.size()>maxSize)
-        {
+    public V put(K key, V value) {
+        if(key == null) {
+            return null;
+        }
+
+        V r = map.put(key, value);
+        linked.add(key);
+
+        if(map.size() > maxSize) {
             crop();
-        }  
+        }
+
         return r;
     }
-    
-    private synchronized void crop()
-    {
-        while(!linked.isEmpty() && map.size()>maxSize)
-        {
-            Object obj=linked.poll();
+
+    /**
+     * Crops elements from cache.
+     */
+    private synchronized void crop() {
+        while(!linked.isEmpty() && map.size() > maxSize) {
+            Object obj = linked.poll();
             map.remove(obj);
         }          
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends V> map)
-    {
+    public void putAll(Map<? extends K, ? extends V> map) {
         this.map.putAll(map);
     }
 
     @Override
-    public void clear()
-    {
+    public void clear() {
         map.clear();
         linked.clear();
     }
 
     @Override
-    public Set<K> keySet()
-    {
+    public Set<K> keySet() {
         return map.keySet();
     }
 
     @Override
-    public Collection<V> values()
-    {
+    public Collection<V> values() {
         return map.values();
     }
 
     @Override
-    public Set<Entry<K,V>> entrySet()
-    {
+    public Set<Entry<K,V>> entrySet() {
         return map.entrySet();
     }
 
     @Override
-    public V remove(Object o)
-    {
-        return map.remove(o);
+    public V remove(Object key) {
+        return map.remove(key);
     }
-    
 }
