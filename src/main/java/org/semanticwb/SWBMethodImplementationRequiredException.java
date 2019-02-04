@@ -48,9 +48,7 @@ public class SWBMethodImplementationRequiredException extends SWBRuntimeExceptio
 	 * especificado.
 	 * </p>
 	 * 
-	 * @param msg
-	 *            the detail message (which is saved for later retrieval by the
-	 *            {@link Throwable.getMessage() Throwable.getMessage()} method)
+	 * @param msg the detail message (which is saved for later retrieval by the {@link #getMessage()} method)
 	 */
 	public SWBMethodImplementationRequiredException(String msg) {
 		super(msg);
@@ -69,7 +67,7 @@ public class SWBMethodImplementationRequiredException extends SWBRuntimeExceptio
 	 *            Throwable.getMessage() method)
 	 * @param e
 	 *            the cause (which is saved for later retrieval by the
-	 *            {@link Throwable.getCause() Throwable.getCause()} method). (A
+	 *            {@link #getCause()} method). (A
 	 *            {@code null} value is permitted, and indicates that the cause is
 	 *            nonexistent or unknown.)
 	 */

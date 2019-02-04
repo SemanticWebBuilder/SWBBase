@@ -51,7 +51,7 @@ public interface Logger {
 	 * @param t
 	 *            a throwable object indicating an exceptional condition
 	 */
-	public void trace(String txt, Throwable t);
+	 void trace(String txt, Throwable t);
 
 	/**
 	 * Registers a message to provide information about an exceptional condition in
@@ -64,7 +64,7 @@ public interface Logger {
 	 * @param txt
 	 *            a string representing the message to include in the app's log
 	 */
-	public void trace(String txt);
+	 void trace(String txt);
 
 	/**
 	 * Registers the elements of the execution stack at the moment it is called to
@@ -79,7 +79,7 @@ public interface Logger {
 	 * @param t
 	 *            a throwable object indicating an exceptional condition
 	 */
-	public void trace(Throwable t);
+	 void trace(Throwable t);
 
 	/*
 	 * Los 3 siguientes metodos son usados para debugueos sencillos
@@ -98,7 +98,7 @@ public interface Logger {
 	 * @param t
 	 *            a throwable object indicating an exceptional condition
 	 */
-	public void debug(String txt, Throwable t);
+	 void debug(String txt, Throwable t);
 
 	/**
 	 * Registers a message to provide information about an exceptional condition.
@@ -110,7 +110,7 @@ public interface Logger {
 	 * @param txt
 	 *            a string representing the message to include in the app's log
 	 */
-	public void debug(String txt);
+	 void debug(String txt);
 
 	/**
 	 * Registers an exceptional condition in the execution of the current thread.
@@ -122,7 +122,7 @@ public interface Logger {
 	 * @param t
 	 *            a throwable object indicating an exceptional condition
 	 */
-	public void debug(Throwable t);
+	 void debug(Throwable t);
 
 	/*
 	 * Los 3 siguientes metodos son usados para Informacion del Sistema
@@ -135,7 +135,7 @@ public interface Logger {
 	 * @param t
 	 *            a throwable object indicating an exceptional condition
 	 */
-	public void info(String txt, Throwable t);
+	 void info(String txt, Throwable t);
 
 	/**
 	 * Registers a message to provide detail on an exceptional condition.
@@ -143,7 +143,7 @@ public interface Logger {
 	 * @param txt
 	 *            a string representing the message to include in the app's log
 	 */
-	public void info(String txt);
+	 void info(String txt);
 
 	/**
 	 * Registers an exceptional condition in an informative manner.
@@ -151,7 +151,7 @@ public interface Logger {
 	 * @param t
 	 *            a throwable object indicating an exceptional condition
 	 */
-	public void info(Throwable t);
+	 void info(Throwable t);
 
 	/*
 	 * Los 3 siguientes metodos son usados para registrar advertencias
@@ -168,7 +168,7 @@ public interface Logger {
 	 * @param t
 	 *            a throwable object indicating an exceptional condition
 	 */
-	public void warn(String txt, Throwable t);
+	 void warn(String txt, Throwable t);
 
 	/**
 	 * Registers a message as a warning on an exceptional condition generated.
@@ -180,7 +180,7 @@ public interface Logger {
 	 * @param txt
 	 *            a string representing the message to include in the app's log
 	 */
-	public void warn(String txt);
+	 void warn(String txt);
 
 	/**
 	 * Registers data as a warning on an exceptional condition generated.
@@ -192,7 +192,7 @@ public interface Logger {
 	 * @param t
 	 *            a throwable object indicating an exceptional condition
 	 */
-	public void warn(Throwable t);
+	 void warn(Throwable t);
 
 	/*
 	 * Los 3 siguientes metodos son usados para registrar errores
@@ -208,7 +208,7 @@ public interface Logger {
 	 * @param t
 	 *            a throwable object indicating an exceptional condition
 	 */
-	public void error(String txt, Throwable t);
+	 void error(String txt, Throwable t);
 
 	/**
 	 * Registers a message to report an error in the application.
@@ -219,7 +219,7 @@ public interface Logger {
 	 * @param txt
 	 *            a string representing the message to include in the app's log
 	 */
-	public void error(String txt);
+	 void error(String txt);
 
 	/**
 	 * Registers data to report an error in the application.
@@ -230,7 +230,7 @@ public interface Logger {
 	 * @param t
 	 *            a throwable object indicating an exceptional condition
 	 */
-	public void error(Throwable t);
+	 void error(Throwable t);
 
 	/*
 	 * Los 3 siguientes metodos son usados para registrar excepciones en tiempo de
@@ -248,7 +248,7 @@ public interface Logger {
 	 * @param t
 	 *            a throwable object indicating an exceptional condition
 	 */
-	public void fatal(String txt, Throwable t);
+	 void fatal(String txt, Throwable t);
 
 	/**
 	 * Registers a message about an exceptional condition generated at runtime.
@@ -260,7 +260,7 @@ public interface Logger {
 	 * @param txt
 	 *            a string representing the message to include in the app's log
 	 */
-	public void fatal(String txt);
+	 void fatal(String txt);
 
 	/**
 	 * Registers data of an exceptional condition generated at runtime.
@@ -272,7 +272,7 @@ public interface Logger {
 	 * @param t
 	 *            a throwable object indicating an exceptional condition
 	 */
-	public void fatal(Throwable t);
+	 void fatal(Throwable t);
 
 	/*
 	 * Los 3 siguientes metodos son usados para notificar eventos
@@ -288,7 +288,7 @@ public interface Logger {
 	 * @param t
 	 *            a throwable object indicating an exceptional condition
 	 */
-	public void event(String txt, Throwable t);
+	 void event(String txt, Throwable t);
 
 	/**
 	 * Registers a message when certain event occurs.
@@ -299,7 +299,7 @@ public interface Logger {
 	 * @param txt
 	 *            a string representing the message to include in the app's log
 	 */
-	public void event(String txt);
+	 void event(String txt);
 
 	/**
 	 * Registers data when certain event occurs.
@@ -310,26 +310,26 @@ public interface Logger {
 	 * @param t
 	 *            a throwable object indicating an exceptional condition
 	 */
-	public void event(Throwable t);
+	 void event(Throwable t);
 
 	/**
 	 * Regresa true si el nivel de loggeo es debug
 	 * 
 	 * @return
 	 */
-	public boolean isDebugEnabled();
+	 boolean isDebugEnabled();
 
 	/**
 	 * Regresa true si el nivel de loggeo es trace
 	 * 
 	 * @return
 	 */
-	public boolean isTraceEnabled();
+	 boolean isTraceEnabled();
 
 	/**
 	 * Regresa true si el nivel de loggeo es info
 	 * 
 	 * @return
 	 */
-	public boolean isInfoEnabled();
+	 boolean isInfoEnabled();
 }

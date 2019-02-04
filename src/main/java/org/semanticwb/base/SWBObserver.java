@@ -33,5 +33,5 @@ public interface SWBObserver {
 	 * @param message notification message.
 	 * @param reference reference object.
 	 */
-	public void sendDBNotify(String message, Object reference);
+	void sendDBNotify(String message, Object reference);
 }
