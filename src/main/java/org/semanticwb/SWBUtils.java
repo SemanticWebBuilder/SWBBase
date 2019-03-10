@@ -1311,9 +1311,9 @@ public class SWBUtils {
 		 *         y todas las subcadenas que cumplen con {@code regexp}.
 		 */
 		// version 1.4
-		public static List<String> regExpSplit(String txt, String regexp) {
+		public static ArrayList<String> regExpSplit(String txt, String regexp) {
 			int index = 0;
-			List<String> matchList = new ArrayList<>();
+			ArrayList<String> matchList = new ArrayList<>();
 			java.util.regex.Matcher m = java.util.regex.Pattern.compile(regexp).matcher(txt);
 
 			while (m.find()) {
