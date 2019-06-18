@@ -2629,7 +2629,10 @@ public class SWBUtils {
 				File ftarget = new File(target);
 				if (!ftarget.exists()) {
 					ftarget.mkdirs();
-				}
+				} else {
+                                    removeDirectory(target);
+                                    ftarget.mkdirs();
+                                }
 				File dir = new File(source);
 				if (dir != null && dir.exists() && dir.isDirectory()) {
 					File[] listado = dir.listFiles();
