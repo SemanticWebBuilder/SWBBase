@@ -61,6 +61,7 @@ import javax.xml.xpath.XPathFactory;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.SocketException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.security.*;
@@ -69,6 +70,8 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -314,6 +317,32 @@ public class SWBUtils {
 			initLogger();
 		}
 		return new Logger4jImpl(cls);
+	}
+
+	/**
+	 * Carga los atributos del archivo de manifiesto del JAR asociado a la clase proporcionada.
+	 *
+	 * @return Objeto {@link Attributes} con la información del manifiesto o null si ocurre algún problema
+	 * al cargar el archivo.
+	 */
+	public static Attributes loadJarManifestAttributes(Class clazz) {
+		Attributes attributes = new Attributes();
+		if (null != clazz) {
+			URL resource = clazz.getResource(clazz.getSimpleName() + ".class");
+			if (null != resource) {
+				String classPath = resource.toString();
+				if (classPath.startsWith("jar")) {
+					String manifestPath = classPath.substring(0, classPath.lastIndexOf('!') + 1) + "/META-INF/MANIFEST.MF";
+					try (InputStream manifestStream = new URL(manifestPath).openStream()) {
+						Manifest manifest = new Manifest(manifestStream);
+						attributes = manifest.getMainAttributes();
+					} catch (IOException ignored) {
+						//Ignored
+					}
+				}
+			}
+		}
+		return attributes;
 	}
 
 	/**
