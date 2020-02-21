@@ -22,82 +22,6 @@
  */
 package org.semanticwb;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
-import java.net.SocketException;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.sql.Connection;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.Formatter;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
-
-import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.DHParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import javax.mail.internet.InternetAddress;
-import javax.xml.namespace.QName;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Templates;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -109,14 +33,7 @@ import org.apache.log4j.PropertyConfigurator;
 import org.semanticwb.base.db.DBConnectionManager;
 import org.semanticwb.base.db.DBConnectionPool;
 import org.semanticwb.base.db.PoolConnectionTimeLock;
-import org.semanticwb.base.util.ErrorElement;
-import org.semanticwb.base.util.FilterRule;
-import org.semanticwb.base.util.GenericFilterRule;
-import org.semanticwb.base.util.SFBase64;
-import org.semanticwb.base.util.SWBMail;
-import org.semanticwb.base.util.SWBMailSender;
-import org.semanticwb.base.util.SWBProperties;
-import org.semanticwb.base.util.SimpleDateFormatTS;
+import org.semanticwb.base.util.*;
 import org.semanticwb.base.util.imp.Logger4jImpl;
 import org.semanticwb.base.util.parser.html.HTMLParser;
 import org.w3c.dom.Document;
@@ -124,6 +41,40 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.DHParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import javax.mail.internet.InternetAddress;
+import javax.xml.namespace.QName;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.*;
+import java.math.BigInteger;
+import java.net.SocketException;
+import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.security.*;
+import java.sql.Connection;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Contains utilities for managing error logs, text, database, IO, Zip files,
@@ -148,7 +99,7 @@ public class SWBUtils {
 	 * bit&aacute;coras.
 	 * </p>
 	 */
-	private static Logger log = getLogger(SWBUtils.class);
+	private static final Logger LOG = getLogger(SWBUtils.class);
 	/**
 	 * Holds a reference to an object of this class.
 	 * <p>
@@ -162,7 +113,7 @@ public class SWBUtils {
 	 * La cadena que representa la ruta f&iacute;sica de esta aplicaci&oacute;n
 	 * </p>
 	 */
-	private static String applicationPath = "" + SWBUtils.class.getResource("/");
+	private static String applicationPath = SWBUtils.class.getResource("/").toString();
 
 	static {
 		if (applicationPath.endsWith("/")) {
@@ -201,13 +152,13 @@ public class SWBUtils {
 	 */
 	public static final String LOCALE_SERVICES = "locale_services";
 	/**
-	 * Stablishes the logger's output as the one used for {@link System.err}
+	 * Stablishes the logger's output as the one used for <code>System.err</code>.
 	 * <p>
 	 * Establece la salida del generador de bit&aacute;coras, como el mismo que usa
 	 * {@code System.err}
 	 * </p>
 	 */
-	private static PrintWriter log2File = new PrintWriter(System.err);
+	private static PrintWriter fileLogWriter = new PrintWriter(System.err);
 	/**
 	 * Contains the error elements to show in the administration site's error
 	 * viewer.
@@ -216,7 +167,7 @@ public class SWBUtils {
 	 * administraci&oacute;n.
 	 * </p>
 	 */
-	private static ArrayList<ErrorElement> errorElement = new ArrayList<>();
+	private static List<ErrorElement> errorElement = new ArrayList<>();
 	/**
 	 * Specifies the number of error elements to show in the administration site's
 	 * error viewer.
@@ -227,17 +178,14 @@ public class SWBUtils {
 	 */
 	private static int errorElementSize = 200;
 
-	// private static java.security.KeyPair RSA512key =
-	// SWBUtils.CryptoWrapper.genRSA512KeyPair();
 	/**
 	 * Creates a new object of this class.
 	 */
 	private SWBUtils() {
-
-		SWBUtils.log.event("Initializing SemanticWebBuilder Base...");
-		SWBUtils.log.event("-->AppicationPath: " + SWBUtils.applicationPath);
+		LOG.event("Initializing SemanticWebBuilder Base...");
+		LOG.event("-->AppicationPath: " + SWBUtils.applicationPath);
 		init();
-		SWBUtils.log.event("-->Default Encoding: " + TEXT.getDafaultEncoding());
+		LOG.event("-->Default Encoding: " + TEXT.getDafaultEncoding());
 	}
 
 	/**
@@ -251,22 +199,18 @@ public class SWBUtils {
 	 * @return a reference to the only one existing object of this class
 	 */
 	 public static synchronized SWBUtils createInstance(String applicationPath) {
-
 		SWBUtils.applicationPath = IO.normalizePath(applicationPath);
-		if (SWBUtils.instance == null) {
+		if (instance == null) {
 			initFileLogger();
-			SWBUtils.instance = new SWBUtils();
+			instance = new SWBUtils();
 		}
-		return SWBUtils.instance;
+		return instance;
 	}
 
-	/*
+	/**
 	 * Initializes the class variables needed to provide this object's services
 	 * <p>Inicializa las variables de clase necesarias para proveer los servicios de
 	 * este objeto.</p>
-	 */
-	/**
-	 * Inits the.
 	 */
 	private void init() {
 
@@ -283,7 +227,7 @@ public class SWBUtils {
 	 *         serve
 	 */
 	public static String getApplicationPath() {
-		return SWBUtils.applicationPath;
+		return applicationPath;
 	}
 
 	/**
@@ -300,7 +244,6 @@ public class SWBUtils {
 	 * </p>
 	 */
 	private static void initLogger() {
-
 		String logConf = "log4j.rootLogger=error, stdout" + "\n"
 				+ "log4j.appender.stdout=org.apache.log4j.ConsoleAppender" + "\n"
 				+ "log4j.appender.stdout.layout=org.apache.log4j.PatternLayout" + "\n"
@@ -312,9 +255,9 @@ public class SWBUtils {
 			proper.load(IO.getStreamFromString(logConf));
 			PropertyConfigurator.configure(proper);
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOG.error("Error loading logging properties");
 		}
-		SWBUtils.initLogger = true;
+		initLogger = true;
 	}
 
 	/**
@@ -331,29 +274,28 @@ public class SWBUtils {
 	 * </p>
 	 */
 	private static void initFileLogger() {
-
 		try {
 			String logConf = "log4j.rootLogger=info, stdout" + "\n"
 					+ "log4j.appender.stdout=org.apache.log4j.ConsoleAppender" + "\n"
 					+ "log4j.appender.stdout.layout=org.apache.log4j.PatternLayout" + "\n"
 					+ "log4j.appender.stdout.layout.ConversionPattern=%d %p - %m%n" + "\n"
 					+ "log4j.logger.org.semanticwb=trace";
-			File file = new File(SWBUtils.applicationPath + "/WEB-INF/classes/logging.properties");
+
+			File file = new File(applicationPath + "/WEB-INF/classes/logging.properties");
 			if (!file.exists()) {
-				file = new File(SWBUtils.applicationPath + "/logging.properties");
+				file = new File(applicationPath + "/logging.properties");
 			}
-			if (file.exists()) {
-				FileInputStream in = new FileInputStream(file);
-				logConf = IO.readInputStream(in);
-			}
-			logConf = SWBUtils.TEXT.replaceAll(logConf, "{apppath}", SWBUtils.applicationPath);
+
+			FileInputStream in = new FileInputStream(file);
+			logConf = IO.getStringFromInputStream(in);
+			logConf = TEXT.replaceAll(logConf, "{apppath}", applicationPath);
 			Properties proper = new Properties();
 			proper.load(IO.getStreamFromString(logConf));
 			PropertyConfigurator.configure(proper);
 		} catch (Exception e) {
-			SWBUtils.log.error("Error: logging.properties not found...", e);
+			LOG.error("Error: logging.properties not found...", e);
 		}
-		SWBUtils.initLogger = true;
+		initLogger = true;
 	}
 
 	/**
@@ -368,7 +310,7 @@ public class SWBUtils {
 	 * @return a logger related to the class specified
 	 */
 	public static Logger getLogger(Class cls) {
-		if (!SWBUtils.initLogger) {
+		if (!initLogger) {
 			initLogger();
 		}
 		return new Logger4jImpl(cls);
@@ -383,18 +325,18 @@ public class SWBUtils {
 	public static class ERROR {
 
 		private ERROR () { }
-		
+
 		/**
-		 * Adds an element to the class variable {@link SWBUtils.errorElement}. If the
-		 * quantity of elements exceeds the {@link SWBUtils.errorElementSize}'s value,
-		 * the last element of {@code SWBUtils.errorElement} is removed. Every element
-		 * is added at the beggining of {@code SWBUtils.errorElement}.
+		 * Adds an element to the class variable {@link #errorElement} If the
+		 * quantity of elements exceeds the {@link #errorElementSize}'s value,
+		 * the last element of {@link #errorElement} is removed. Every element
+		 * is added at the beginning of {@link #errorElement}.
 		 * <p>
-		 * Agrega un elemento a la variable de clase {@code SWBUtils.errorElement}. Si
+		 * Agrega un elemento a la variable de clase {@link #errorElement}. Si
 		 * la cantidad de elementos excede el valor de
-		 * {@code SWBUtils.errorElementSize}, el &uacute;ltimo elemento de
-		 * {@code SWBUtils.errorElement} es eliminado. Cada elemento se agrega al inicio
-		 * de {@code SWBUtils.errorElement}.
+		 * {@link #errorElementSize}, el &uacute;ltimo elemento de
+		 * {@link #errorElement} es eliminado. Cada elemento se agrega al inicio
+		 * de {@link #errorElement}.
 		 * </p>
 		 *
 		 * @param msg
@@ -407,24 +349,23 @@ public class SWBUtils {
 		 *            a string representing the error element's level
 		 */
 		public static void addError(String msg, Throwable e, Class cls, String level) {
-			// MAPS74 try removed, shoudn't be an error here
-			SWBUtils.errorElement.add(0, new ErrorElement(e, msg, cls, level));
-			if (SWBUtils.errorElement.size() > SWBUtils.errorElementSize) {
-				SWBUtils.errorElement.remove(SWBUtils.errorElementSize);
+			errorElement.add(0, new ErrorElement(e, msg, cls, level));
+			if (errorElement.size() > errorElementSize) {
+				errorElement.remove(errorElementSize);
 			}
 		}
 
 		/**
-		 * Retrieves the {@code SWBUtils.errorElement}'s iterator, whose size is defined
-		 * by the class member {@code SWBUtils.errorElementSize}.
+		 * Retrieves the {@link #errorElement}'s iterator, whose size is defined
+		 * by the class member {@link #errorElementSize}.
 		 * <p>
-		 * Regresa el iterador de {@code SWBUtils.errorElement}, cuyo tamaño est&aacute;
-		 * definido por la variable de clase {@code SWBUtils.errorElementSize}.
+		 * Regresa el iterador de {@link #errorElement}, cuyo tamaño est&aacute;
+		 * definido por la variable de clase {@link #errorElementSize}.
 		 *
 		 * @return the error elements
 		 */
 		public static Iterator<ErrorElement> getErrorElements() {
-			return new ArrayList<ErrorElement>(SWBUtils.errorElement).iterator();
+			return new ArrayList<>(errorElement).iterator();
 		}
 
 		/**
@@ -436,7 +377,7 @@ public class SWBUtils {
 		 * @return the value of the class member {@code SWBUtils.errorElementSize}.
 		 */
 		public static int getErrorElementSize() {
-			return SWBUtils.errorElementSize;
+			return errorElementSize;
 		}
 
 		/**
@@ -445,12 +386,12 @@ public class SWBUtils {
 		 * Asigna el valor de la variable de clase {@code SWBUtils.errorElementSize}.
 		 * </p>
 		 *
-		 * @param errorElementSize
+		 * @param size
 		 *            the new value of the class member
 		 *            {@code SWBUtils.errorElementSize}.
 		 */
-		public static void setErrorElementSize(int errorElementSize) {
-			SWBUtils.errorElementSize = errorElementSize;
+		public static void setErrorElementSize(int size) {
+			errorElementSize = size;
 		}
 	}
 
@@ -467,13 +408,14 @@ public class SWBUtils {
 	public static class TEXT {
 
 		private TEXT() {}
-		
+
 		/**
 		 * Specifies the value for the charset ISO8859-1.
 		 * <p>
 		 * Especifica el valor para el c&oacute;digo de caracteres ISO8859-1.
 		 * </p>
 		 */
+		//TODO: Remove this harcoded charset name
 		public static final String CHARSET_ISO8859_1 = "ISO8859_1";
 		/**
 		 * Specifies the value for the charset UTF-8
@@ -481,6 +423,7 @@ public class SWBUtils {
 		 * Especifica el valor para el c&oacute;digo de caracteres UTF-8.
 		 * </p>
 		 */
+		//TODO: Remove this harcoded charset name
 		public static final String CHARSET_UTF8 = "UTF8";
 		/**
 		 * Stores the name of the character encoding used by default.
@@ -490,12 +433,11 @@ public class SWBUtils {
 		 */
 		private static String defencoding = null;
 
-		private static SimpleDateFormatTS formatter = new SimpleDateFormatTS("MMMM");
-		private static SimpleDateFormatTS iso8601dateFormat1 = new SimpleDateFormatTS("yyyy-MM-dd'T'HH:mm:ss'.'SSS");
-		private static SimpleDateFormatTS iso8601dateFormat2 = new SimpleDateFormatTS("yyyy-MM-dd'T'HH:mm:ss");
-		private static SimpleDateFormatTS iso8601dateFormat3 = new SimpleDateFormatTS("yyyy-MM-dd");
-		public static final SimpleDateFormatTS iso8601dateFormat4 = new SimpleDateFormatTS("yyyy-MM");
-		public static final SimpleDateFormatTS iso8601dateFormat5 = new SimpleDateFormatTS("yyyy");
+		//TODO: Refactor SimpleDateFormatTS attributes to use Java DateTimeFormatter class
+		public static final SimpleDateFormatTS formatter = new SimpleDateFormatTS("MMMM");
+		public static final SimpleDateFormatTS iso8601Full = new SimpleDateFormatTS("yyyy-MM-dd'T'HH:mm:ss'.'SSS");
+		public static final SimpleDateFormatTS iso8601Long = new SimpleDateFormatTS("yyyy-MM-dd'T'HH:mm:ss");
+		public static final SimpleDateFormatTS iso8601Short = new SimpleDateFormatTS("yyyy-MM-dd");
 
 		/**
 		 * Given a string specifying a charset, returns the value of
@@ -529,69 +471,87 @@ public class SWBUtils {
 		 *         {@value #CHARSET_ISO8859_1}
 		 *         </p>
 		 */
+		//TODO: Check why this method is necessary in Distributor.java
 		public static String getHomCharSet(String charset) {
-
-			String ret = SWBUtils.TEXT.CHARSET_ISO8859_1;
+			String ret = TEXT.CHARSET_ISO8859_1;
 			if (charset.toUpperCase().indexOf("UTF") > -1) {
-				ret = SWBUtils.TEXT.CHARSET_UTF8;
+				ret = TEXT.CHARSET_UTF8;
 			}
 			return ret;
 		}
 
 		/**
+		 * @deprecated This method was only used in Banner.java to encode a query string.
+		 * Use {@link URLEncoder} instead.
+		 *
 		 * Encode URLChars 4 Cross Site Scripting
-		 * 
-		 * @param txt
-		 * @return
+		 * @param urlString the URL to sanitize.
+		 * @return Sanitized URL string.
 		 */
-		public static String encodeURLChars4CSS(String txt) {
-			String ret = txt;
-			ret = ret.replace("\"", "%22");
-			ret = ret.replace("'", "%27");
-			ret = ret.replace(">", "%3E");
-			ret = ret.replace("<", "%3C");
-			return ret;
+		@Deprecated
+		public static String encodeURLChars4CSS(String urlString) {
+			if (null != urlString) {
+				return urlString.replace("\"", "%22")
+						.replace("'", "%27")
+						.replace(">", "%3E")
+						.replace("<", "%3C");
+			}
+			return null;
 		}
 
 		/**
-		 * Gets the plural.
-		 *
-		 * @param name
-		 *            the name
-		 * @return the plural
+		 * Pluralizes an english word using naive rules.
+		 * @param name Word to pluralize.
+		 * @return Pluralized form o word.
 		 */
 		public static String getPlural(String name) {
 			String nname = name;
-			
-			if (nname.endsWith("y") && !(nname.endsWith("ay") || nname.endsWith("ey") || nname.endsWith("iy")
-					|| nname.endsWith("oy") || nname.endsWith("uy"))) {
-				nname = nname.substring(0, nname.length() - 1);
-				nname += "ies";
-			} else if (nname.endsWith("s") || nname.endsWith("z") || nname.endsWith("x") || nname.endsWith("ch")
-					|| nname.endsWith("sh")) {
-				nname += "es";
-			} else if (nname.endsWith("is")) {
-				nname = nname.substring(0, nname.length() - 2);
-				nname += "es";
-			} else if (nname.endsWith("fe")) {
-				nname = nname.substring(0, nname.length() - 2);
-				nname += "ves";
-			} else {
-				nname += "s";
+
+			if (null != name) {
+				if (nname.endsWith("y") && !(nname.endsWith("ay") || nname.endsWith("ey") || nname.endsWith("iy")
+						|| nname.endsWith("oy") || nname.endsWith("uy"))) {
+					nname = nname.substring(0, nname.length() - 1);
+					nname += "ies";
+				} else if (nname.endsWith("s") || nname.endsWith("z") || nname.endsWith("x") || nname.endsWith("ch")
+						|| nname.endsWith("sh")) {
+					nname += "es";
+				} else if (nname.endsWith("is")) {
+					nname = nname.substring(0, nname.length() - 2);
+					nname += "es";
+				} else if (nname.endsWith("fe")) {
+					nname = nname.substring(0, nname.length() - 2);
+					nname += "ves";
+				} else {
+					nname += "s";
+				}
+				return nname;
 			}
-			return nname;
+			return null;
 		}
 
 		/**
+		 * @deprecated Use {@link #capitalize(String)}.
 		 * To upper case.
 		 *
 		 * @param data
 		 *            the data
 		 * @return the string
 		 */
+		@Deprecated
 		public static String toUpperCase(String data) {
-			String letter = data.substring(0, 1);
-			return letter.toUpperCase() + data.substring(1);
+			return capitalize(data);
+		}
+
+		/**
+		 * Capitalizes a String.
+		 * @param data String to capitalize.
+		 * @return Capitalized string.
+		 */
+		public static String capitalize(String data) {
+			if (null != data) {
+				return data.substring(0, 1).toUpperCase() + data.substring(1);
+			}
+			return null;
 		}
 
 		/**
@@ -624,7 +584,7 @@ public class SWBUtils {
 			try {
 				loc = new Locale(language);
 			} catch (Exception e) {
-				loc = SWBUtils.locale;
+				loc = locale;
 			}
 
 			GregorianCalendar gc = new GregorianCalendar(loc);
@@ -650,12 +610,11 @@ public class SWBUtils {
 		 *
 		 */
 		public static String getDafaultEncoding() {
-
-			if (SWBUtils.TEXT.defencoding == null) {
+			if (defencoding == null) {
 				OutputStreamWriter out = new OutputStreamWriter(new ByteArrayOutputStream());
-				SWBUtils.TEXT.defencoding = out.getEncoding();
+				defencoding = out.getEncoding();
 			}
-			return SWBUtils.TEXT.defencoding;
+			return defencoding;
 		}
 
 		/**
@@ -679,7 +638,7 @@ public class SWBUtils {
 		 */
 		public static String replaceAll(String str, String match, String replace) {
 			String replaceString = (null != replace ? replace : "");
-			
+
 			if (match == null || match.length() == 0) {
 				return str;
 			}
@@ -687,6 +646,7 @@ public class SWBUtils {
 			if (match.equals(replaceString)) {
 				return str;
 			}
+
 			StringBuilder ret = new StringBuilder();
 			int i = str.indexOf(match);
 			int y = 0;
@@ -722,13 +682,13 @@ public class SWBUtils {
 		 */
 		public static String replaceAllIgnoreCase(String str, String match, String replace) {
 			String replaceString = (null != replace ? replace : "");
-			
+
 			if (match == null || match.length() == 0) {
 				return str;
 			}
 
 			int i = str.toLowerCase().indexOf(match.toLowerCase());
-			int y = 0;
+			int y;
 			while (i >= 0) {
 				str = str.substring(0, i) + replaceString + str.substring(i + match.length());
 				y = i + replaceString.length();
@@ -759,7 +719,7 @@ public class SWBUtils {
 		 */
 		public static String replaceFirstIgnoreCase(String str, String match, String replace) {
 			String replaceString = (null != replace ? replace : "");
-			
+
 			if (match == null || match.length() == 0) {
 				return str;
 			}
@@ -772,6 +732,7 @@ public class SWBUtils {
 		}
 
 		/**
+		 * @deprecated Use format method of {@link #iso8601Full} static attribute
 		 * Converts a date into a string with the format
 		 * {@literal yyyy-MM-dd'T'HH:mm:ss'.'SSS}.
 		 * <p>
@@ -786,11 +747,13 @@ public class SWBUtils {
 		 *         representa al date recibido, con el formato
 		 *         {@literal yyyy-MM-dd'T'HH:mm:ss'.'SSS}.
 		 */
+		@Deprecated
 		public static String iso8601DateFormat(Date date) {
-			return iso8601dateFormat1.format(date);
+			return iso8601Full.format(date);
 		}
 
 		/**
+		 * @deprecated @deprecated Use parse method of {@link #iso8601Full} static attribute
 		 * Converts a string representing a date with the format
 		 * {@literal yyyy-MM-dd'T'HH:mm:ss'.'SSS} into a date.
 		 * <p>
@@ -811,20 +774,22 @@ public class SWBUtils {
 		 *             objeto date.
 		 *             </p>
 		 */
+		@Deprecated
 		public static Date iso8601DateParse(String date) throws ParseException {
-			SimpleDateFormatTS iso8601dateFormat = null;
+			//TODO: Remove this method, logic is naive and error prone
+			SimpleDateFormatTS iso8601dateFormat;
 			if (date.length() > 19) {
-				iso8601dateFormat = iso8601dateFormat1;// "yyyy-MM-dd'T'HH:mm:ss'.'SSS"
-			}
-			if (date.length() > 10) {
-				iso8601dateFormat = iso8601dateFormat2;// "yyyy-MM-dd'T'HH:mm:ss"
+				iso8601dateFormat = iso8601Full;// "yyyy-MM-dd'T'HH:mm:ss'.'SSS"
+			} else if (date.length() > 10) {
+				iso8601dateFormat = iso8601Long;// "yyyy-MM-dd'T'HH:mm:ss"
 			} else {
-				iso8601dateFormat = iso8601dateFormat3;// "yyyy-MM-dd"
+				iso8601dateFormat = iso8601Short;// "yyyy-MM-dd"
 			}
 			return iso8601dateFormat.parse(date);
 		}
 
 		/**
+		 * @deprecated Method is used only in Distributor.java and code can be written using parseInt directly.
 		 * Converts a string in an integer value; if this is not possible, it returns
 		 * the integer received.
 		 * <p>
@@ -842,10 +807,8 @@ public class SWBUtils {
 		 *         {@code val}, o {@code defa}, si la conversi&oacute;n no es posible o
 		 *         si {@code val} es {@code null}.
 		 */
+		@Deprecated
 		public static int getInt(String val, int defa) {
-			if (val == null) {
-				return defa;
-			}
 			try {
 				return Integer.parseInt(val);
 			} catch (Exception e) {
@@ -883,9 +846,7 @@ public class SWBUtils {
 		 * @throws IOException
 		 *             Signals that an I/O exception has occurred.
 		 */
-		public static String encode(String data, String enc)
-				throws java.io.IOException {
-
+		public static String encode(String data, String enc) throws java.io.IOException {
 			ByteArrayOutputStream sw = new java.io.ByteArrayOutputStream();
 			OutputStreamWriter out = new OutputStreamWriter(sw, enc);
 			out.write(data);
@@ -923,17 +884,14 @@ public class SWBUtils {
 		 * @throws IOException
 		 *             Signals that an I/O exception has occurred.
 		 */
-		public static String decode(String data, String enc)
-				throws java.io.IOException {
-
+		public static String decode(String data, String enc) throws java.io.IOException {
 			ByteArrayInputStream sw = new ByteArrayInputStream(data.getBytes());
 			InputStreamReader in = new InputStreamReader(sw, enc);
-
 			StringBuilder ret = new StringBuilder(data.length());
 
-			char[] bfile = new char[SWBUtils.bufferSize];
+			char[] bfile = new char[bufferSize];
 			int x;
-			while ((x = in.read(bfile, 0, SWBUtils.bufferSize)) > -1) {
+			while ((x = in.read(bfile, 0, bufferSize)) > -1) {
 				ret.append(new String(bfile, 0, x));
 			}
 			in.close();
@@ -1009,38 +967,14 @@ public class SWBUtils {
 		}
 
 		/**
-		 * Replaces accented characters and blank spaces in the string given. Makes the
-		 * changes in a case sensitive manner, the following are some examples of the
-		 * changes this method makes: <br>
-		 *
-		 * @param txt
-		 *            a string in which the characters are going to be replaced
-		 * @param replaceSpaces
-		 *            a {@code boolean} indicating if blank spaces are going to be
-		 *            replaced or not
-		 * @return a string similar to {@code txt} but with neither accented or special
-		 *         characters nor symbols in it. un objeto string similar a {@code txt}
-		 *         pero sin caracteres acentuados o especiales y sin s&iacute;mbolos
-		 *         {@literal Á} is replaced by {@literal A} <br>
-		 *         {@literal Ê} is replaced by {@literal E} <br>
-		 *         {@literal Ï} is replaced by {@literal I} <br>
-		 *         {@literal â} is replaced by {@literal a} <br>
-		 *         {@literal ç} is replaced by {@literal c} <br>
-		 *         {@literal ñ} is replaced by {@literal n} <br>
-		 *         and blank spaces are replaced by underscore characters, any symbol in
-		 *         {@code txt} other than underscore is eliminated including the
-		 *         periods.
-		 *         <p>
-		 *         Reemplaza caracteres acentuados y espacios en blanco en {@code txt}.
-		 *         Realiza los cambios respetando caracteres en may&uacute;sculas o
-		 *         min&uacute;sculas los caracteres en blanco son reemplazados por
-		 *         guiones bajos, cualquier s&iacute;mbolo diferente a gui&oacute;n bajo
-		 *         es eliminado.
-		 *         </p>
+		 * Replaces accented charcacters from a String.
+		 * @param in Input string.
+		 * @param replaceSpaces Whether to replace blank spaces.
+		 * @return
 		 */
-		public static String replaceSpecialCharacters(String txt, boolean replaceSpaces) {
-			StringBuilder ret = new StringBuilder();
-			String aux = txt;
+		private static String replaceAccentedCharacters(String in, boolean replaceSpaces) {
+			String aux = in;
+
 			aux = aux.replace('Á', 'A');
 			aux = aux.replace('Ä', 'A');
 			aux = aux.replace('Å', 'A');
@@ -1111,7 +1045,45 @@ public class SWBUtils {
 			if (replaceSpaces) {
 				aux = aux.replace(' ', '_');
 			}
+
+			return aux;
+		}
+
+		/**
+		 * Replaces accented characters and blank spaces in the string given. Makes the
+		 * changes in a case sensitive manner, the following are some examples of the
+		 * changes this method makes: <br>
+		 *
+		 * @param txt
+		 *            a string in which the characters are going to be replaced
+		 * @param replaceSpaces
+		 *            a {@code boolean} indicating if blank spaces are going to be
+		 *            replaced or not
+		 * @return a string similar to {@code txt} but with neither accented or special
+		 *         characters nor symbols in it. un objeto string similar a {@code txt}
+		 *         pero sin caracteres acentuados o especiales y sin s&iacute;mbolos
+		 *         {@literal Á} is replaced by {@literal A} <br>
+		 *         {@literal Ê} is replaced by {@literal E} <br>
+		 *         {@literal Ï} is replaced by {@literal I} <br>
+		 *         {@literal â} is replaced by {@literal a} <br>
+		 *         {@literal ç} is replaced by {@literal c} <br>
+		 *         {@literal ñ} is replaced by {@literal n} <br>
+		 *         and blank spaces are replaced by underscore characters, any symbol in
+		 *         {@code txt} other than underscore is eliminated including the
+		 *         periods.
+		 *         <p>
+		 *         Reemplaza caracteres acentuados y espacios en blanco en {@code txt}.
+		 *         Realiza los cambios respetando caracteres en may&uacute;sculas o
+		 *         min&uacute;sculas los caracteres en blanco son reemplazados por
+		 *         guiones bajos, cualquier s&iacute;mbolo diferente a gui&oacute;n bajo
+		 *         es eliminado.
+		 *         </p>
+		 */
+		public static String replaceSpecialCharacters(String txt, boolean replaceSpaces) {
+			StringBuilder ret = new StringBuilder();
+			String aux = replaceAccentedCharacters(txt, replaceSpaces);
 			int l = aux.length();
+
 			for (int x = 0; x < l; x++) {
 				char ch = aux.charAt(x);
 				if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_'
@@ -1123,82 +1095,27 @@ public class SWBUtils {
 			return aux;
 		}
 
-		public static String replaceSpecialCharactersForFile(String txt, char ch, boolean replaceSpaces) {
-			return replaceSpecialCharactersForFile(txt, ch, replaceSpaces, '_');
+		/**
+		 * Replaces special characters for a file name, replacing spaces using underscore character.
+		 * @param fileName File name.
+		 * @param ch
+		 * @param replaceSpaces whether to replace blank spaces using underscore.
+		 * @return File name without special characters.
+		 */
+		public static String replaceSpecialCharactersForFile(String fileName, char ch, boolean replaceSpaces) {
+			return replaceSpecialCharactersForFile(fileName, ch, replaceSpaces, '_');
 		}
 
-		public static String replaceSpecialCharactersForFile(String txt, char ch, boolean replaceSpaces,
-				char wordSeparator) {
-			String aux = txt;
-			aux = aux.replace('Á', 'A');
-			aux = aux.replace('Ä', 'A');
-			aux = aux.replace('Å', 'A');
-			aux = aux.replace('Â', 'A');
-			aux = aux.replace('À', 'A');
-			aux = aux.replace('Ã', 'A');
-
-			aux = aux.replace('É', 'E');
-			aux = aux.replace('Ê', 'E');
-			aux = aux.replace('È', 'E');
-			aux = aux.replace('Ë', 'E');
-
-			aux = aux.replace('Í', 'I');
-			aux = aux.replace('Î', 'I');
-			aux = aux.replace('Ï', 'I');
-			aux = aux.replace('Ì', 'I');
-
-			aux = aux.replace('Ó', 'O');
-			aux = aux.replace('Ö', 'O');
-			aux = aux.replace('Ô', 'O');
-			aux = aux.replace('Ò', 'O');
-			aux = aux.replace('Õ', 'O');
-
-			aux = aux.replace('Ú', 'U');
-			aux = aux.replace('Ü', 'U');
-			aux = aux.replace('Û', 'U');
-			aux = aux.replace('Ù', 'U');
-
-			aux = aux.replace('Ñ', 'N');
-
-			aux = aux.replace('Ç', 'C');
-			aux = aux.replace('Ý', 'Y');
-
-			aux = aux.replace('á', 'a');
-			aux = aux.replace('à', 'a');
-			aux = aux.replace('ã', 'a');
-			aux = aux.replace('â', 'a');
-			aux = aux.replace('ä', 'a');
-			aux = aux.replace('å', 'a');
-
-			aux = aux.replace('é', 'e');
-			aux = aux.replace('è', 'e');
-			aux = aux.replace('ê', 'e');
-			aux = aux.replace('ë', 'e');
-
-			aux = aux.replace('í', 'i');
-			aux = aux.replace('ì', 'i');
-			aux = aux.replace('î', 'i');
-			aux = aux.replace('ï', 'i');
-
-			aux = aux.replace('ó', 'o');
-			aux = aux.replace('ò', 'o');
-			aux = aux.replace('ô', 'o');
-			aux = aux.replace('ö', 'o');
-			aux = aux.replace('õ', 'o');
-
-			aux = aux.replace('ú', 'u');
-			aux = aux.replace('ù', 'u');
-			aux = aux.replace('ü', 'u');
-			aux = aux.replace('û', 'u');
-
-			aux = aux.replace('ñ', 'n');
-
-			aux = aux.replace('ç', 'c');
-			aux = aux.replace('ÿ', 'y');
-			aux = aux.replace('ý', 'y');
-
+		/**
+		 * Replaces special characters for a file name, replacing spaces using specified word separator.
+		 * @param fileName File name.
+		 * @param ch
+		 * @param replaceSpaces whether to replace blank spaces using underscore.
+		 * @return File name without special characters.
+		 */
+		public static String replaceSpecialCharactersForFile(String fileName, char ch, boolean replaceSpaces, char wordSeparator) {
+			String aux = replaceAccentedCharacters(fileName, replaceSpaces);
 			if (replaceSpaces) {
-
 				aux = aux.replace(' ', wordSeparator);
 			}
 			return aux;
@@ -1258,11 +1175,8 @@ public class SWBUtils {
 		 * @return the string
 		 */
 		public static String scape4Script(String txt) {
-			String aux = txt;
-			aux = aux.replace("'", "\\'");
-			aux = aux.replace("\"", "&quot;");
-
-			return aux;
+			return txt.replace("'", "\\'")
+					.replace("\"", "&quot;");
 		}
 
 		/**
@@ -1290,7 +1204,7 @@ public class SWBUtils {
 		 * {@code locale} utilizado por defecto.
 		 * </p>
 		 *
-		 * @param Bundle
+		 * @param bundle
 		 *            a string specifying the bundle that contains the data to retrieve
 		 * @param key
 		 *            a string indicating the key name whose value is required
@@ -1299,7 +1213,7 @@ public class SWBUtils {
 		 *         {@code key} especificado almacenado en {@code Bundle}.
 		 */
 		public static String getLocaleString(String bundle, String key) {
-			return getLocaleString(bundle, key, SWBUtils.locale);
+			return getLocaleString(bundle, key, locale);
 		}
 
 		/**
@@ -1310,7 +1224,7 @@ public class SWBUtils {
 		 * {@code locale} indicado.
 		 * </p>
 		 *
-		 * @param Bundle
+		 * @param bundle
 		 *            a string specifying the bundle that contains the data to retrieve
 		 * @param key
 		 *            a string indicating the key name whose value is required
@@ -1333,7 +1247,7 @@ public class SWBUtils {
 		 * {@code locale} y {@code loader} indicados.
 		 * </p>
 		 *
-		 * @param Bundle
+		 * @param bundle
 		 *            a string specifying the bundle that contains the data to retrieve
 		 * @param key
 		 *            a string indicating the key name whose value is required
@@ -1347,7 +1261,6 @@ public class SWBUtils {
 		 *         almacenado en {@code Bundle}.
 		 */
 		public static String getLocaleString(String bundle, String key, Locale locale, ClassLoader loader) {
-
 			String cad = "";
 			try {
 				if (loader == null) {
@@ -1356,8 +1269,7 @@ public class SWBUtils {
 					cad = java.util.ResourceBundle.getBundle(bundle, locale, loader).getString(key);
 				}
 			} catch (Exception e) {
-				SWBUtils.log.error("Error while looking for properties key:" + key + " in " + bundle);
-				return "";
+				LOG.error("Error while looking for properties key:" + key + " in " + bundle);
 			}
 			return cad;
 		}
@@ -1375,7 +1287,7 @@ public class SWBUtils {
 		 * @return the locale
 		 */
 		public static Locale getLocale() {
-			return SWBUtils.locale;
+			return locale;
 		}
 
 		/**
@@ -1441,12 +1353,45 @@ public class SWBUtils {
 		 *
 		 */
 		public static Iterator<String> findInterStr(String str, String pre, String pos) {
-			ArrayList<String> ret = new ArrayList<>();
+			List<String> ret = new ArrayList<>();
 			int y = 0;
 			do {
 				y = findInterStr(str, pre, pos, y, ret);
 			} while (y > -1);
 			return ret.iterator();
+		}
+
+		/**
+		 * @deprecated Use {@link #findInterStr(String, String, String, int, List)}
+		 * Finds a substring in {@code str} which position must be after {@code index}
+		 * and is delimited by {@code pre} and {@code pos} strings. The substring found
+		 * is then stored in {@code arr}.
+		 * <p>
+		 * Encuentra una subcadena en {@code str} cuya posici&oacute;n debe ser
+		 * posterior a {@code index} y es delimitada por las cadenas {@code pre} y
+		 * {@code pos}. La subcadena encontrada se almacena en {@code arr}.
+		 * </p>
+		 *
+		 * @param str
+		 *            a string from which a substring is going to be extracted
+		 * @param pre
+		 *            a string that precedes the substring to extract from {@code str}
+		 * @param pos
+		 *            a string that goes immediatly after the substring to extract from
+		 *            {@code str}
+		 * @param index
+		 *            the position in {@code str} from which {@code pre} is looked for
+		 * @param arr
+		 *            the object in which the substring extracted is going to be stored
+		 * @return the index in {@code str} immediatly after {@code pos}, or -1 if
+		 *         {@code pre} is not found in {@code str}. El &iacute;ndice en
+		 *         {@code str} inmediatamente despu&eacute;s de {@code pos}, o -1 si
+		 *         {@code pre} no es encontrado en {@code str}.
+		 *         </p>
+		 */
+		@Deprecated
+		private static int findInterStr(String str, String pre, String pos, int index, ArrayList<String> arr) {
+			return findInterStr(str, pre, pos, index, arr);
 		}
 
 		/**
@@ -1476,8 +1421,7 @@ public class SWBUtils {
 		 *         {@code pre} no es encontrado en {@code str}.
 		 *         </p>
 		 */
-		private static int findInterStr(String str, String pre, String pos, int index, ArrayList<String> arr) {
-
+		private static int findInterStr(String str, String pre, String pos, int index, List<String> arr) {
 			int i = str.indexOf(pre, index);
 			if (i > -1) {
 				i = i + pre.length();
@@ -1493,8 +1437,8 @@ public class SWBUtils {
 		/**
 		 * @deprecated
 		 * This method is locale dependent implementation and will be removed in future API versions.
-		 * Use DateFormat methods instead. 
-		 * 
+		 * Use DateFormat methods instead.
+		 *
 		 * Obtains the day's name corresponding to the number received specifying the
 		 * day of the week. The first day of the week is Sunday and its day number is
 		 * zero.
@@ -1525,7 +1469,7 @@ public class SWBUtils {
 		 * @deprecated
 		 * This method is locale dependent implementation and will be removed in future API versions.
 		 * Use DateFormat methods instead.
-		 * 
+		 *
 		 * Obtains the month's name corresponding to the number received specifying the
 		 * month of the year. The first month of the year is January and its
 		 * corresponding number is zero.
@@ -1590,7 +1534,7 @@ public class SWBUtils {
 		 *         en el lenguaje y con el formato especificados.
 		 */
 		public static String getStrDate(Date date, String lang, String format) {
-			String ret = "";
+			String ret;
 			if (format != null) {
 				ret = getStrFormat(date, format, lang);
 			} else if (lang != null) {
@@ -1601,7 +1545,7 @@ public class SWBUtils {
 				DateFormat df = new SimpleDateFormat();
 				ret = df.format(date);
 			}
-			
+
 			if (ret == null || ret.length() == 0) {
 				DateFormat df = new SimpleDateFormat();
 				ret = df.format(date);
@@ -1639,7 +1583,7 @@ public class SWBUtils {
 			if (null != lang && !lang.isEmpty()) {
 				ln = lang;
 			}
-			
+
 			Locale loc = new Locale(ln);
 			String dayName = new SimpleDateFormat("EEEE", loc).format(date);
 			String dayNumber = new SimpleDateFormat("dd", loc).format(date);
@@ -1650,7 +1594,7 @@ public class SWBUtils {
 			String hour = new SimpleDateFormat("hh", loc).format(date);
 			String minute = new SimpleDateFormat("mm", loc).format(date);
 			String second = new SimpleDateFormat("ss", loc).format(date);
-			
+
 			String ret = format;
 			ret = replaceAll(ret, "Day", dayName.substring(0,1).toUpperCase() + dayName.substring(1));
 			ret = replaceAll(ret, "DAY", dayName.toUpperCase());
@@ -1679,7 +1623,7 @@ public class SWBUtils {
 		 * meses y a&ntilde;os.
 		 * </p>
 		 *
-		 * @param CreationDate
+		 * @param creationDate
 		 *            the date to compare
 		 * @param lang
 		 *            a string indicating the language in which the date is going to be
@@ -1705,9 +1649,9 @@ public class SWBUtils {
 		 * a&ntilde;os.
 		 * </p>
 		 *
-		 * @param CurrentDate
+		 * @param currentDate
 		 *            the most recent date to compare
-		 * @param CreationDate
+		 * @param creationDate
 		 *            the oldest date to compare
 		 * @param lang
 		 *            a string indicating the language in which the date is going to be
@@ -1717,6 +1661,7 @@ public class SWBUtils {
 		 *         representa la diferencia entre dos fechas dadas, expresada en la
 		 *         unidad de tiempo m&aacute;s grande posible.
 		 */
+		//TODO: Refactor method to return single time unit and remove unit conversion and labeling
 		public static String getTimeAgo(Date currentDate, Date creationDate, String lang) {
 			String ret = "";
 			int second;
@@ -1831,6 +1776,7 @@ public class SWBUtils {
 				yearCurrent = yearCurrent - 1;
 			}
 
+			//TODO: Move specific labeling outside method
 			year = yearCurrent - yearCreation;
 			if ("en".equals(lang)) {
 				if (year > 0) {
@@ -1860,29 +1806,6 @@ public class SWBUtils {
 				} else {
 					ret = (second + " segundo(s) atrás");
 				}
-			}
-			return ret;
-		}
-
-		/**
-		 * Converts an integer into a string and adds a zero to the left if that integer
-		 * has only one digit.
-		 * <p>
-		 * Convierte un entero en un objeto string y le agrega un cero a la izquierda si
-		 * ese entero est&aacute; formado por un solo d&iacute;gito.
-		 * </p>
-		 *
-		 * @param num
-		 *            an integer to convert to a string
-		 * @return a string representing the integer received, with a zero preceding the
-		 *         integer if it is formed by only one digit. un objeto string que
-		 *         representa el entero recibido, con un cero precediendo al valor
-		 *         entero si &eacute;ste est&aacute; formado solo por un d&iacute;gito.
-		 */
-		private static String dateCeroComp(int num) {
-			String ret = Integer.toString(num);
-			if (ret.length() == 1) {
-				ret = "0" + ret;
 			}
 			return ret;
 		}
@@ -1923,6 +1846,7 @@ public class SWBUtils {
 		}
 
 		/**
+		 * @deprecated Use {@link #getPropertiesFile(String)}
 		 * Creates a properties object from the file whose name equals the value of the
 		 * parameter {@code name}.
 		 * <p>
@@ -1940,13 +1864,36 @@ public class SWBUtils {
 		 *         par&aacute;metro {@code name}.
 		 *         </p>
 		 */
+		@Deprecated
 		public static Properties getPropertyFile(String name) {
+			return getPropertiesFile(name);
+		}
+
+		/**
+		 * Creates a properties object from the file whose name equals the value of the
+		 * parameter {@code name}.
+		 * <p>
+		 * Crea un objeto properties a partir de un archivo cuyo nombre sea el mismo que
+		 * el valor del par&aacute;metro {@code name}.
+		 * </p>
+		 *
+		 * @param name
+		 *            a string representing the name of the file from which the object
+		 *            properties is going to be created.
+		 * @return a properties object whose name equals the value of the parameter
+		 *         {@code name}.
+		 *         <p>
+		 *         un objeto properties cuyo nombre es el mismo que el valor del
+		 *         par&aacute;metro {@code name}.
+		 *         </p>
+		 */
+		public static Properties getPropertiesFile(String name) {
 			Properties p = new SWBProperties();
 			try (InputStream in = SWBUtils.class.getResourceAsStream(name)) {
-				SWBUtils.log.info("-->Loading Property File:" + name);
+				LOG.info("-->Loading Property File:" + name);
 				p.load(in);
 			} catch (Exception ex) {
-				SWBUtils.log.error("Error loading property file:" + name, ex);
+				LOG.error("Error loading property file:" + name, ex);
 			}
 
 			return p;
@@ -2030,13 +1977,13 @@ public class SWBUtils {
 		/**
 		 * Extracts all the text in a HTML document.
 		 * <p>
-		 * Extrae todo el texto de un documento HTML.
+		 * Extrae el texto de un documento HTML.
 		 * </p>
 		 *
 		 * @param txt
 		 *            a string representing the content of a HTML document
 		 * @return a string representing all the text in the HTML document. un objeto
-		 *         string que representa todo el texto contenido en el documento HTML.
+		 *         string que representa el texto contenido en el documento HTML.
 		 * @throws java.io.IOException
 		 *             if an I/O error occurs.
 		 *             <p>
@@ -2053,7 +2000,6 @@ public class SWBUtils {
 		 *             the interrupted exception
 		 */
 		public static String parseHTML(String txt) throws IOException {
-
 			String ret = null;
 			if (txt != null) {
 				HTMLParser parser = new HTMLParser(new StringReader(txt));
@@ -2063,12 +2009,14 @@ public class SWBUtils {
 		}
 
 		/**
+		 * @deprecated Not intended to be used anymore.
 		 * Valida si txt es nulo regresa def de lo contrario regresa txt
 		 *
 		 * @param txt
 		 * @param def
 		 * @return
 		 */
+		@Deprecated
 		public static String nullValidate(String txt, String def) {
 			if (txt == null) {
 				return def;
@@ -2077,12 +2025,14 @@ public class SWBUtils {
 		}
 
 		/**
+		 * @deprecated Not intended to be used anymore.
 		 * Valida si obj es nulo regresa def de lo contrario regresa txt
 		 *
 		 * @param txt
 		 * @param def
 		 * @return
 		 */
+		@Deprecated
 		public static String nullValidate(Object obj, String txt, String def) {
 			if (obj == null) {
 				return def;
@@ -2091,6 +2041,7 @@ public class SWBUtils {
 		}
 
 		/**
+		 * @deprecated Use join method of {@link String} class.
 		 * Une los elementos del arreglo <b>arr</b> de Strings con el valor
 		 * <b>concat</b>
 		 *
@@ -2100,6 +2051,7 @@ public class SWBUtils {
 		 *            valores a concatenar con el valor del parametro concat
 		 * @return
 		 */
+		@Deprecated
 		public static String join(String concat, String[] arr) {
 			StringBuilder ret = new StringBuilder();
 			for (int x = 0; x < arr.length; x++) {
@@ -2110,7 +2062,6 @@ public class SWBUtils {
 			}
 			return ret.toString();
 		}
-
 	}
 
 	/**
@@ -2122,7 +2073,7 @@ public class SWBUtils {
 	 * </p>
 	 */
 	public static class IO {
-		
+
 		private IO () {}
 
 		/**
@@ -2135,7 +2086,7 @@ public class SWBUtils {
 		 *
 		 */
 		public static int getBufferSize() {
-			return SWBUtils.bufferSize;
+			return bufferSize;
 		}
 
 		/**
@@ -2177,7 +2128,7 @@ public class SWBUtils {
 		 *             </p>
 		 */
 		public static void copyStream(InputStream in, OutputStream out) throws IOException {
-			copyStream(in, out, SWBUtils.bufferSize);
+			copyStream(in, out, bufferSize);
 		}
 
 		/**
@@ -2203,11 +2154,12 @@ public class SWBUtils {
 		 */
 		public static void copyStream(InputStream in, OutputStream out, int bufferSize) throws IOException {
 			if (in == null) {
-				throw new IOException("Input Stream null");
+				throw new IOException("Null Input Stream");
 			}
 			if (out == null) {
-				throw new IOException("Ouput Stream null");
+				throw new IOException("Null Ouput Stream");
 			}
+
 			byte[] bfile = new byte[bufferSize];
 			int x;
 			while ((x = in.read(bfile, 0, bufferSize)) > -1) {
@@ -2216,6 +2168,31 @@ public class SWBUtils {
 			in.close();
 			out.flush();
 			out.close();
+		}
+
+		/**
+		 * @deprecated Use {@link #getStringFromInputStream(InputStream)}.
+		 *
+		 * Reads an input stream and creates a string with that content.
+		 * <p>
+		 * Lee un objeto inputStream y crea un objeto string con el contenido
+		 * le&iacute;do.
+		 * </p>
+		 *
+		 * @param in
+		 *            an input stream to read its content
+		 * @return a string whose content is the same as for the input stream read. un
+		 *         objeto string cuyo contenido es el mismo que el del objeto
+		 *         inputStream le&iacute;do.
+		 * @throws IOException
+		 *             if the input stream received is {@code null}.
+		 *             <p>
+		 *             Si el objeto inputStream recibido tiene un valor {@code null}.
+		 *             </p>
+		 */
+		@Deprecated
+		public static String readInputStream(InputStream in) throws IOException {
+			return getStringFromInputStream(in);
 		}
 
 		/**
@@ -2236,7 +2213,7 @@ public class SWBUtils {
 		 *             Si el objeto inputStream recibido tiene un valor {@code null}.
 		 *             </p>
 		 */
-		public static String readInputStream(InputStream in) throws IOException {
+		public static String getStringFromInputStream(InputStream in) throws IOException {
 			if (in == null) {
 				throw new IOException("Input Stream null");
 			}
@@ -2249,6 +2226,29 @@ public class SWBUtils {
 			}
 			in.close();
 			return buf.toString();
+		}
+
+		/**
+		 * @deprecated Use {@link #getStringFromReader(Reader)}.
+		 * Reads a reader and creates a string with that content.
+		 * <p>
+		 * Lee un objeto Reader y crea un objeto string con el contenido le&iacute;do.
+		 * </p>
+		 *
+		 * @param in
+		 *            an input stream to read its content
+		 * @return a string whose content is the same as for the input stream read. un
+		 *         objeto string cuyo contenido es el mismo que el del objeto
+		 *         inputStream le&iacute;do.
+		 * @throws IOException
+		 *             if the input stream received is {@code null}.
+		 *             <p>
+		 *             Si el objeto inputStream recibido tiene un valor {@code null}.
+		 *             </p>
+		 */
+		@Deprecated
+		public static String readReader(Reader in) throws IOException {
+			return getStringFromReader(in);
 		}
 
 		/**
@@ -2268,7 +2268,7 @@ public class SWBUtils {
 		 *             Si el objeto inputStream recibido tiene un valor {@code null}.
 		 *             </p>
 		 */
-		public static String readReader(Reader in) throws IOException {
+		public static String getStringFromReader(Reader in) throws IOException {
 			if (in == null) {
 				throw new IOException("Input Stream null");
 			}
@@ -2284,6 +2284,7 @@ public class SWBUtils {
 		}
 
 		/**
+		 * @deprecated Use {@link #getStringFromInputStream(InputStream, String)}
 		 * Reads an input stream and creates a string with the content read using the
 		 * charset especified by name through {@code enc}.
 		 * <p>
@@ -2291,7 +2292,7 @@ public class SWBUtils {
 		 * utilizando el conjunto de caracteres especificado por nombre a trav&eacute;s
 		 * de
 		 *
-		 * @param inp
+		 * @param in
 		 *            the input stream to read
 		 * @param enc
 		 *            the charset's name to use for representing the input stream's
@@ -2314,26 +2315,51 @@ public class SWBUtils {
 		 * @throws IOException
 		 *             Signals that an I/O exception has occurred. {@code enc}.
 		 */
-		public static String readInputStream(InputStream inp, String enc)
-				throws java.io.IOException {
+		@Deprecated
+		public static String readInputStream(InputStream in, String enc) throws java.io.IOException {
+			return getStringFromInputStream(in, enc);
+		}
 
-			if (inp == null) {
-				throw new IOException("Input Stream null");
+		/**
+		 * Reads an input stream and creates a string with the content read using the
+		 * charset especified by name through {@code enc}.
+		 * <p>
+		 * Lee un objeto inputStream y crea una cadena con el contenido le&iacute;do
+		 * utilizando el conjunto de caracteres especificado por nombre a trav&eacute;s
+		 * de
+		 *
+		 * @param in
+		 *            the input stream to read
+		 * @param enc
+		 *            the charset's name to use for representing the input stream's
+		 *            content
+		 * @return a string representing the input stream's content with the charset
+		 *         specified. un objeto string que representa el contenido del objeto
+		 *         inputStream con el conjunto de caracteres especificado.
+		 * @throws java.io.UnsupportedEncodingException
+		 *             if {@code enc} is {@code null}.
+		 *             <p>
+		 *             si el valor de {@code enc} es {@code null}.
+		 *             </p>
+		 * @throws java.io.IOException
+		 *             if {@code inp} is {@code null}.
+		 *             <p>
+		 *             si el valor de {@code inp} es {@code null}.
+		 *             </p>
+		 * @throws UnsupportedEncodingException
+		 *             the unsupported encoding exception
+		 * @throws IOException
+		 *             Signals that an I/O exception has occurred. {@code enc}.
+		 */
+		public static String getStringFromInputStream(InputStream in, String enc) throws java.io.IOException {
+			if (in == null) {
+				throw new IOException("Null Input Stream");
 			}
 			if (enc == null) {
-				throw new UnsupportedEncodingException("Encoding null");
+				throw new UnsupportedEncodingException("Null Encoding");
 			}
-			InputStreamReader in = new InputStreamReader(inp, enc);
-
-			StringBuilder ret = new StringBuilder();
-
-			char[] bfile = new char[SWBUtils.bufferSize];
-			int x;
-			while ((x = in.read(bfile, 0, SWBUtils.bufferSize)) > -1) {
-				ret.append(new String(bfile, 0, x));
-			}
-			in.close();
-			return ret.toString();
+			InputStreamReader reader = new InputStreamReader(in, enc);
+			return getStringFromReader(reader);
 		}
 
 		/**
@@ -2360,7 +2386,6 @@ public class SWBUtils {
 		 *         anteriormente.
 		 */
 		public static String normalizePath(String path) {
-
 			if (path == null) {
 				return null;
 			}
@@ -2368,12 +2393,15 @@ public class SWBUtils {
 			if (normalized.equals("/.")) {
 				return "/";
 			}
+
 			if (normalized.indexOf('\\') >= 0) {
 				normalized = normalized.replace('\\', '/');
 			}
+
 			if (!normalized.startsWith("/") && normalized.indexOf(':') < 0) {
 				normalized = "/" + normalized;
 			}
+
 			do {
 				int index = normalized.indexOf("//");
 				if (index < 0) {
@@ -2417,31 +2445,47 @@ public class SWBUtils {
 		 *
 		 */
 		public static boolean removeDirectory(String path) {
-			log.trace("removeDirectory:" + path);
 			try {
 				File dir = new File(path);
 				if (dir.exists() && dir.isDirectory()) {
 					File[] listado = dir.listFiles();
-					for (int i = 0; i < listado.length; i++) {
-						if (listado[i].isFile()) {
-							listado[i].delete();
-						}
-						if (listado[i].isDirectory()) {
-							String lpath = listado[i].getPath();
-							boolean flag = removeDirectory(lpath);
-							if (flag) {
-								listado[i].delete();
+					if (null != listado) {
+						for (File fi : listado) {
+							if (fi.isFile()) {
+								Files.delete(fi.toPath());
+							} else if (fi.isDirectory()) {
+								String lpath = fi.getPath();
+								if (removeDirectory(lpath)) {
+									Files.delete(fi.toPath());
+								}
 							}
 						}
 					}
-				}
-				if (dir.isDirectory() && dir.delete()) {
+					Files.delete(dir.toPath());
 					return true;
 				}
 			} catch (Exception e) {
-				log.error("Can't recursively delete " + path, e);
+				LOG.error("Can't recursively delete " + path, e);
 			}
 			return false;
+		}
+
+		/**
+		 * @deprecated Use {@link #readFile(String)}
+		 *
+		 * Reads the file corresponding to the {@code path} specified.
+		 * <p>
+		 * Lee el archivo correspondiente a la ruta especificada por {@code path}.
+		 * </p>
+		 *
+		 * @param path
+		 *            a string representing the path of the file to read.
+		 * @return a string with the file's content read, null if the file don't exist
+		 *
+		 */
+		@Deprecated
+		public static String getFileFromPath(String path) {
+			return readFile(path);
 		}
 
 		/**
@@ -2455,17 +2499,16 @@ public class SWBUtils {
 		 * @return a string with the file's content read, null if the file don't exist
 		 *
 		 */
-		public static String getFileFromPath(String path) {
+		public static String readFile(String path) {
 			String ret = null;
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			File f = new File(path);
 			if (f.exists()) {
-				try {
-					FileInputStream in = new FileInputStream(f);
+				try (FileInputStream in = new FileInputStream(f)) {
+					ByteArrayOutputStream out = new ByteArrayOutputStream();
 					copyStream(in, out);
 					ret = out.toString();
 				} catch (Exception e) {
-					log.error("Can't retreive file:" + path, e);
+					LOG.error("Can't read file:" + path, e);
 				}
 			}
 			return ret;
@@ -2526,10 +2569,11 @@ public class SWBUtils {
 			if (file.isFile()) {
 				ret = file.length();
 			} else if (file.isDirectory()) {
-				File []files = file.listFiles();
-				for (int x = 0; x < files.length; x++) {
-					File ch = files[x];
-					ret += getFileSize(ch);
+				File [] files = file.listFiles();
+				if (null != files) {
+					for (File fi : files) {
+						ret += getFileSize(fi);
+					}
 				}
 			}
 			return ret;
@@ -2550,17 +2594,41 @@ public class SWBUtils {
 		 *
 		 */
 		public static boolean createDirectory(String path) {
-			boolean ret = false;
 			try {
 				File f = new File(path);
 				if (!f.exists()) {
 					f.mkdirs();
 				}
-				ret = true;
+				return true;
 			} catch (Exception e) {
-				SWBUtils.log.error(e);
+				LOG.error(e);
 			}
-			return ret;
+			return false;
+		}
+
+		/**
+		 * @deprecated Use {@link #copyDirectory(String, String)}
+		 * Creates a copy of the given pathname's file system substructure. The origen
+		 * pathname ({@code source}) must represent a directory's path in the file
+		 * system.
+		 * <p>
+		 * Crea una copia de la subestructura del sistema de archivos de la ruta dada.
+		 * La ruta de origen ({@code source}) debe representar la ruta de un directorio
+		 * en el sistema de archivos.
+		 * </p>
+		 *
+		 * @param source
+		 *            pathname of the directory to copy. Must not be null.
+		 * @param target
+		 *            pathname of the new directory where file system's substructure
+		 *            will be copied. Must not be null.
+		 * @return a {@code boolean} indicating if the source directory was copied
+		 *         succefully or not.
+		 *
+		 */
+		@Deprecated
+		public static boolean copyStructure(String source, String target) {
+			return copyDirectory(source, target);
 		}
 
 		/**
@@ -2582,15 +2650,50 @@ public class SWBUtils {
 		 *         succefully or not.
 		 *
 		 */
-		public static boolean copyStructure(String source, String target) {
-			boolean ret = false;
+		public static boolean copyDirectory(String source, String target) {
 			try {
-				copyStructure(source, target, false, "", "");
-				ret = true;
+				copyDirectory(source, target, false, "", "");
+				return true;
 			} catch (Exception e) {
-				SWBUtils.log.error(e);
+				LOG.error(e);
 			}
-			return ret;
+			return false;
+		}
+
+		/**
+		 * @deprecated Use {@link #copyDirectory(String, String, boolean, String, String)}
+		 * Creates a copy of the given pathname's file system substructure and replaces
+		 * a specified path located within the files of that substructure. The origen
+		 * pathname ({@code source}) must represent a directory's path in the file
+		 * system.
+		 * <p>
+		 * Crea una copia de la subestructura del sistema de archivos de la ruta dada y
+		 * reemplaza una ruta especificada por {@code sourcePath} en el contenido de los
+		 * archivos a copiar. La ruta de origen ({@code source}) debe representar la
+		 * ruta de un directorio en el sistema de archivos.
+		 * </p>
+		 *
+		 * @param source
+		 *            pathname of the directory to copy. Must not be null.
+		 * @param target
+		 *            pathname of the new directory where file system's substructure
+		 *            will be copied. Must not be null.
+		 * @param changePath
+		 *            a {@code boolean} that indicates if the files' content will be
+		 *            parsed. Must not be null.
+		 * @param sourcePath
+		 *            a pathname string located in the source files to be replaced by
+		 *            {@code targetPath}. Must not be null.
+		 * @param targetPath
+		 *            the pathname string to write in the target files in replacement of
+		 *            {@code sourcePath}
+		 * @return a {@code boolean} indicating if the source directory was copied
+		 *         succefully or not.
+		 *
+		 */
+		@Deprecated
+		public static boolean copyStructure(String source, String target, boolean changePath, String sourcePath, String targetPath) {
+			return copyDirectory(source, target, changePath, sourcePath, targetPath);
 		}
 
 		/**
@@ -2610,7 +2713,7 @@ public class SWBUtils {
 		 * @param target
 		 *            pathname of the new directory where file system's substructure
 		 *            will be copied. Must not be null.
-		 * @param ChangePath
+		 * @param changePath
 		 *            a {@code boolean} that indicates if the files' content will be
 		 *            parsed. Must not be null.
 		 * @param sourcePath
@@ -2623,22 +2726,21 @@ public class SWBUtils {
 		 *         succefully or not.
 		 *
 		 */
-		public static boolean copyStructure(String source, String target, boolean changePath, String sourcePath,
-				String targetPath) {
+		public static boolean copyDirectory(String source, String target, boolean changePath, String sourcePath, String targetPath) {
 			try {
 				File ftarget = new File(target);
 				if (!ftarget.exists()) {
 					ftarget.mkdirs();
 				}
 				File dir = new File(source);
-				if (dir != null && dir.exists() && dir.isDirectory()) {
+				if (dir.exists() && dir.isDirectory()) {
 					File[] listado = dir.listFiles();
 					for (int i = 0; i < listado.length; i++) {
 						try {
 							if (listado[i].isFile()) {
 								File targetFile = new File(target + listado[i].getName());
 								if (targetFile.length() == 0) {
-									copy(source + listado[i].getName(), target + listado[i].getName(), changePath,
+									copyFile(source + listado[i].getName(), target + listado[i].getName(), changePath,
 											sourcePath, targetPath);
 								}
 							}
@@ -2646,23 +2748,61 @@ public class SWBUtils {
 								String newpath = listado[i].getPath();
 								File f = new File(target + listado[i].getName());
 								f.mkdirs();
-								boolean flag = copyStructure(newpath + "/", target + listado[i].getName() + "/",
+								boolean flag = copyDirectory(newpath + "/", target + listado[i].getName() + "/",
 										changePath, sourcePath, targetPath);
 								if (flag) {
 									listado[i].delete();
 								}
 							}
 						} catch (Exception e) {
-							SWBUtils.log.error(e);
+							LOG.error(e);
 							return false;
 						}
 					}
 				}
 			} catch (Exception e) {
-				SWBUtils.log.error(e);
+				LOG.error(e);
 				return false;
 			}
 			return true;
+		}
+
+		/**
+		 * @deprecated Use {@link #copyFile(String, String, boolean, String, String)}
+		 * Copies a file to another directory, modifying a path in its content. If
+		 * indicated through {@code ChangePath} the string represented by
+		 *
+		 * @param sourceName
+		 *            pathname of the file to copy. Must not be null.
+		 * @param destName
+		 *            pathname of the new location of the file to copy. Must not be
+		 *            null.
+		 * @param changePath
+		 *            a {@code boolean} indicating if the file will be parsed to modify
+		 *            its content
+		 * @param sourcePath
+		 *            a pathname string in the source file to be replaced
+		 * @param targetPath
+		 *            a pathname string that will replace {@code sourcePath}
+		 * @throws IOException
+		 *             Signals that an I/O exception has occurred. {@code sourcePath} is
+		 *             looked for in the file's content and replaced by
+		 *             {@code targetPath}, only if the file to copy has an extension
+		 *             like: {@literal html}, {@literal html}, {@literal htm.orig} or
+		 *             {@literal html.orig}.
+		 *             <p>
+		 *             Copia un archivo a otro directorio, modificando una ruta en su
+		 *             contenido. Si se indica a trav&eacute;s de {@code ChangePath} el
+		 *             objeto string representado en {@code sourcePath} se busca en el
+		 *             contenido del archivo y se reemplaza por el representado en
+		 *             {@code targetPath}, solo si el archivo a copiar tiene por
+		 *             extensi&oacute;n: {@literal html}, {@literal html},
+		 *             {@literal htm.orig} o {@literal html.orig}.
+		 *             </p>
+		 */
+		@Deprecated
+		public static void copy(String sourceName, String destName, boolean changePath, String sourcePath, String targetPath) throws IOException {
+			copyFile(sourceName, destName, changePath, sourcePath, targetPath);
 		}
 
 		/**
@@ -2697,29 +2837,23 @@ public class SWBUtils {
 		 *             {@literal htm.orig} o {@literal html.orig}.
 		 *             </p>
 		 */
-		public static void copy(String sourceName, String destName, boolean changePath, String sourcePath,
-				String targetPath) throws IOException {
-
+		public static void copyFile(String sourceName, String destName, boolean changePath, String sourcePath, String targetPath) throws IOException {
 			File sourceFile = new File(sourceName);
 			File destinationFile = new File(destName);
-			java.io.FileOutputStream destination = null;
+			FileOutputStream destination;
+			FileInputStream source = new FileInputStream(sourceFile);
 
-			try (FileInputStream source = new FileInputStream(sourceFile)) {
-				destination = new FileOutputStream(destinationFile);
-				if (changePath && (sourceFile.getName().endsWith(".htm") || sourceFile.getName().endsWith(".html")
-						|| sourceFile.getName().endsWith(".html.orig")
-						|| sourceFile.getName().endsWith(".htm.orig"))) {
-					String content = readInputStream(source);
-					content = content.replaceAll(sourcePath, targetPath);
-					copyStream(getStreamFromString(content), destination);
-				} else {
-					copyStream(source, destination);
-				}
-				
-				destination.close();
-			} catch (Exception e) {
-				SWBUtils.log.error(e);
+			destination = new FileOutputStream(destinationFile);
+			if (changePath && (sourceFile.getName().endsWith(".htm") || sourceFile.getName().endsWith(".html")
+					|| sourceFile.getName().endsWith(".html.orig")
+					|| sourceFile.getName().endsWith(".htm.orig"))) {
+				String content = getStringFromInputStream(source);
+				content = content.replaceAll(sourcePath, targetPath);
+				copyStream(getStreamFromString(content), destination);
+			} else {
+				copyStream(source, destination);
 			}
+			destination.close();
 		}
 
 		/**
@@ -2750,7 +2884,7 @@ public class SWBUtils {
 			byte []arr = new byte[txt.length() / 2];
 			for (int x = 0; x < txt.length(); x += 2) {
 				String val = txt.substring(x, x + 2);
-				int v = Integer.decode("0x" + val).intValue();
+				int v = Integer.decode("0x" + val);
 				if (v > 127) {
 					v = v - 256;
 				}
@@ -2787,7 +2921,7 @@ public class SWBUtils {
 			s.flush();
 			s.close();
 			byte []arr = f.toByteArray();
-			String hex = "";
+			StringBuilder hex = new StringBuilder();
 			for (int x = 0; x < arr.length; x++) {
 				int v = arr[x];
 				if (v < 0) {
@@ -2797,49 +2931,36 @@ public class SWBUtils {
 				if (val.length() == 1) {
 					val = "0" + val;
 				}
-				hex += val;
+				hex.append(val);
 			}
-			return hex;
+			return hex.toString();
 		}
 
-		/*
+		/**
 		 * Reads a file and stores the content in an array of bytes. <p>Lee un archivo y
 		 * almacena el contenido en un arreglo de bytes</p>
-		 * 
+		 *
 		 * @param file the {@code file} to read. Must not be {@code null}
-		 * 
+		 *
 		 * @return an array of bytes that stores the content of the file specified.
 		 * <p>un arreglo de bytes que almecena el contenido del archivo
 		 * especificado.</p>
-		 * 
+		 *
 		 * @throws java.io.FileNotFoundException if the specified file does not exists.
 		 * <p>si el archivo especificado no existe.</p>
-		 * 
+		 *
 		 * @throws java.io.IOException if an I/O error occurs while reading the file's
 		 * content. <p>si un error de E/S ocurre durante la lectura del contenido del
 		 * archivo.</p>
 		 */
-		/**
-		 * Read file.
-		 *
-		 * @param file
-		 *            the file
-		 * @return the byte[]
-		 * @throws FileNotFoundException
-		 *             the file not found exception
-		 * @throws IOException
-		 *             Signals that an I/O exception has occurred.
-		 */
 		public static byte[] readFile(File file) throws IOException {
 			if (!file.exists()) {
-				throw new FileNotFoundException("File Not Found...");
+				throw new FileNotFoundException();
 			}
-			
+
 			try (FileInputStream in = new FileInputStream(file)) {
-				// EHSP2017 - Removed dead code
-	
 				int len = (int) file.length();
-	
+
 				byte[] bfile = new byte[len];
 				int x = 0;
 				int y = 0;
@@ -2863,36 +2984,37 @@ public class SWBUtils {
 		 *
 		 * @param request
 		 *            an HTTP request that contains the files to store.
-		 * @param path2Save
+		 * @param destPath
 		 *            the string representing the pathname where the files are to be
 		 *            stored
 		 * @return an iterator containing the file items detected in the HTTP request.
 		 *         un objeto iterador que contiene los archivos detectados en la
 		 *         petici&oacute;n HTTP.
 		 */
-		public static Iterator<FileItem> fileUpload(javax.servlet.http.HttpServletRequest request, String path2Save) {
-
+		public static Iterator<FileItem> fileUpload(javax.servlet.http.HttpServletRequest request, String destPath) {
 			DiskFileItemFactory factory = new DiskFileItemFactory();
 			ServletFileUpload fu = new ServletFileUpload(factory);
 			List<FileItem> items = null;
+
 			try {
 				items = fu.parseRequest(request);
 			} catch (FileUploadException e) {
-				e.printStackTrace();
+				LOG.error(e);
 			}
-			if (items != null && path2Save == null) {
+
+			if (items != null && destPath == null) {
 				return items.iterator();
-			} else if (items != null && path2Save != null) {
+			} else if (items != null) {
 				Iterator<FileItem> iter = items.iterator();
 				while (iter.hasNext()) {
 					FileItem item = iter.next();
 					// Si No es un campo de forma comun, es un campo tipo file, grabarlo
 					if (!item.isFormField()) {
-						File fichero = new File(path2Save + item.getName());
+						File fichero = new File(destPath + item.getName());
 						try {
 							item.write(fichero);
 						} catch (Exception e) {
-							SWBUtils.log.error(e);
+							LOG.error(e);
 						}
 					}
 				}
@@ -2941,8 +3063,8 @@ public class SWBUtils {
 				file.mkdirs();
 			}
 			String logFile = new File(filePath).getCanonicalPath().replace('\\', '/');
-			SWBUtils.log2File = new PrintWriter(new FileWriter(logFile, true), true);
-			SWBUtils.log2File.println(msg);
+			fileLogWriter = new PrintWriter(new FileWriter(logFile, true), true);
+			fileLogWriter.println(msg);
 		}
 
 		/**
@@ -2974,41 +3096,39 @@ public class SWBUtils {
 		 *             Signals that an I/O exception has occurred.
 		 * @author Jorge Jim&eacute;nez
 		 */
-		public static final void zip(File directory, File base, ZipOutputStream zos) throws IOException {
-
+		public static void zip(File directory, File base, ZipOutputStream zos) throws IOException {
 			if (directory == null || !directory.exists()) {
-				return;
+				throw new FileNotFoundException();
 			}
-			byte[] buffer = new byte[SWBUtils.bufferSize];
-			int read = 0;
+			byte[] buffer = new byte[bufferSize];
+			int read;
 			File[] files = directory.listFiles();
-			for (int i = 0, n = files.length; i < n; i++) {
-				if (files[i].isDirectory()) {
-					zip(files[i], base, zos);
-				} else {
-					try (FileInputStream in = new FileInputStream(files[i])) {
-						ZipEntry entry = new ZipEntry(files[i].getPath().substring(base.getPath().length() + 1));
-						zos.putNextEntry(entry);
-						while (-1 != (read = in.read(buffer))) {
-							zos.write(buffer, 0, read);
+
+			if (null != files) {
+				for (File fi : files) {
+					if (fi.isDirectory()) {
+						zip(fi, base, zos);
+					} else {
+						try (FileInputStream in = new FileInputStream(fi)) {
+							ZipEntry entry = new ZipEntry(fi.getPath().substring(base.getPath().length() + 1));
+							zos.putNextEntry(entry);
+							while (-1 != (read = in.read(buffer))) {
+								zos.write(buffer, 0, read);
+							}
+							zos.closeEntry();
+						} catch (FileNotFoundException e) {
+							LOG.error(e);
 						}
-						zos.closeEntry();
-						in.close();
-					} catch (FileNotFoundException e) {
-						log.error(e);
 					}
 				}
 			}
 		}
 
 		/**
-		 * Checks if is uT f8.
-		 *
-		 * @param file
-		 *            the file
-		 * @return true, if is uT f8
-		 * @throws IOException
-		 *             Signals that an I/O exception has occurred.
+		 * Checks whether a fine is UTF-8 encoded.
+		 * @param file the file
+		 * @return true, if the file is UTF-8 encoded.
+		 * @throws IOException Signals that an I/O exception has occurred.
 		 */
 		public static boolean isUTF8(File file) throws IOException {
 			int c3 = -61;
@@ -3025,6 +3145,32 @@ public class SWBUtils {
 				}
 			}
 			return false;
+		}
+
+		/**
+		 * @deprecated Use {@link #addFilesToZip(File, File[])}
+		 * Adds the files received to the specified zip file.
+		 * <p>
+		 * Agrega los archivos recibidos al archivo comprimido especificado.
+		 * </p>
+		 *
+		 * @param zipFile
+		 *            a compressed file to include some files at
+		 * @param files
+		 *            an array of files that will be added to {@code zipFile}
+		 * @throws java.io.IOException
+		 *             if some I/O error occurs during data reading or writing.
+		 *             <p>
+		 *             si alg&uacute;n error de E/S ocurre durante la lectura o
+		 *             escritura de informaci&oacute;n.
+		 *             </p>
+		 * @throws IOException
+		 *             Signals that an I/O exception has occurred.
+		 * @author Jorge Jim&eacute;nez
+		 */
+		@Deprecated
+		public static void addFilesToExistingZip(File zipFile, File[] files) throws IOException {
+			addFilesToZip(zipFile, files);
 		}
 
 		/**
@@ -3045,9 +3191,8 @@ public class SWBUtils {
 		 *             </p>
 		 * @throws IOException
 		 *             Signals that an I/O exception has occurred.
-		 * @author Jorge Jim&eacute;nez
 		 */
-		public static void addFilesToExistingZip(File zipFile, File[] files) throws IOException {
+		public static void addFilesToZip(File zipFile, File[] files) throws IOException {
 			// get a temp file
 			// MAPS74 En Solaris no se vale renombrar un archivo hacia /var/tmp
 			File tempFile = File.createTempFile(zipFile.getName(), null, zipFile.getParentFile());
@@ -3114,7 +3259,7 @@ public class SWBUtils {
 		 *
 		 * @param zip
 		 *            a zipped file
-		 * @param extractTo
+		 * @param destPath
 		 *            a file that denotes a directory path
 		 * @throws java.io.IOException
 		 *             if an I/O error occurs during reading or writing data.
@@ -3126,8 +3271,8 @@ public class SWBUtils {
 		 *             Signals that an I/O exception has occurred.
 		 * @author Jorge Jim&eacute;nez
 		 */
-		public static final void unzip(File zip, File extractTo) throws IOException {
-			unzip(zip, extractTo, new ArrayList<String>(), null, null);
+		public static void unzip(File zip, File destPath) throws IOException {
+			unzip(zip, destPath, new ArrayList<>(), null, null);
 		}
 
 		/**
@@ -3160,17 +3305,13 @@ public class SWBUtils {
 		 *             Signals that an I/O exception has occurred.
 		 * @author Jorge Jim&eacute;nez
 		 */
-		public static final void unzip(File zip, File extractTo, ArrayList<String> fext2parse, String parse,
-				String parse2) throws IOException {
-
+		public static final void unzip(File zip, File destPath, ArrayList<String> fext2parse, String parse, String parse2) throws IOException {
 			ZipFile archive = new ZipFile(zip);
 			Enumeration e = archive.entries();
 			while (e.hasMoreElements()) {
 				ZipEntry entry = (ZipEntry) e.nextElement();
-				File file = new File(extractTo, TEXT.replaceAll(entry.getName(), "\\", "/")); // TODO:Pienso que con
-																								// esto se soluciona el
-																								// problema de creación
-																								// de rutas en linux
+				// TODO:Pienso que con esto se soluciona el problema de creación de rutas en linux
+				File file = new File(destPath, TEXT.replaceAll(entry.getName(), "\\", "/"));
 				if (entry.isDirectory() && !file.exists()) {
 					file.mkdirs();
 				} else {
@@ -3187,7 +3328,7 @@ public class SWBUtils {
 							ext = file.getName().substring(pos + 1);
 						}
 						if (fext2parse.contains(ext)) {
-							String content = readInputStream(in);
+							String content = getStringFromInputStream(in);
 							content = content.replaceAll(parse, parse2);
 							in = getStreamFromString(content);
 						}
@@ -3200,7 +3341,7 @@ public class SWBUtils {
 						out.close();
 						in.close();
 					} catch (Exception ex) {
-						SWBUtils.log.debug(ex);
+						LOG.debug(ex);
 					}
 				}
 			}
@@ -3222,20 +3363,18 @@ public class SWBUtils {
 		 *         contiene todas las entradas (archivos) contenidas en el archivo
 		 *         comprimido.
 		 */
-		public static final Iterator<ZipEntry> readZip(String zipName) {
-			ArrayList<ZipEntry> itFiles = new ArrayList<>();
+		public static Iterator<ZipEntry> readZip(String zipName) {
+			List<ZipEntry> itFiles = new ArrayList<>();
 			try (ZipFile zf = new ZipFile(zipName)) {
 				Enumeration enu = zf.entries();
 				while (enu.hasMoreElements()) {
 					ZipEntry zen = (ZipEntry) enu.nextElement();
-					if (zen.isDirectory()) {
-						continue;
-					} else {
+					if (!zen.isDirectory()) {
 						itFiles.add(zen);
 					}
 				}
 			} catch (Exception ex) {
-				SWBUtils.log.error(ex); // MAPS74
+				LOG.error(ex); // MAPS74
 			}
 			return itFiles.iterator();
 		}
@@ -3255,18 +3394,18 @@ public class SWBUtils {
 		 *
 		 * @author Jorge Jim&eacute;nez
 		 */
-		public static final String readFileFromZipAsString(String zipName, String file2Read) {
+		public static String readFileFromZipAsString(String zipName, String file2Read) {
 			String content = null;
 			try (ZipFile zip = new ZipFile(new File(zipName))) {
 				for (Enumeration e = zip.entries(); e.hasMoreElements();) {
 					ZipEntry entry = (ZipEntry) e.nextElement();
 					if (entry.getName() != null && entry.getName().equals(file2Read)) {
 						InputStream is = zip.getInputStream(entry);
-						content = readInputStream(is);
+						content = getStringFromInputStream(is);
 					}
 				}
 			} catch (Exception e) {
-				SWBUtils.log.debug(e);
+				LOG.debug(e);
 			}
 			return content;
 		}
@@ -3282,7 +3421,7 @@ public class SWBUtils {
 	 * @author Jorge Jim&eacute;nez
 	 */
 	public static class EMAIL {
-		
+
 		private EMAIL () {}
 
 		/**
@@ -3338,11 +3477,11 @@ public class SWBUtils {
 		/**
 		 * Sets the sMTP ssl.
 		 *
-		 * @param ssl
+		 * @param val
 		 *            the new sMTP ssl
 		 */
-		public static void setSMTPSsl(boolean ssl) {
-			SWBUtils.EMAIL.smtpssl = ssl;
+		public static void setSMTPSsl(boolean val) {
+			smtpssl = val;
 		}
 
 		/**
@@ -3351,7 +3490,7 @@ public class SWBUtils {
 		 * Fija el nombre de dominio o la direcci&oacute;n IP del servidor SMTP a usar.
 		 * </p>
 		 *
-		 * @param smtpserver
+		 * @param val
 		 *            a string representing the domain name or the IP address for the
 		 *            SMTP server.
 		 *            <p>
@@ -3359,8 +3498,8 @@ public class SWBUtils {
 		 *            direcci&oacute;n IP del servidor SMTP.
 		 *            </p>
 		 */
-		public static void setSMTPServer(String smtpserver) {
-			SWBUtils.EMAIL.smtpserver = smtpserver;
+		public static void setSMTPServer(String val) {
+			smtpserver = val;
 		}
 
 		/**
@@ -3370,7 +3509,7 @@ public class SWBUtils {
 		 *            the new sMTP port
 		 */
 		public static void setSMTPPort(int port) {
-			SWBUtils.EMAIL.smtpport = port;
+			smtpport = port;
 		}
 
 		/**
@@ -3380,7 +3519,7 @@ public class SWBUtils {
 		 *            the new sMTP tls
 		 */
 		public static void setSMTPTls(boolean tls) {
-			SWBUtils.EMAIL.smtptls = tls;
+			smtptls = tls;
 		}
 
 		/**
@@ -3395,7 +3534,7 @@ public class SWBUtils {
 		 *         la direcci&oacute;n IP del servidor SMTP en uso.
 		 */
 		public static String getSMTPServer() {
-			return SWBUtils.EMAIL.smtpserver;
+			return smtpserver;
 		}
 
 		/**
@@ -3404,23 +3543,24 @@ public class SWBUtils {
 		 * Fija una cuenta de correo para generar mensajes de correo electr&oacute;nico.
 		 * </p>
 		 *
-		 * @param adminEmail
+		 * @param val
 		 *            a string representing a valid e-mail account.
 		 *            <p>
 		 *            un objeto string que representa una cuenta de correo
 		 *            electr&oacute;nico v&aacute;lida.
 		 *            </p>
 		 */
-		public static void setAdminEmail(String adminEmail) {
-			SWBUtils.EMAIL.adminEmail = adminEmail;
+		public static void setAdminEmail(String val) {
+			adminEmail = val;
 		}
 
 		public static String getAdminEmail() {
-			return SWBUtils.EMAIL.adminEmail;
+			return adminEmail;
 		}
 
 		/**
-		 * Sends an e-mail with the information supplied. The e-mail body can be
+		 * @deprecated Use {@link #sendMail(SWBMail)}
+         * Sends an e-mail with the information supplied. The e-mail body can be
 		 * formatted as HTML or plain text.
 		 * <p>
 		 * Env&iacute;a un correo electr&oacute;nico con la informaci&oacute;n
@@ -3428,22 +3568,22 @@ public class SWBUtils {
 		 * texto plano.
 		 * </p>
 		 *
-		 * @param fromEmail
+		 * @param senderEmail
 		 *            a string representing the sender's e-mail account. Must be a valid
 		 *            e-mail account, otherwise the mail will not be sent.
-		 * @param fromName
+		 * @param senderName
 		 *            a string representing the sender's name
-		 * @param address
+		 * @param recipients
 		 *            a collection of the recipients' e-mail accounts. Every element in
 		 *            the collection is expected to be a valid
-		 *            {@link java.mail.internet.InternetAddress}. Must not be null,
+		 *            {@link InternetAddress}. Must not be null,
 		 *            otherwise the mail will not be sent.
-		 * @param ccEmail
+		 * @param ccRecipients
 		 *            a collection of e-mail accounts to send the email as a copy. Every
 		 *            element in the collection is expected to be a valid
 		 *            {@literal java.mail.internet.InternetAddress}. If it is
 		 *            {@code null}, the mail won't be sent as a carbon copy to anyone.
-		 * @param bccEmail
+		 * @param bccRecipients
 		 *            a collection of e-mail accounts to send the email as a blind
 		 *            carbon copy. Every element in the collection is expected to be a
 		 *            valid {@literal java.mail.internet.InternetAddress}. If it is
@@ -3455,7 +3595,7 @@ public class SWBUtils {
 		 *            a string indicating the content type of the mail. {@literal HTML}
 		 *            indicates the body has an HTML format, otherwise it will be send
 		 *            in text plain format. Must not be {@code null}.
-		 * @param data
+		 * @param body
 		 *            a string containing the e-mail body's text
 		 * @param login
 		 *            a string representing a login name for SMTP server authentication.
@@ -3467,68 +3607,27 @@ public class SWBUtils {
 		 *            a list containing all the attachments for the e-mail. Every
 		 *            element in the collection is expected to be of type
 		 *            {@literal org.apache.commons.mail.EmailAttachment}.
-		 * @return a string that at the moment of writing this documentation is equal to
-		 *         {@code null}. un objeto string que al momento de escribir esta
-		 *         documentaci&oacute;n es igual a {@code null}.
+		 * @return the message id of the underlying MimeMessage. See {@link HtmlEmail#send()}
 		 */
-		public static String sendMail(String fromEmail, String fromName, Collection<InternetAddress> address,
-				Collection<InternetAddress> ccEmail, Collection<InternetAddress> bccEmail, String subject,
-				String contentType, String data, String login, String password,
-				ArrayList<EmailAttachment> attachments) {
-			String ret = null;
-			try {
-				HtmlEmail email = new HtmlEmail();
-				if (SWBUtils.EMAIL.smtpssl) {
-					email.setSSLOnConnect(SWBUtils.EMAIL.smtpssl);
-				}
+		@Deprecated
+		public static String sendMail(String senderEmail, String senderName, Collection<InternetAddress> recipients,
+				Collection<InternetAddress> ccRecipients, Collection<InternetAddress> bccRecipients, String subject,
+				String contentType, String body, String login, String password, List<EmailAttachment> attachments) {
 
-				if (attachments != null && !attachments.isEmpty()) {
-					Iterator<EmailAttachment> itAttaches = attachments.iterator();
-					while (itAttaches.hasNext()) {
-						EmailAttachment attchment = itAttaches.next();
-						email.attach(attchment);
-					}
-				}
+		    SWBMail mail = new SWBMail();
+		    mail.setSenderEmail(senderEmail);
+		    mail.setSenderName(senderName);
+		    mail.setRecipients(recipients);
+		    mail.setCcRecipients(ccRecipients);
+		    mail.setBccRecipients(bccRecipients);
+		    mail.setSubject(subject);
+		    mail.setContentType(contentType);
+		    mail.setMessage(body);
+		    mail.setLogin(login);
+		    mail.setPassword(password);
+		    mail.setAttachments(attachments);
 
-				email.setHostName(SWBUtils.EMAIL.smtpserver);
-				if (SWBUtils.EMAIL.smtpport > 0) {
-					if (SWBUtils.EMAIL.smtpssl) {
-						email.setSslSmtpPort(Integer.toString(SWBUtils.EMAIL.smtpport) + ")");//Por qué tiene un )?
-						email.setSmtpPort(SWBUtils.EMAIL.smtpport);
-					} else {
-						email.setSmtpPort(SWBUtils.EMAIL.smtpport);
-					}
-				}
-				email.setFrom(fromEmail, fromName);
-				email.setTo(address);
-				if (ccEmail != null) {
-					email.setCc(ccEmail);
-				}
-				if (bccEmail != null) {
-					email.setBcc(bccEmail);
-				}
-				email.setSubject(subject);
-
-				if (contentType != null && contentType.toLowerCase().indexOf("html") != -1) {
-					email.setHtmlMsg(data); // set the html message
-				} else {
-					email.setMsg(data);
-				}
-				// Set authentication default to config, as in sendBGEmail method
-				if (null != SWBUtils.EMAIL.smtpuser && null != SWBUtils.EMAIL.smtppassword) {
-					email.setAuthenticator(new DefaultAuthenticator(EMAIL.smtpuser, EMAIL.smtppassword));
-				}
-				if (login != null && password != null) {
-					email.setAuthenticator(new DefaultAuthenticator(login, password));
-				}
-				if (SWBUtils.EMAIL.smtptls) {
-					email.setStartTLSEnabled(true);
-				}
-				ret = email.send();
-			} catch (Exception e) {
-				SWBUtils.log.error(e);
-			}
-			return ret;
+			return sendMail(mail);
 		}
 
 		/**
@@ -3549,51 +3648,58 @@ public class SWBUtils {
 		 *             the socket exception
 		 */
 		public static String sendMail(SWBMail message) {
-			String ret = null;
-			try {
-				HtmlEmail email = new HtmlEmail();
-				email.setSSLOnConnect(SWBUtils.EMAIL.smtpssl);
+            try {
+                HtmlEmail email = new HtmlEmail();
+                email.setHostName(smtpserver);
+                email.setSSLOnConnect(smtpssl);
+                email.setStartTLSEnabled(smtptls);
+                email.setSSLCheckServerIdentity(smtpssl || smtptls);
 
-				Iterator<EmailAttachment> itAttaches = message.getAttachments().iterator();
-				while (itAttaches.hasNext()) {
-					EmailAttachment attchment = itAttaches.next();
-					email.attach(attchment);
-				}
+                if (message.getAttachments() != null) {
+                    for (EmailAttachment attachment: message.getAttachments()) {
+                        email.attach(attachment);
+                    }
+                }
 
-				email.setHostName(SWBUtils.EMAIL.smtpserver);
-				if (SWBUtils.EMAIL.smtpport > 0) {
-					email.setSmtpPort(SWBUtils.EMAIL.smtpport);
-				}
-				email.setFrom(message.getFromEmail(), message.getFromName());
-				email.setTo(message.getAddresses());
-				if (message.getCcEmail() != null) {
-					email.setCc(message.getCcEmail());
-				}
-				if (message.getBccEmail() != null) {
-					email.setBcc(message.getBccEmail());
-				}
-				email.setSubject(message.getSubject());
+                if (smtpport > 0) {
+                    if (smtpssl) {
+                        email.setSslSmtpPort(Integer.toString(smtpport));
+                    }
+                    email.setSmtpPort(smtpport);
+                }
 
-				if (message.getContentType().equalsIgnoreCase("HTML")) {
-					email.setHtmlMsg(message.getData()); // set the html message
-				} else {
-					email.setTextMsg(message.getData());
-				}
-				// Set authentication default to config, as in sendBGEmail method
-				if (null != SWBUtils.EMAIL.smtpuser && null != SWBUtils.EMAIL.smtppassword) {
-					email.setAuthentication(EMAIL.smtpuser, EMAIL.smtppassword);
-				}
-				if (message.getLogin() != null && message.getPassword() != null) {
-					email.setAuthentication(message.getLogin(), message.getPassword());
-				}
-				if (SWBUtils.EMAIL.smtptls) {
-					email.setStartTLSEnabled(true);
-				}
-				ret = email.send();
-			} catch (Exception e) {
-				SWBUtils.log.error(e);
-			}
-			return ret;
+                email.setFrom(message.getSenderEmail(), message.getSenderName());
+                email.setTo(message.getRecipients());
+
+                if (message.getCcRecipients() != null) {
+                    email.setCc(message.getCcRecipients());
+                }
+
+                if (message.getBccRecipients() != null) {
+                    email.setBcc(message.getBccRecipients());
+                }
+                email.setSubject(message.getSubject());
+
+                if (message.getContentType() != null && message.getContentType().toLowerCase().contains("html")) {
+                    email.setHtmlMsg(message.getMessage()); // set the html message
+                } else {
+                    email.setMsg(message.getMessage());
+                }
+
+                // Set authentication default to config, as in sendBGEmail method
+                if (null != smtpuser && null != smtppassword) {
+                    email.setAuthenticator(new DefaultAuthenticator(smtpuser, smtppassword));
+                }
+
+                if (message.getLogin() != null && message.getPassword() != null) {
+                    email.setAuthenticator(new DefaultAuthenticator(message.getLogin(), message.getPassword()));
+                }
+
+                return email.send();
+            } catch (Exception e) {
+                LOG.error(e);
+            }
+            return null;
 		}
 
 		/**
@@ -3604,7 +3710,7 @@ public class SWBUtils {
 		 * {@code EMAIL.adminEmail}, requiriendo la informaci&oacute;n m&iacute;nima.
 		 * </p>
 		 *
-		 * @param toEmail
+		 * @param recipient
 		 *            toEmail a string representing the repicients' e-mail accounts.
 		 *            This string can contain more than one e-mail accounts,
 		 *            semicolon-separated. If it is {@code null} the e-mail will not be
@@ -3622,32 +3728,22 @@ public class SWBUtils {
 		 * @throws SocketException
 		 *             the socket exception
 		 */
-		public static String sendMail(String toEmail, String subject, String msg) {
-			try {
-				ArrayList<InternetAddress> acol = new ArrayList<>();
-				if (toEmail != null && toEmail.indexOf(';') > 0) {
-					StringTokenizer strTokens = new StringTokenizer(toEmail, ";");
-					while (strTokens.hasMoreTokens()) {
-						String token = strTokens.nextToken();
-						if (token == null) {
-							continue;
-						}
-						InternetAddress address = new InternetAddress();
-						address.setAddress(token);
-						acol.add(address);
-					}
-				} else if (toEmail != null) {
-					InternetAddress address = new InternetAddress();
-					address.setAddress(toEmail);
-					acol.add(address);
-				}
-				// Send my with authentication information from config by default as in method
-				// sendBGEmail
-				SWBUtils.EMAIL.sendMail(SWBUtils.EMAIL.adminEmail, "", acol, null, null, subject, null, msg,
-						EMAIL.smtpuser, EMAIL.smtppassword, null);
-			} catch (Exception e) {
-				SWBUtils.log.error(e);
+		public static String sendMail(String recipient, String subject, String msg) {
+			if (null != recipient && null != subject && null != msg) {
+				List<InternetAddress> recipients = parseAddressList(recipient);
+
+				SWBMail mail = new SWBMail();
+				mail.setSenderEmail(adminEmail);
+				mail.setSenderName("");
+				mail.setRecipients(recipients);
+				mail.setSubject(subject);
+				mail.setMessage(msg);
+				mail.setLogin(smtpuser);
+				mail.setPassword(smtppassword);
+
+				return sendMail(mail);
 			}
+
 			return null;
 		}
 
@@ -3659,7 +3755,7 @@ public class SWBUtils {
 		 * correo del remitente como la asignada a {@code EMAIL.adminEmail}.
 		 * </p>
 		 *
-		 * @param toEmail
+		 * @param recipient
 		 *            a string representing the repicients' e-mail accounts. This string
 		 *            can contain more than one e-mail accounts, semicolon-separated. If
 		 *            it is {@code null} the e-mail will not be sent.
@@ -3673,56 +3769,46 @@ public class SWBUtils {
 		 *             si ocurre alg&uacute;n error en la creaci&oacute;n del remitente
 		 *             de correos.
 		 *             </p>
-		 * @throws SocketException
-		 *             the socket exception
 		 */
-		public static void sendBGEmail(String toEmail, String subject, String body) throws java.net.SocketException {
+		public static void sendBGEmail(String recipient, String subject, String body) {
+			List<InternetAddress> recipients = parseAddressList(recipient);
 
-			ArrayList<InternetAddress> acol = new ArrayList<>();
-			if (toEmail != null && toEmail.indexOf(';') > 0) {
-				StringTokenizer strTokens = new StringTokenizer(toEmail, ";");
-				while (strTokens.hasMoreTokens()) {
-					String token = strTokens.nextToken();
-					if (token == null) {
-						continue;
-					}
-					InternetAddress address = new InternetAddress();
-					address.setAddress(token);
-					acol.add(address);
-				}
-			} else if (toEmail != null) {
-				InternetAddress address = new InternetAddress();
-				address.setAddress(toEmail);
-				acol.add(address);
-			}
-			SWBUtils.EMAIL.sendBGEmail(SWBUtils.EMAIL.adminEmail, null, acol, null, null, subject, null, body,
-					SWBUtils.EMAIL.smtpuser, SWBUtils.EMAIL.smtppassword, null);
+			SWBMail mail = new SWBMail();
+			mail.setSenderEmail(adminEmail);
+			mail.setRecipients(recipients);
+			mail.setSubject(subject);
+			mail.setMessage(body);
+			mail.setLogin(smtpuser);
+			mail.setPassword(smtppassword);
+
+			sendBGEmail(mail);
 		}
 
 		/**
-		 * Sends an e-mail in background mode with the information supplied.
+		 * @deprecated Use {@link #sendBGEmail(SWBMail)}
+         * Sends an e-mail in background mode with the information supplied.
 		 * <p>
 		 * Env&iacute;a un correo electr&oacute;nico en segundo plano con la
 		 * informaci&oacute;n proporcionada.
 		 * </p>
 		 *
-		 * @param fromEmail
+		 * @param senderEmail
 		 *            a string representing the sender's e-mail account. Must be a valid
 		 *            e-mail account, if it is equal to {@code null}, the value of
 		 *            {@code EMAIL.adminEmail} will be used.
-		 * @param fromName
+		 * @param senderName
 		 *            a string representing the sender's name
-		 * @param address
+		 * @param recipients
 		 *            a collection of the recipients' e-mail accounts. Every element in
 		 *            the collection is expected to be a valid
-		 *            {@link java.mail.internet.InternetAddress}. Must not be null,
+		 *            {@link InternetAddress}. Must not be null,
 		 *            otherwise the mail will not be sent.
-		 * @param ccEmail
+		 * @param ccRecipients
 		 *            a collection of e-mail accounts to send the email as a copy. Every
 		 *            element in the collection is expected to be a valid
 		 *            {@literal java.mail.internet.InternetAddress}. If it is
 		 *            {@code null}, the mail won't be sent as a carbon copy to anyone.
-		 * @param bccEmail
+		 * @param bccRecipients
 		 *            a collection of e-mail accounts to send the email as a blind
 		 *            carbon copy. Every element in the collection is expected to be a
 		 *            valid {@literal java.mail.internet.InternetAddress}. If it is
@@ -3734,7 +3820,7 @@ public class SWBUtils {
 		 *            a string indicating the content type of the mail. {@literal HTML}
 		 *            indicates the body has an HTML format, otherwise it will be send
 		 *            in text plain format. Must not be {@code null}.
-		 * @param data
+		 * @param body
 		 *            a string containing the e-mail body's text
 		 * @param login
 		 *            a string representing a login name for SMTP server authentication.
@@ -3753,64 +3839,98 @@ public class SWBUtils {
 		 *             si ocurre un error durante la creaci&oacute;n del nuevo thread
 		 *             para trabajar en segundo plano.
 		 *             </p>
-		 * @throws SocketException
-		 *             the socket exception
 		 */
-		public static void sendBGEmail(String fromEmail, String fromName, Collection<InternetAddress> address,
-				Collection<InternetAddress> ccEmail, Collection<InternetAddress> bccEmail, String subject,
-				String contentType, String data, String login, String password, ArrayList<EmailAttachment> attachments)
-				throws java.net.SocketException {
+		@Deprecated
+		public static void sendBGEmail(String senderEmail, String senderName, Collection<InternetAddress> recipients,
+				Collection<InternetAddress> ccRecipients, Collection<InternetAddress> bccRecipients, String subject,
+				String contentType, String body, String login, String password, List<EmailAttachment> attachments) {
 
 			SWBMail message = new SWBMail();
-			if (fromEmail == null && SWBUtils.EMAIL.adminEmail != null) {
-				fromEmail = SWBUtils.EMAIL.adminEmail;
+			message.setContentType(null == contentType ? "text/html" : contentType);
+
+			if (senderEmail == null && adminEmail != null) {
+				senderEmail = adminEmail;
 			}
-			if (fromEmail != null) {
-				message.setFromEmail(fromEmail);
+
+			if (senderEmail != null) {
+				message.setSenderEmail(senderEmail);
 			}
-			if (fromName != null) {
-				message.setFromName(fromName);
+
+			if (senderName != null) {
+				message.setSenderName(senderName);
 			}
-			if (address != null) {
-				message.setAddress((ArrayList<InternetAddress>) address);
+
+			if (recipients != null) {
+				message.setRecipients(recipients);
 			}
-			if (ccEmail != null) {
-				message.setCcEmail(ccEmail);
+
+			if (ccRecipients!= null) {
+				message.setCcRecipients(ccRecipients);
 			}
-			if (bccEmail != null) {
-				message.setBccEmail(bccEmail);
+
+			if (bccRecipients != null) {
+				message.setBccRecipients(bccRecipients);
 			}
+
 			if (subject != null) {
 				message.setSubject(subject);
 			}
-			if (contentType == null) {
-				contentType = "text/html";
+
+			if (body != null) {
+				message.setMessage(body);
 			}
-			if (contentType != null) {
-				message.setContentType(contentType);
+
+			if (smtpuser != null) {
+				message.setLogin(smtpuser);
 			}
-			if (data != null) {
-				message.setData(data);
-			}
-			if (SWBUtils.EMAIL.smtpuser != null) {
-				message.setLogin(SWBUtils.EMAIL.smtpuser);
-			}
+
 			if (login != null) {
 				message.setLogin(login);
 			}
-			if (SWBUtils.EMAIL.smtppassword != null) {
-				message.setPassword(SWBUtils.EMAIL.smtppassword);
+
+			if (smtppassword != null) {
+				message.setPassword(smtppassword);
 			}
+
 			if (password != null) {
 				message.setPassword(password);
 			}
+
 			if (attachments != null) {
 				message.setAttachments(attachments);
 			}
 
-			SWBMailSender swbMailSender = new SWBMailSender();
-			swbMailSender.addEMail(message);
-			swbMailSender.start();
+			sendBGEmail(message);
+		}
+
+		/**
+		 * Parses a semi-colon separated list of e-mail addresses. No address validation is performed.
+		 * @param addressList semi-colon separated list of e-mail addresses.
+		 * @return List of parsed {@link InternetAddress} objects.
+		 */
+		private static List<InternetAddress> parseAddressList(String addressList) {
+			ArrayList<InternetAddress> recipients = new ArrayList<>();
+
+			if (null != addressList && !addressList.isEmpty()) {
+				String[] addresses;
+				if (addressList.contains(";")) {
+					addresses = addressList.split(";");
+					for (int i = 0; i < addresses.length; i++) {
+						addresses[i] = addresses[i].trim();
+					}
+				} else {
+					addresses = new String[1];
+					addresses[0] = addressList.trim();
+				}
+
+				for (String address : addresses) {
+					InternetAddress iaddress = new InternetAddress();
+					iaddress.setAddress(address);
+					recipients.add(iaddress);
+				}
+			}
+
+			return recipients;
 		}
 
 		/**
@@ -3823,17 +3943,9 @@ public class SWBUtils {
 		 *
 		 * @param message
 		 *            an object of type {@link org.semanticwb.base.util.SWBMail}
-		 * @throws java.net.SocketException
-		 *             if an error occurs during new thread's creation for working in
-		 *             background mode.
-		 *             <p>
-		 *             si ocurre un error durante la creaci&oacute;n del nuevo thread
-		 *             para trabajar en segundo plano.
-		 *             </p>
-		 * @throws SocketException
-		 *             the socket exception
+		 *
 		 */
-		public static void sendBGEmail(SWBMail message) throws java.net.SocketException {
+		public static void sendBGEmail(SWBMail message) {
 			SWBMailSender swbMailSender = new SWBMailSender();
 			swbMailSender.addEMail(message);
 			swbMailSender.start();
@@ -3847,11 +3959,11 @@ public class SWBUtils {
 		 * enviar mensajes.
 		 * </p>
 		 *
-		 * @param smtpuser
+		 * @param val
 		 *            a string representing a user's name registered in the SMTP server.
 		 */
-		public static void setSMTPUser(String smtpuser) {
-			SWBUtils.EMAIL.smtpuser = smtpuser;
+		public static void setSMTPUser(String val) {
+			smtpuser = val;
 		}
 
 		/**
@@ -3862,12 +3974,12 @@ public class SWBUtils {
 		 * SMTP para enviar mensajes.
 		 * </p>
 		 *
-		 * @param smtppassword
+		 * @param val
 		 *            a string representing a user's password registered in the SMTP
 		 *            server.
 		 */
-		public static void setSMTPPassword(String smtppassword) {
-			SWBUtils.EMAIL.smtppassword = smtppassword;
+		public static void setSMTPPassword(String val) {
+			smtppassword = val;
 		}
 
 		/**
@@ -3888,7 +4000,7 @@ public class SWBUtils {
 	}
 
 	/**
-	 * Provides several common operations to perform involving DOM documents and
+	 * Provides several common operations to perform processing of DOM documents and
 	 * their contents.
 	 * <p>
 	 * Provee varias operaciones comunes que involucran documentos DOM y su
@@ -3896,6 +4008,7 @@ public class SWBUtils {
 	 * </p>
 	 */
 	public static class XML {
+		//TODO: Review class code because several NPE are not cached
 
 		/**
 		 * The only one instance of this object for the entire application.
@@ -3915,10 +4028,6 @@ public class SWBUtils {
 			}
 		};
 
-		// /**
-		// * A DOM object tree producer.
-		// * <p>Un generador de &aacute;rboles de objetos DOM.</p>
-		// */
 		/**
 		 * Creator of objects of type {@link javax.xml.transform.Transformer} and
 		 * {@link javax.xml.transform.Templates}.
@@ -4032,13 +4141,13 @@ public class SWBUtils {
 				xpathObj = xpathFactory.newXPath();
 
 			} catch (Exception e) {
-				log.error("Error getting DocumentBuilderFactory...", e);
+				LOG.error("Error getting DocumentBuilderFactory...", e);
 			}
 
 			try {
 				mTFactory = TransformerFactory.newInstance();
 			} catch (Exception e) {
-				log.error("Error getting TransformerFactory...", e);
+				LOG.error("Error getting TransformerFactory...", e);
 			}
 		}
 
@@ -4084,7 +4193,7 @@ public class SWBUtils {
 				transformer.transform(new DOMSource(dom), streamResult);
 				res = sw.toString();
 			} catch (Exception e) {
-				SWBUtils.log.error(e);
+				LOG.error(e);
 			}
 			return res;
 		}
@@ -4145,10 +4254,8 @@ public class SWBUtils {
 				Transformer transformer = factory.newTransformer();
 				transformer.transform(source, result);
 				return stringWriter.getBuffer().toString();
-			} catch (TransformerConfigurationException e) {
-				e.printStackTrace();
 			} catch (TransformerException e) {
-				e.printStackTrace();
+				LOG.error(e);
 			}
 			return null;
 		}
@@ -4170,8 +4277,7 @@ public class SWBUtils {
 		 *             si una circunstancia excepcional ocurre mientras se ejecutan
 		 *             operaciones DOM.
 		 *             </p>
-		 * @throws SWBException
-		 *             the sWB exception
+		 *
 		 */
 		public static Document copyDom(Document dom) {
 			Document n = getNewDocument();
@@ -4202,7 +4308,7 @@ public class SWBUtils {
 				ByteArrayInputStream sr = new java.io.ByteArrayInputStream(xml.getBytes());
 				dom = xmlToDom(sr);
 			} catch (Exception e) {
-				SWBUtils.log.error(e);
+				LOG.error(e);
 			}
 			return dom;
 		}
@@ -4224,7 +4330,7 @@ public class SWBUtils {
 			try {
 				dom = xmlToDom(new InputSource(xml));
 			} catch (Exception e) {
-				SWBUtils.log.error(e);
+				LOG.error(e);
 			}
 			return dom;
 		}
@@ -4242,9 +4348,10 @@ public class SWBUtils {
 		 *         por la fuente de entrada recibida.
 		 */
 		public static Document xmlToDom(InputSource xml) {
-			DocumentBuilderFactory dbf = null;
-			DocumentBuilder db = null;
+			DocumentBuilderFactory dbf;
+			DocumentBuilder db;
 			Document dom = null;
+
 			try {
 				dbf = getDocumentBuilderFactory();
 				synchronized (dbf) {
@@ -4256,7 +4363,7 @@ public class SWBUtils {
 					dom = copyDom(dom);
 				}
 			} catch (Exception e) {
-				SWBUtils.log.error(e);
+				LOG.error(e);
 			}
 			return dom;
 		}
@@ -4272,7 +4379,7 @@ public class SWBUtils {
 		 */
 		public static Document getNewDocument() {
 			DocumentBuilderFactory dbf = getDocumentBuilderFactory();
-			DocumentBuilder db = null;
+			DocumentBuilder db;
 			Document dom = null;
 			try {
 				synchronized (dbf) {
@@ -4280,7 +4387,7 @@ public class SWBUtils {
 				}
 				dom = db.newDocument();
 			} catch (Exception e) {
-				SWBUtils.log.error(e);
+				LOG.error(e);
 			}
 			return dom;
 		}
@@ -4394,9 +4501,9 @@ public class SWBUtils {
 			boolean bOk = false;
 			if (schema == null || xml == null) {
 				if (schema == null) {
-					SWBUtils.log.error("Error SWBUtils.XMLVerifier(): Schema source is null.");
+					LOG.error("Error SWBUtils.XMLVerifier(): Schema source is null.");
 				} else {
-					SWBUtils.log.event("Error SWBUtils.XMLVerifier(): The input document source is null.");
+					LOG.event("Error SWBUtils.XMLVerifier(): The input document source is null.");
 				}
 				return bOk;
 			}
@@ -4458,9 +4565,9 @@ public class SWBUtils {
 			boolean bOk = false;
 			if (schema == null || xml == null) {
 				if (schema == null) {
-					SWBUtils.log.error("Error SWBUtils.XMLVerifier(): Schema stream is null.");
+					LOG.error("Error SWBUtils.XMLVerifier(): Schema stream is null.");
 				} else {
-					SWBUtils.log.error("Error SWBUtils.XMLVerifier(): The input document stream is null.");
+					LOG.error("Error SWBUtils.XMLVerifier(): The input document stream is null.");
 				}
 				return bOk;
 			}
@@ -4493,13 +4600,13 @@ public class SWBUtils {
 		 *         {@code java.lang.String}.
 		 */
 		private static boolean xmlVerifierImpl(String sysid, Object objschema, Object objxml) {
-
+			//TODO: Remove this method and dependencies because is not used anywhere. Move code to WBAdmResourceUtils class and migrate to pure java code.
 			boolean bOk = false;
 			if (objschema == null || objxml == null) {
 				if (objschema == null) {
-					SWBUtils.log.error("Error SWBUtils.XMLVerifier(): Schema is null.");
+					LOG.error("Error SWBUtils.XMLVerifier(): Schema is null.");
 				} else {
-					SWBUtils.log.error("Error SWBUtils.XMLVerifier(): The input document is null.");
+					LOG.error("Error SWBUtils.XMLVerifier(): The input document is null.");
 				}
 				return bOk;
 			}
@@ -4533,12 +4640,12 @@ public class SWBUtils {
 						bOk = verifier.verify((String) objxml);
 					}
 				} catch (org.iso_relax.verifier.VerifierConfigurationException e) {
-					SWBUtils.log.error("Error SWBUtils.XMLVerifier(): Unable to create a new verifier.", e);
+					LOG.error("Error SWBUtils.XMLVerifier(): Unable to create a new verifier.", e);
 				} catch (org.xml.sax.SAXException e) {
-					SWBUtils.log.event("Error SWBUtils.XMLVerifier(): Input document is not wellformed.", e);
+					LOG.event("Error SWBUtils.XMLVerifier(): Input document is not wellformed.", e);
 				}
 			} catch (Exception e) {
-				SWBUtils.log.event("Error SWBUtils.XMLVerifier(): Unable to parse schema file.", e);
+				LOG.event("Error SWBUtils.XMLVerifier(): Unable to parse schema file.", e);
 			}
 			return bOk;
 		}
@@ -4597,13 +4704,6 @@ public class SWBUtils {
 		 *            a node to convert
 		 * @return a document containing the node's content.
 		 *
-		 * @throws SWBException
-		 *             if an exceptional situation occurs during creation of the new
-		 *             document.
-		 *             <p>
-		 *             si una situaci&oacute;n excepcional ocurre durante la
-		 *             creaci&oacute;n del nuevo documento.
-		 *             </p>
 		 */
 		public static Document node2Document(Node node) {
 			// ensures xerces dom
@@ -4676,7 +4776,7 @@ public class SWBUtils {
 				osw.flush();
 				osw.close();
 			} catch (Exception e) {
-				SWBUtils.log.error(e);
+				LOG.error(e);
 			}
 		}
 
@@ -4687,33 +4787,18 @@ public class SWBUtils {
 		 * alguno.
 		 * </p>
 		 */
+		//TODO: Check whether a mute error handler is needed or if its a good practice to do this.
 		private static final org.xml.sax.ErrorHandler silentErrorHandler = new org.xml.sax.ErrorHandler() {
-
-			/**
-			 * Method with an empty body.
-			 * <p>
-			 * M&eacute;todo con cuerpo vac&iacute;o.
-			 * </p>
-			 */
 			public void fatalError(org.xml.sax.SAXParseException e) {
+
 			}
 
-			/**
-			 * Method with an empty body.
-			 * <p>
-			 * M&eacute;todo con cuerpo vac&iacute;o.
-			 * </p>
-			 */
 			public void error(org.xml.sax.SAXParseException e) {
+
 			}
 
-			/**
-			 * Method with an empty body.
-			 * <p>
-			 * M&eacute;todo con cuerpo vac&iacute;o.
-			 * </p>
-			 */
 			public void warning(org.xml.sax.SAXParseException e) {
+
 			}
 		};
 
@@ -4745,31 +4830,16 @@ public class SWBUtils {
 			// split tokens
 			StringTokenizer tokenizer = new StringTokenizer(str, " \t@%^&()-+=|\\{}[].;\"<>", true);
 			while (tokenizer.hasMoreTokens()) {
-				// next token
 				String token = tokenizer.nextToken();
 
-				// replace '\t' by the content of "tabulation"
 				if (token.startsWith("\t")) {
 					ret.append("    ");
-					continue;
-				}
-
-				// replace '<' by '&lt;'
-				if (token.startsWith("<")) {
+				} else if (token.startsWith("<")) {
 					ret.append("&lt;");
-					continue;
-				}
-
-				// replace '>' by '&gt;'
-				if (token.startsWith(">")) {
+				} else if (token.startsWith(">")) {
 					ret.append("&gt;");
-					continue;
-				}
-
-				// replace '&' by '&amp;'
-				if (token.startsWith("&")) {
+				} else if (token.startsWith("&")) {
 					ret.append("&amp;");
-					continue;
 				}
 				ret.append(token);
 			}
@@ -4797,10 +4867,10 @@ public class SWBUtils {
 		 *         </p>
 		 */
 		 public static String replaceXMLTags(String txt) {
-
 			if (txt == null) {
 				return null;
 			}
+
 			StringBuilder str = new StringBuilder(txt);
 			for (int x = 0; x < str.length(); x++) {
 				char ch = str.charAt(x);
@@ -5113,10 +5183,10 @@ public class SWBUtils {
 		 *         objeto.
 		 */
 		private static DBConnectionManager getConnectionManager() {
-			if (SWBUtils.DB.manager == null) {
-				SWBUtils.DB.manager = new DBConnectionManager();
+			if (manager == null) {
+				manager = new DBConnectionManager();
 			}
-			return SWBUtils.DB.manager;
+			return manager;
 		}
 
 		/**
@@ -5164,7 +5234,7 @@ public class SWBUtils {
 		 *         datos cuyo nombre concuerda con {@code SWBUtils.DB.defaultPoolName}.
 		 */
 		public static DBConnectionPool getDefaultPool() {
-			return (DBConnectionPool) getConnectionManager().getPools().get(SWBUtils.DB.defaultPoolName);
+			return (DBConnectionPool) getConnectionManager().getPools().get(defaultPoolName);
 		}
 
 		/**
@@ -5178,7 +5248,7 @@ public class SWBUtils {
 		 *         conexiones a base de datos por defecto.
 		 */
 		public static String getDefaultPoolName() {
-			return SWBUtils.DB.defaultPoolName;
+			return defaultPoolName;
 		}
 
 		/**
@@ -5192,7 +5262,7 @@ public class SWBUtils {
 		 *            connection pool. Must not be {@code null}.
 		 */
 		public static void setDefaultPool(String poolName) {
-			SWBUtils.DB.defaultPoolName = poolName;
+			defaultPoolName = poolName;
 		}
 
 		/**
@@ -5228,7 +5298,7 @@ public class SWBUtils {
 		 * @return Connection from DBPool.
 		 */
 		public static Connection getDefaultConnection(String description) {
-			return getConnection(SWBUtils.DB.defaultPoolName, description);
+			return getConnection(defaultPoolName, description);
 		}
 
 		/**
@@ -5243,7 +5313,7 @@ public class SWBUtils {
 		 *         conexi&oacute;n a base de datos del pool de conexiones por defecto.
 		 */
 		public static Connection getDefaultConnection() {
-			return getConnection(SWBUtils.DB.defaultPoolName);
+			return getConnection(defaultPoolName);
 		}
 
 		/**
@@ -5297,7 +5367,7 @@ public class SWBUtils {
 		 *         defecto.
 		 */
 		public static String getDatabaseName() {
-			return getDatabaseName(SWBUtils.DB.defaultPoolName);
+			return getDatabaseName(defaultPoolName);
 		}
 
 		/**
@@ -5324,7 +5394,7 @@ public class SWBUtils {
 					con.close();
 				}
 			} catch (Exception e) {
-				SWBUtils.log.error("Not Database Found...", e);
+				LOG.error("Not Database Found...", e);
 			}
 			return ret;
 		}
@@ -5354,7 +5424,7 @@ public class SWBUtils {
 		 *         </p>
 		 */
 		public static String getDatabaseType() {
-			return getDatabaseType(SWBUtils.DB.defaultPoolName);
+			return getDatabaseType(defaultPoolName);
 		}
 
 		/**
@@ -5384,20 +5454,22 @@ public class SWBUtils {
 		 *         </p>
 		 */
 		public static String getDatabaseType(String poolName) {
-
 			String ret = getDatabaseName(poolName);
-			if (ret.toLowerCase().indexOf("hsql") > -1) {
-				ret = SWBUtils.DB.DBTYPE_HSQLDB;
-			} else if (ret.toLowerCase().indexOf("mysql") > -1) {
-				ret = SWBUtils.DB.DBTYPE_MySQL;
-			} else if (ret.toLowerCase().indexOf("mssql") > -1) {
-				ret = SWBUtils.DB.DBTYPE_MsSQL;
-			} else if (ret.toLowerCase().indexOf("oracle") > -1) {
-				ret = SWBUtils.DB.DBTYPE_Oracle;
-			} else if (ret.toLowerCase().indexOf("postgresql") > -1) {
-				ret = SWBUtils.DB.DBTYPE_PostgreSQL;
-			} else if (ret.toLowerCase().indexOf("derby") > -1) {
-				ret = SWBUtils.DB.DBTYPE_Derby;
+
+			if (null != ret) {
+				if (ret.toLowerCase().contains("hsql")) {
+					ret = SWBUtils.DB.DBTYPE_HSQLDB;
+				} else if (ret.toLowerCase().contains("mysql")) {
+					ret = SWBUtils.DB.DBTYPE_MySQL;
+				} else if (ret.toLowerCase().contains("mssql")) {
+					ret = SWBUtils.DB.DBTYPE_MsSQL;
+				} else if (ret.toLowerCase().contains("oracle")) {
+					ret = SWBUtils.DB.DBTYPE_Oracle;
+				} else if (ret.toLowerCase().contains("postgresql")) {
+					ret = SWBUtils.DB.DBTYPE_PostgreSQL;
+				} else if (ret.toLowerCase().contains("derby")) {
+					ret = SWBUtils.DB.DBTYPE_Derby;
+				}
 			}
 			return ret;
 		}
@@ -5465,14 +5537,14 @@ public class SWBUtils {
 	 */
 	public static class CryptoWrapper {
 		private static SecureRandom sr = null;
-		
+
 		private CryptoWrapper () {}
 
 		static {
 			try {
 				sr = SecureRandom.getInstance("SHA1PRNG");
 			} catch (NoSuchAlgorithmException nsae) {
-				log.error("Instantiating the secure Random generator", nsae);
+				LOG.error("Instantiating the secure Random generator", nsae);
 			}
 		}
 
@@ -5547,7 +5619,7 @@ public class SWBUtils {
 		 *             si no hay una implementaci&oacute;n del algoritmo SHA-512
 		 *             disponible en el ambiente.
 		 *             </p>
-		 * @throws GeneralSecurityException
+		 * @throws NoSuchAlgorithmException
 		 *             If something fails when comparing passwords
 		 */
 		public static String comparablePassword(String toEncode) throws NoSuchAlgorithmException {
@@ -5578,11 +5650,8 @@ public class SWBUtils {
 		 *             si no hay una implementaci&oacute;n del algoritmo especificado
 		 *             disponible en el ambiente.
 		 *             </p>
-		 * @throws GeneralSecurityException
-		 *             If something fails when comparing passwords
 		 */
-		public static String comparablePassword(String toEncode, String digestAlgorithm)
-				throws NoSuchAlgorithmException {
+		public static String comparablePassword(String toEncode, String digestAlgorithm) throws NoSuchAlgorithmException {
 			MessageDigest messageDigest = MessageDigest.getInstance(digestAlgorithm);
 			byte[] bits = null;
 			try {
@@ -5618,15 +5687,7 @@ public class SWBUtils {
 		 *             </p>
 		 */
 		public static byte[] PBEAES128Cipher(String passPhrase, byte[] data) throws GeneralSecurityException {
-
-			byte[] key = new byte[16];
-			byte[] tmp = passPhrase.getBytes();
-			int pos = 0;
-			while (pos < 16) {
-				System.arraycopy(tmp, 0, key, pos, Math.min(16 - pos, tmp.length));
-				pos += tmp.length;
-			}
-			SecretKey secretKey = new SecretKeySpec(key, "AES");
+			SecretKey secretKey = getSecretKey(passPhrase, "AES");
 			Cipher cipher = Cipher.getInstance("AES");
 			cipher.init(Cipher.ENCRYPT_MODE, secretKey);
 			return cipher.doFinal(data);
@@ -5659,7 +5720,19 @@ public class SWBUtils {
 		 *             </p>
 		 */
 		public static byte[] PBEAES128Decipher(String passPhrase, byte[] data) throws GeneralSecurityException {
+			SecretKey secretKey = getSecretKey(passPhrase, "AES");
+			Cipher cipher = Cipher.getInstance("AES");
+			cipher.init(Cipher.DECRYPT_MODE, secretKey);
+			return cipher.doFinal(data);
+		}
 
+		/**
+		 * Gets a {@link SecretKey} object from a String passphrase.
+		 * @param passPhrase Passphrase.
+		 * @param algorithm Algorithm.
+		 * @return SecretKey
+		 */
+		private static SecretKey getSecretKey(String passPhrase, String algorithm) {
 			byte[] key = new byte[16];
 			byte[] tmp = passPhrase.getBytes();
 			int pos = 0;
@@ -5667,10 +5740,7 @@ public class SWBUtils {
 				System.arraycopy(tmp, 0, key, pos, Math.min(16 - pos, tmp.length));
 				pos += tmp.length;
 			}
-			SecretKey secretKey = new SecretKeySpec(key, "AES");
-			Cipher cipher = Cipher.getInstance("AES");
-			cipher.init(Cipher.DECRYPT_MODE, secretKey);
-			return cipher.doFinal(data);
+			return new SecretKeySpec(key, algorithm);
 		}
 
 		/**
@@ -5696,7 +5766,7 @@ public class SWBUtils {
 				keyGen.initialize(dhSpec, new SecureRandom(seed.getBytes()));
 				return keyGen.generateKeyPair();
 			} catch (Exception e) {
-				e.printStackTrace();
+				LOG.error(e);
 				assert (false);
 			}
 			return null;
@@ -5713,7 +5783,7 @@ public class SWBUtils {
 				keyGen.initialize(1024);
 				return keyGen.genKeyPair();
 			} catch (Exception e) {
-				e.printStackTrace();
+				LOG.error(e);
 				assert (false);
 			}
 			return null;
@@ -5772,8 +5842,7 @@ public class SWBUtils {
 		 * @param password
 		 * @return
 		 */
-		public static String decryptPassword(String password, java.security.KeyPair RSA512key)
-				throws GeneralSecurityException {
+		public static String decryptPassword(String password, java.security.KeyPair RSA512key) throws GeneralSecurityException {
 			Cipher c = Cipher.getInstance("RSA");
 			c.init(Cipher.DECRYPT_MODE, RSA512key.getPrivate());
 			return new String(c.doFinal(hexStringToByteArray(password)));
@@ -5798,7 +5867,7 @@ public class SWBUtils {
 	 * </p>
 	 */
 	public static class Collections {
-		
+
 		private Collections () {}
 
 		/**
@@ -5814,7 +5883,7 @@ public class SWBUtils {
 		 *         {@code list} formado por los mismos elementos que tiene {@code it}.
 		 */
 		public static List copyIterator(Iterator it) {
-			ArrayList ret = new ArrayList();
+			List ret = new ArrayList();
 			while (it.hasNext()) {
 				Object ref = it.next();
 				ret.add(ref);
@@ -5843,36 +5912,6 @@ public class SWBUtils {
 				size++;
 			}
 			return size;
-		}
-
-		/**
-		 * Filtra iterador por medio de la interface FilterRule, la cual hay que
-		 * implementar cuando se utilice
-		 *
-		 * @param it
-		 * @param rule
-		 * @return
-		 */
-		public static List filterIterator(Iterator it, FilterRule rule) {
-			List ret = new ArrayList();
-			while (it.hasNext()) {
-				Object object = it.next();
-				if (!rule.filter(object)) {
-					ret.add(object);
-				}
-			}
-			return ret;
-		}
-
-		public static List filterIterator(Iterator it, GenericFilterRule rule) {
-			List ret = new ArrayList();
-			while (it.hasNext()) {
-				Object object = it.next();
-				if (!rule.filter(object)) {
-					ret.add(object);
-				}
-			}
-			return ret;
 		}
 	}
 }

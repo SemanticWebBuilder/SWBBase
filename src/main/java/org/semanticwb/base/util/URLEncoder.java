@@ -47,22 +47,22 @@ import sun.security.action.GetPropertyAction;
  * <p>
  * <ul>
  * <li>The alphanumeric characters &quot;<code>a</code>&quot; through
- *     &quot;<code>z</code>&quot;, &quot;<code>A</code>&quot; through
- *     &quot;<code>Z</code>&quot; and &quot;<code>0</code>&quot;
- *     through &quot;<code>9</code>&quot; remain the same.
+ * &quot;<code>z</code>&quot;, &quot;<code>A</code>&quot; through
+ * &quot;<code>Z</code>&quot; and &quot;<code>0</code>&quot;
+ * through &quot;<code>9</code>&quot; remain the same.
  * <li>The special characters &quot;<code>.</code>&quot;,
- *     &quot;<code>-</code>&quot;, &quot;<code>*</code>&quot;, and
- *     &quot;<code>_</code>&quot; remain the same.
+ * &quot;<code>-</code>&quot;, &quot;<code>*</code>&quot;, and
+ * &quot;<code>_</code>&quot; remain the same.
  * <li>The space character &quot;<code>&nbsp;</code>&quot; is
- *     converted into a plus sign &quot;<code>+</code>&quot;.
+ * converted into a plus sign &quot;<code>+</code>&quot;.
  * <li>All other characters are unsafe and are first converted into
- *     one or more bytes using some encoding scheme. Then each byte is
- *     represented by the 3-character string
- *     &quot;<code>%<i>xy</i></code>&quot;, where <i>xy</i> is the
- *     two-digit hexadecimal representation of the byte.
- *     The recommended encoding scheme to use is UTF-8. However,
- *     for compatibility reasons, if an encoding is not specified,
- *     then the default encoding of the platform is used.
+ * one or more bytes using some encoding scheme. Then each byte is
+ * represented by the 3-character string
+ * &quot;<code>%<i>xy</i></code>&quot;, where <i>xy</i> is the
+ * two-digit hexadecimal representation of the byte.
+ * The recommended encoding scheme to use is UTF-8. However,
+ * for compatibility reasons, if an encoding is not specified,
+ * then the default encoding of the platform is used.
  * </ul>
  *
  * <p>
@@ -72,24 +72,28 @@ import sun.security.action.GetPropertyAction;
  * &#252; is encoded as two bytes C3 (hex) and BC (hex), and the
  * character @ is encoded as one byte 40 (hex).
  *
- * @author  Herb Jellinek
+ * @author Herb Jellinek
  * @version 1.26, 04/15/02
- * @since   JDK1.0
+ * @since JDK1.0
  */
-public class URLEncoder
-{
-    
-    /** The dont need encoding. */
+public class URLEncoder {
+
+    /**
+     * The dont need encoding.
+     */
     static BitSet dontNeedEncoding;
-    
-    /** The Constant caseDiff. */
+
+    /**
+     * The Constant caseDiff.
+     */
     static final int caseDiff = ('a' - 'A');
-    
-    /** The dflt enc name. */
+
+    /**
+     * The dflt enc name.
+     */
     static String dfltEncName = null;
 
-    static
-    {
+    static {
 
         /* The list of characters that are not encoded has been
          * determined as follows:
@@ -129,16 +133,13 @@ public class URLEncoder
 
         dontNeedEncoding = new BitSet(256);
         int i;
-        for (i = 'a'; i <= 'z'; i++)
-        {
+        for (i = 'a'; i <= 'z'; i++) {
             dontNeedEncoding.set(i);
         }
-        for (i = 'A'; i <= 'Z'; i++)
-        {
+        for (i = 'A'; i <= 'Z'; i++) {
             dontNeedEncoding.set(i);
         }
-        for (i = '0'; i <= '9'; i++)
-        {
+        for (i = '0'; i <= '9'; i++) {
             dontNeedEncoding.set(i);
         }
         //dontNeedEncoding.set(' '); /* encoding a space to a + is done
@@ -148,43 +149,35 @@ public class URLEncoder
         dontNeedEncoding.set('.');
         dontNeedEncoding.set('*');
 
-        try
-        {
+        try {
             dfltEncName = (String) AccessController.doPrivileged(
-                new GetPropertyAction("file.encoding")
+                    new GetPropertyAction("file.encoding")
             );
-        }catch(Exception e)
-        {
-            dfltEncName=SWBUtils.TEXT.getDafaultEncoding();
+        } catch (Exception e) {
+            dfltEncName = SWBUtils.TEXT.getDafaultEncoding();
         }
     }
 
     /**
      * You can't call the constructor.
      */
-    private URLEncoder()
-    {
+    private URLEncoder() {
     }
 
     /**
      * Translates a string into <code>x-www-form-urlencoded</code>
      * format. This method uses the platform's default encoding
      * as the encoding scheme to obtain the bytes for unsafe characters.
-     * 
+     *
      * @param s the s
-     * @return  the translated .
+     * @return the translated .
      */
-    public static String encode(String s)
-    {
-
+    public static String encode(String s) {
         String str = null;
-
         if (s != null) {
-            try
-            {
+            try {
                 str = encode(s, dfltEncName);
-            } catch (UnsupportedEncodingException e)
-            {
+            } catch (UnsupportedEncodingException e) {
                 // The system should always have the platform default
             }
         }
@@ -203,48 +196,37 @@ public class URLEncoder
      * World Wide Web Consortium Recommendation</a> states that
      * UTF-8 should be used. Not doing so may introduce
      * incompatibilites.</em>
-     * 
-     * @param s the s
+     *
+     * @param s   the s
      * @param enc the enc
-     * @return  the translated .
+     * @return the translated .
      * @throws UnsupportedEncodingException the unsupported encoding exception
-     * @exception  UnsupportedEncodingException
-     * If the named encoding is not supported
+     * @throws UnsupportedEncodingException If the named encoding is not supported
      * @see URLDecoder#decode(java.lang.String, java.lang.String)
      * @since 1.4
      */
-    public static String encode(String s, String enc)
-            throws UnsupportedEncodingException
-    {
-
+    public static String encode(String s, String enc) throws UnsupportedEncodingException {
         boolean needToChange = false;
         boolean wroteUnencodedChar = false;
         int maxBytesPerChar = 10; // rather arbitrary limit, but safe for now
         StringBuilder out = new StringBuilder(s.length());
         ByteArrayOutputStream buf = new ByteArrayOutputStream(maxBytesPerChar);
 
-        BufferedWriter writer =
-                new BufferedWriter(new OutputStreamWriter(buf, enc));
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(buf, enc));
 
-        for (int i = 0; i < s.length(); i++)
-        {
+        for (int i = 0; i < s.length(); i++) {
             int c = (int) s.charAt(i);
-            if (dontNeedEncoding.get(c))
-            {
-                if (c == ' ')
-                {
+            if (dontNeedEncoding.get(c)) {
+                if (c == ' ') {
                     c = '+';
                     needToChange = true;
                 }
                 out.append((char) c);
                 wroteUnencodedChar = true;
-            } else
-            {
+            } else {
                 // convert to external encoding before hex conversion
-                try
-                {
-                    if (wroteUnencodedChar)
-                    { // Fix for 4407610
+                try {
+                    if (wroteUnencodedChar) { // Fix for 4407610
                         writer = new BufferedWriter(new OutputStreamWriter(buf, enc));
                         wroteUnencodedChar = false;
                     }
@@ -257,39 +239,32 @@ public class URLEncoder
                      * surrogate pair. For now, just treat it as if it were
                      * any other character.
                      */
-                    if (c >= 0xD800 && c <= 0xDBFF)
-                    {
-                        if ((i + 1) < s.length())
-                        {
+                    if (c >= 0xD800 && c <= 0xDBFF) {
+                        if ((i + 1) < s.length()) {
                             int d = (int) s.charAt(i + 1);
-                            if (d >= 0xDC00 && d <= 0xDFFF)
-                            {
+                            if (d >= 0xDC00 && d <= 0xDFFF) {
                                 writer.write(d);
                                 i++;
                             }
                         }
                     }
                     writer.flush();
-                } catch (IOException e)
-                {
+                } catch (IOException e) {
                     buf.reset();
                     continue;
                 }
                 byte[] ba = buf.toByteArray();
-                for (int j = 0; j < ba.length; j++)
-                {
+                for (int j = 0; j < ba.length; j++) {
                     out.append('%');
                     char ch = Character.forDigit((ba[j] >> 4) & 0xF, 16);
                     // converting to use uppercase letter as part of
                     // the hex value if ch is a letter.
-                    if (Character.isLetter(ch))
-                    {
+                    if (Character.isLetter(ch)) {
                         ch -= caseDiff;
                     }
                     out.append(ch);
                     ch = Character.forDigit(ba[j] & 0xF, 16);
-                    if (Character.isLetter(ch))
-                    {
+                    if (Character.isLetter(ch)) {
                         ch -= caseDiff;
                     }
                     out.append(ch);

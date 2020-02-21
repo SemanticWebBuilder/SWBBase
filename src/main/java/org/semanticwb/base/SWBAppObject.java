@@ -23,7 +23,7 @@
 package org.semanticwb.base;
 
 /**
- * Application object that need to perform some operations constantly in time or
+ * Interface for an Application object that needs to perform some operations constantly in time or
  * by events that are very common in the entire application, hence will remain
  * alive while the application is running.
  * <p>
@@ -56,7 +56,7 @@ public interface SWBAppObject {
 	 * de la aplicaci&oacute;n para dejar de interactuar con este objeto.
 	 * </p>
 	 */
-	public void destroy();
+	void destroy();
 
 	/**
 	 * Updates the state of this object.
@@ -64,5 +64,5 @@ public interface SWBAppObject {
 	 * Actualiza el estado de este objeto.
 	 * </p>
 	 */
-	public void refresh();
+	void refresh();
 }

@@ -31,6 +31,8 @@ import java.io.FileNotFoundException;
  *
  * @author jorge.jimenez
  */
+//TODO: Delete this wrapper class because only calls parent methods.
+@Deprecated
 public class SWBFileInputStream extends FileInputStream {
 
     public SWBFileInputStream(String name) throws FileNotFoundException {
