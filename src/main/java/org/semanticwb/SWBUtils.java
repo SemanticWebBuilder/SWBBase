@@ -461,6 +461,16 @@ public class SWBUtils {
 		 * </p>
 		 */
 		private static String defencoding = null;
+		/**
+		 * a string that contains all characters in the english alphabet and the 10
+		 * digits.
+		 * <p>
+		 * una string que contiene todos los caracteres del alfabeto ingl&eacute;s y los
+		 * 10 d&iacute;gitos del sistema decimal.
+		 * </p>
+		 * Used to generate strings with characters selected randomly.
+		 */
+		private final static String ALPHABETH = "ABCDEFGHiJKLMNPQRSTUVWXYZ123456789+=?";
 
 		//TODO: Refactor SimpleDateFormatTS attributes to use Java DateTimeFormatter class
 		public static final SimpleDateFormatTS formatter = new SimpleDateFormatTS("MMMM");
@@ -556,6 +566,27 @@ public class SWBUtils {
 				return nname;
 			}
 			return null;
+		}
+
+		/**
+		 * Generates a string of {@code size} characters selected in a random basis.
+		 * <p>
+		 * Genera una string con {@code size} caracteres seleccionados en orden
+		 * aleatorio.
+		 * </p>
+		 *
+		 * @param size the number of characters the resulting string will contain
+		 * @return a string with {@code size} characters selected in a random basis. If
+		 * {@code size} equals zero the returning string will be empty, and if
+		 * {@code size} is less than zero an exception will be thrown.
+		 * @throws NegativeArraySizeException if the {@code size} argument is less than zero.
+		 */
+		public static String getRandomString(int size) {
+			StringBuilder sb = new StringBuilder(size);
+			for (int i = 0; i < size; i++) {
+				sb.append(ALPHABETH.charAt((int) (Math.random() * ALPHABETH.length())));
+			}
+			return sb.toString();
 		}
 
 		/**
