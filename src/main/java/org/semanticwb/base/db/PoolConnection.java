@@ -22,89 +22,47 @@
  */
 package org.semanticwb.base.db;
 
+import org.semanticwb.Logger;
+import org.semanticwb.SWBUtils;
+
 import java.io.PrintStream;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.NClob;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLClientInfoException;
-import java.sql.SQLException;
-import java.sql.SQLWarning;
-import java.sql.SQLXML;
-import java.sql.Statement;
-import java.sql.Struct;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
-import org.semanticwb.Logger;
-import org.semanticwb.SWBUtils;
-
 /**
- * Una conexión (sesión) con una base de datos. Sentencias SQL son ejecutadas y
- * los resultados se obtienen dentro del contexto de la conexión.
- *
- * Un objeto PoolConnection con una base de datos puede proporcionar la
- * información que describe sus tablas, soporta la gramática SQL, los
- * procedimientos almacenados, las capacidades de esta conexión, etc. Esta
- * información se obtiene con el método getMetaData().}
- *
+ * Custom implementation of a Database connection.
  * @author Javier Solis Gonzalez (jsolis@infotec.com.mx)
  *
  * @see java.sql.Connection
  */
 public class PoolConnection implements java.sql.Connection {
-
-	/** The log. */
 	private static Logger log = SWBUtils.getLogger(PoolConnection.class);
-
-	/** The con. */
-	private java.sql.Connection con = null;
-
-	/** The vec. */
-	private ArrayList<Object> vec = new ArrayList<>();
-
-	/** The pool. */
+	private java.sql.Connection con;
+	private ArrayList<Object> statements = new ArrayList<>();
 	private DBConnectionPool pool;
-
-	/** The isclosed. */
-	private boolean isclosed = false;
-
-	/** The description. */
+	private boolean isClosed = false;
 	private String description = "";
-
-	/** The id. */
 	private long id = 0;
-
-	/** The idleTime. */
-	private long idleTime = 0;
-
-	/** The destroy. */
+	private long idleTime;
 	private boolean destroy = false;
-
-	/** The isdestroyed. */
-	private volatile boolean isdestroyed = false;
-
-	/** The stack. */
+	private volatile boolean isDestroyed = false;
 	private StackTraceElement[] stack = null;
 	private String threadName = null;
 
+	/**
+	 * Constructor. Creates a new instance of {@link PoolConnection}.
+	 * @param con connection object to wrap in.
+	 */
 	public PoolConnection(Connection con) {
 		this(con, null);
 	}
 
 	/**
-	 * Instantiates a new pool connection.
-	 * 
-	 * @param con
-	 *            the con
-	 * @param pool
-	 *            the pool
+	 * Constructor. Creates a new instance of {@link PoolConnection} using a specified {@link DBConnectionPool}.
+	 * @param con connection object to wrap in.
+	 * @param pool connection pool to use.
 	 */
 	public PoolConnection(Connection con, DBConnectionPool pool) {
 		idleTime = System.currentTimeMillis();
@@ -118,18 +76,17 @@ public class PoolConnection implements java.sql.Connection {
 	}
 
 	/**
-	 * Inits the.
+	 * Inits the instance.
 	 */
 	public void init() {
-		isclosed = false;
+		isClosed = false;
 		description = "";
 		id = 0;
 	}
 
 	/**
-	 * Getter for property id.
-	 * 
-	 * @return Value of property id.
+	 * Gets connection id.
+	 * @return connection id.
 	 *
 	 */
 	public long getId() {
@@ -137,11 +94,8 @@ public class PoolConnection implements java.sql.Connection {
 	}
 
 	/**
-	 * Setter for property id.
-	 * 
-	 * @param id
-	 *            New value of property id.
-	 *
+	 * Sets connection id.
+	 * @param id connection id.
 	 */
 	public void setId(long id) {
 		threadName = Thread.currentThread().getName();
@@ -151,7 +105,6 @@ public class PoolConnection implements java.sql.Connection {
 
 	/**
 	 * Gets the stack trace elements.
-	 * 
 	 * @return the stack trace elements
 	 */
 	public StackTraceElement[] getStackTraceElements() {
@@ -159,10 +112,8 @@ public class PoolConnection implements java.sql.Connection {
 	}
 
 	/**
-	 * Prints the track trace.
-	 * 
-	 * @param out
-	 *            the out
+	 * Prints the track trace to a {@link PrintStream}.
+	 * @param out print stream.
 	 */
 	public void printTrackTrace(PrintStream out) {
 		for (int x = 0; x < stack.length; x++) {
@@ -171,32 +122,27 @@ public class PoolConnection implements java.sql.Connection {
 	}
 
 	/**
-	 * Gets the native connection.
-	 * 
-	 * @return the native connection
-	 * @return
+	 * Gets wrapped {@link Connection} object.
+	 * @return wrapped connection.
 	 */
-	public java.sql.Connection getNativeConnection() {
+	public Connection getNativeConnection() {
 		return con;
 	}
 
 	/**
-	 * Getter for property pool.
-	 * 
-	 * @return Value of property pool.
-	 *
+	 * Gets the {@link DBConnectionPool} object
+	 * @return connection pool.
 	 */
 	public DBConnectionPool getPool() {
 		return pool;
 	}
 
 	/**
-	 * Getter for property description.
-	 * 
-	 * @return Value of property description.
-	 *
+	 * Gets the description of this Pool. If no description is set explicitly, a concatenation
+	 * of stack trace and thread name is returned.
+	 * @return Pool description.
 	 */
-	public java.lang.String getDescription() {
+	public String getDescription() {
 		if (description == null || description.length() == 0) {
 			StringBuilder ret = new StringBuilder();
 			ret.append(threadName);
@@ -212,66 +158,46 @@ public class PoolConnection implements java.sql.Connection {
 	}
 
 	/**
-	 * Setter for property description.
-	 * 
-	 * @param description
-	 *            New value of property description.
-	 *
+	 * Sets the description for this Pool.
+	 * @param description pool description.
 	 */
-	public void setDescription(java.lang.String description) {
+	public void setDescription(String description) {
 		this.description = description;
 	}
 
 	/**
 	 * Close statements.
-	 * 
-	 * @return true, if successful
-	 * @return
+	 * @return true if statements were closed with no errors.
 	 */
 	public boolean closeStatements() {
-		boolean noerrors = true;
-		while (!vec.isEmpty()) {
-			PoolStatement st = (PoolStatement) vec.get(0);
-			if (st != null) {
+		boolean success = true;
+		while (!statements.isEmpty()) {
+			PoolStatement st = (PoolStatement) statements.get(0);
+			if (st != null && !st.isClosed()) {
 				try {
-					if (!st.isClosed()) {
-						ResultSet rs = st.getResultSet();
-						if (rs != null) {
-							rs.close();
-						}
-						st.close();
-						log.warn("Statement was not closed..., " + description);
-						noerrors = false;
+					ResultSet rs = st.getResultSet();
+					if (rs != null) {
+						rs.close();
 					}
+					st.close();
+					log.warn("Statement was not closed..., " + description);
+					success = false;
 				} catch (SQLException noe) {/* Es correcto el error, ya que el susuario cerro la conexion */
 
 				}
 			}
-			vec.remove(0);
+			statements.remove(0);
 		}
-		return noerrors;
+		return success;
 	}
 
 	/**
-	 * _close.
-	 * 
-	 */
-	public void _close() {
-		destroyConnection();
-	}
-
-	/**
-	 * Cierra la conexión con la base de datos en vez de esperar. Una conexión puede
-	 * ser cerrada automáticamente cuando es garbage collected. También ciertos
-	 * errores fatales puden cerrar la conexión.
-	 * 
-	 * @throws SQLException
-	 *             the sQL exception
-	 * @exception java.sql.SQLException
-	 *                Si un error de acceso a kla base de datos ocurre.
+	 * Closes connection without waiting. A connection can be automatically closed when
+	 * garbage collected or by certain errors.
+	 * @throws SQLException when an database error occurs.
 	 */
 	public void close() throws SQLException {
-		if (!isclosed) {
+		if (!isClosed) {
 			if (destroy) {
 				log.trace("Connection.close(destroy):" + getId());
 				try {
@@ -281,48 +207,45 @@ public class PoolConnection implements java.sql.Connection {
 					log.error("Connection " + description + ", close.setAutocomit(false):", e);
 				}
 			}
-			isclosed = true;
-			if (pool != null)
+
+			isClosed = true;
+			if (pool != null) {
 				pool.getConnectionManager().getTimeLock().removeConnection(this);
+			}
+
 			idleTime = System.currentTimeMillis();
 			try {
 				closeStatements();
 			} catch (Exception e) {
 				log.error("Connection " + description + ", closeStatement:", e);
 			}
+
 			try {
-				if (pool != null)
+				if (pool != null) {
 					pool.freeConnection(this);
+					log.trace("close:(" + getId() + "," + pool.getName() + "):" + pool.checkedOut);
+				}
 			} catch (Exception e) {
 				log.error("Connection " + description + ", freeConnection:", e);
 			}
-			if (pool != null)
-				log.trace("close:(" + getId() + "," + pool.getName() + "):" + pool.checkedOut);
 		}
 	}
 
 	/**
-	 * Configura el modo auto-commit de la conexión en el estado determinado. Si una
-	 * conexión está en auto-commit, entonces cada sentencia SQL será procesada y el
-	 * commit se ejecutará por cada una como una transacción individual. De lo
-	 * contrario, sus sentencias SQL se agrupan en una transacción que finalizará
-	 * por una llamada al método <code>commit</code> o al método
-	 * <code>rollback</code>. Por default un nuevo objeto PoolConnection está en
-	 * modo auto-commit.
-	 * 
-	 * @param param
-	 *            the new auto commit
-	 * @throws SQLException
-	 *             the sQL exception
-	 * @exception java.sql.SQLException
-	 *                Si un error de acceso a kla base de datos ocurre.
-	 * @see getAutoCommit()
+	 * Sets connection auto-commit mode. On auto-commit enabled connections, each SQL
+	 * sentence will be processed and committed as a separate transaction. When connection
+	 * is not in auto-commit mode, all SQL sentences are grouped in a single transaction
+	 * that will be committed using <code>commit</code> or <code>rollback</code> methods.
+	 * New instances of {@link PoolConnection} class are auto-commit enabled by default.
+	 *
+	 * @param enable boolean value to set auto-commit. TRUE for enable, FALSE for disable.
+	 * @throws SQLException if value setting fails.
 	 */
-	public void setAutoCommit(boolean param) throws SQLException {
-		if (!param) {
+	public void setAutoCommit(boolean enable) throws SQLException {
+		if (!enable) {
 			destroy = true;
 		}
-		con.setAutoCommit(param);
+		con.setAutoCommit(enable);
 	}
 
 	/*
@@ -403,8 +326,8 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#nativeSQL(java.lang.String)
 	 */
-	public String nativeSQL(String str) throws SQLException {
-		return con.nativeSQL(str);
+	public String nativeSQL(String sql) throws SQLException {
+		return con.nativeSQL(sql);
 	}
 
 	/*
@@ -412,8 +335,8 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#prepareStatement(java.lang.String, int, int)
 	 */
-	public PreparedStatement prepareStatement(String str, int param, int param2) throws SQLException {
-		return con.prepareStatement(str, param, param2);
+	public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
+		return con.prepareStatement(sql, resultSetType, resultSetConcurrency);
 	}
 
 	/*
@@ -421,8 +344,8 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#setTransactionIsolation(int)
 	 */
-	public void setTransactionIsolation(int param) throws SQLException {
-		con.setTransactionIsolation(param);
+	public void setTransactionIsolation(int level) throws SQLException {
+		con.setTransactionIsolation(level);
 	}
 
 	/*
@@ -430,9 +353,9 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#setReadOnly(boolean)
 	 */
-	public void setReadOnly(boolean param) throws SQLException {
+	public void setReadOnly(boolean readOnly) throws SQLException {
 		destroy = true;
-		con.setReadOnly(param);
+		con.setReadOnly(readOnly);
 	}
 
 	/*
@@ -440,9 +363,9 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#setCatalog(java.lang.String)
 	 */
-	public void setCatalog(String str) throws SQLException {
+	public void setCatalog(String catalog) throws SQLException {
 		destroy = true;
-		con.setCatalog(str);
+		con.setCatalog(catalog);
 	}
 
 	/*
@@ -451,7 +374,7 @@ public class PoolConnection implements java.sql.Connection {
 	 * @see java.sql.Connection#isClosed()
 	 */
 	public boolean isClosed() throws SQLException {
-		return isclosed || con.isClosed();
+		return isClosed || con.isClosed();
 	}
 
 	/*
@@ -461,7 +384,7 @@ public class PoolConnection implements java.sql.Connection {
 	 */
 	public Statement createStatement() throws SQLException {
 		Statement st = new PoolStatement(con.createStatement(), this);
-		vec.add(st);
+		statements.add(st);
 		return st;
 	}
 
@@ -470,9 +393,9 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#createStatement(int, int)
 	 */
-	public Statement createStatement(int param, int param1) throws SQLException {
-		Statement st = new PoolStatement(con.createStatement(param, param1), this);
-		vec.add(st);
+	public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
+		Statement st = new PoolStatement(con.createStatement(resultSetType, resultSetConcurrency), this);
+		statements.add(st);
 		return st;
 	}
 
@@ -481,8 +404,8 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#prepareStatement(java.lang.String)
 	 */
-	public PreparedStatement prepareStatement(String str) throws SQLException {
-		return new PoolPreparedStatement(con.prepareStatement(str), str, this);
+	public PreparedStatement prepareStatement(String sql) throws SQLException {
+		return new PoolPreparedStatement(con.prepareStatement(sql), sql, this);
 	}
 
 	/*
@@ -499,8 +422,8 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#prepareCall(java.lang.String)
 	 */
-	public CallableStatement prepareCall(String str) throws SQLException {
-		return con.prepareCall(str);
+	public CallableStatement prepareCall(String sql) throws SQLException {
+		return con.prepareCall(sql);
 	}
 
 	/*
@@ -517,8 +440,8 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#prepareCall(java.lang.String, int, int)
 	 */
-	public CallableStatement prepareCall(String str, int param, int param2) throws SQLException {
-		return con.prepareCall(str, param, param2);
+	public CallableStatement prepareCall(String sql, int resultType, int resultConcurrency) throws SQLException {
+		return con.prepareCall(sql, resultType, resultConcurrency);
 	}
 
 	/*
@@ -531,24 +454,28 @@ public class PoolConnection implements java.sql.Connection {
 	}
 
 	/**
-	 * Destroy connection.
+	 * Destroys connection.
 	 */
 	protected void destroyConnection() {
-		if (isdestroyed == false) {
-			isdestroyed = true;
-			isclosed = true;
+		if (!isDestroyed) {
+			isDestroyed = true;
+			isClosed = true;
 			if (pool != null) {
 				pool.checkedOut--;
 				pool.getConnectionManager().getTimeLock().removeConnection(this);
 			}
+
 			try {
-				if (!con.isClosed())
+				if (!con.isClosed()) {
 					con.close();
+				}
 			} catch (Exception e) {
 				log.error("Connection " + description + " finalize", e);
 			}
-			if (pool != null)
+
+			if (pool != null) {
 				log.debug("destroyConnection:(" + getId() + "," + pool.getName() + "):" + pool.checkedOut);
+			}
 		}
 	}
 
@@ -562,7 +489,7 @@ public class PoolConnection implements java.sql.Connection {
 		// We are no longer referenced by anyone (including the
 		// connection pool). Time to close down.
 		try {
-			if (isdestroyed == false) {
+			if (!isDestroyed) {
 				log.warn("finalize(" + getId() + ")..., connection was not closed, " + description);
 				destroyConnection();
 			}
@@ -578,10 +505,9 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#setSavepoint()
 	 */
-	public java.sql.Savepoint setSavepoint() throws java.sql.SQLException {
+	public Savepoint setSavepoint() throws SQLException {
 		destroy = true;
 		return con.setSavepoint();
-		// return null;
 	}
 
 	/*
@@ -589,9 +515,9 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#setHoldability(int)
 	 */
-	public void setHoldability(int param) throws java.sql.SQLException {
+	public void setHoldability(int holdability) throws SQLException {
 		destroy = true;
-		con.setHoldability(param);
+		con.setHoldability(holdability);
 	}
 
 	/*
@@ -599,8 +525,8 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#prepareStatement(java.lang.String, int)
 	 */
-	public java.sql.PreparedStatement prepareStatement(java.lang.String str, int param) throws java.sql.SQLException {
-		return con.prepareStatement(str, param);
+	public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
+		return con.prepareStatement(sql, autoGeneratedKeys);
 	}
 
 	/*
@@ -608,9 +534,8 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#prepareStatement(java.lang.String, int, int, int)
 	 */
-	public java.sql.PreparedStatement prepareStatement(java.lang.String str, int param, int param2, int param3)
-			throws java.sql.SQLException {
-		return con.prepareStatement(str, param, param2, param3);
+	public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+		return con.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
 	}
 
 	/*
@@ -618,9 +543,8 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#prepareStatement(java.lang.String, int[])
 	 */
-	public java.sql.PreparedStatement prepareStatement(java.lang.String str, int[] values)
-			throws java.sql.SQLException {
-		return con.prepareStatement(str, values);
+	public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
+		return con.prepareStatement(sql, columnIndexes);
 	}
 
 	/*
@@ -628,7 +552,7 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#getHoldability()
 	 */
-	public int getHoldability() throws java.sql.SQLException {
+	public int getHoldability() throws SQLException {
 		return con.getHoldability();
 	}
 
@@ -637,7 +561,7 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#setSavepoint(java.lang.String)
 	 */
-	public java.sql.Savepoint setSavepoint(java.lang.String str) throws java.sql.SQLException {
+	public Savepoint setSavepoint(String str) throws SQLException {
 		destroy = true;
 		return con.setSavepoint(str);
 	}
@@ -647,8 +571,8 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#createStatement(int, int, int)
 	 */
-	public java.sql.Statement createStatement(int param, int param1, int param2) throws java.sql.SQLException {
-		return con.createStatement(param, param1, param2);
+	public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+		return con.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
 	}
 
 	/*
@@ -656,9 +580,8 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#prepareCall(java.lang.String, int, int, int)
 	 */
-	public java.sql.CallableStatement prepareCall(java.lang.String str, int param, int param2, int param3)
-			throws java.sql.SQLException {
-		return con.prepareCall(str, param, param2, param3);
+	public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+		return con.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
 	}
 
 	/*
@@ -666,7 +589,7 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#releaseSavepoint(java.sql.Savepoint)
 	 */
-	public void releaseSavepoint(java.sql.Savepoint savepoint) throws java.sql.SQLException {
+	public void releaseSavepoint(Savepoint savepoint) throws SQLException {
 		con.releaseSavepoint(savepoint);
 	}
 
@@ -676,9 +599,8 @@ public class PoolConnection implements java.sql.Connection {
 	 * @see java.sql.Connection#prepareStatement(java.lang.String,
 	 * java.lang.String[])
 	 */
-	public java.sql.PreparedStatement prepareStatement(java.lang.String str, java.lang.String[] str1)
-			throws java.sql.SQLException {
-		return con.prepareStatement(str, str1);
+	public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
+		return con.prepareStatement(sql, columnNames);
 	}
 
 	/*
@@ -686,15 +608,14 @@ public class PoolConnection implements java.sql.Connection {
 	 * 
 	 * @see java.sql.Connection#rollback(java.sql.Savepoint)
 	 */
-	public void rollback(java.sql.Savepoint savepoint) throws java.sql.SQLException {
+	public void rollback(Savepoint savepoint) throws SQLException {
 		destroy = true;
 		con.rollback(savepoint);
 	}
 
 	/**
-	 * Getter for property idle_time.
-	 * 
-	 * @return Value of property idle_time.
+	 * Gets the idle time.
+	 * @return idle time.
 	 */
 	public long getIdleTime() {
 		return idleTime;
