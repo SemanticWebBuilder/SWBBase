@@ -22,78 +22,52 @@
  */
 package org.semanticwb.base.db;
 
+import org.semanticwb.Logger;
+import org.semanticwb.SWBUtils;
+import org.semanticwb.base.util.SWBProperties;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Properties;
-import java.util.StringTokenizer;
-
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.sql.DataSource;
-
-import org.semanticwb.Logger;
-import org.semanticwb.SWBUtils;
-import org.semanticwb.base.util.SWBProperties;
+import java.util.*;
 
 /**
- * Esta clase proporciona acceso a uno o más connection pools
- * definidos en el archivo de propiedades db.properties. 
+ * Class to manage several connection pools defined in db.properties configuration file.
  *
  * @author  Javier Solis Gonzalez (jsolis@infotec.com.mx)
  */
 public class DBConnectionManager {
-
-    /** The log. */
     private static Logger log = SWBUtils.getLogger(DBConnectionManager.class);
-    
-    /** The drivers. */
     private ArrayList<Driver> drivers = new ArrayList<>();
-    
-    /** The pools. */
     private Hashtable<String, Object> pools = new Hashtable<>();
-    
-    /** The is jndi. */
     private boolean isJNDI;
-    
-    /** The JNDI patern. */
-    private String JNDIPatern;
-    
-    /** The init ctx. */
+    private String jndiPattern;
     private Context initCtx;
-    
-    /** The time lock. */
     private PoolConnectionTimeLock timeLock = new PoolConnectionTimeLock();
 
     /**
-     * Instantiates a new dB connection manager.
+     * Creates a new {@link DBConnectionManager}.
      */
-    public DBConnectionManager()
-    {
+    public DBConnectionManager() {
         log.event("Initializing DBConnectionManager...");
         init();
     }
 
     /**
-     * Gets the num connections.
-     * 
-     * @return the num connections
-     * @return
+     * Gets the total number of free connections available in all managed pools.
+     * @return free connection count on all pools.
      */
-    public int getNumConnections()
-    {
+    public int getNumConnections() {
         int cl = 0;
-        Enumeration allPools = pools.elements();
-        if (!isJNDI)
-        {
-            while (allPools.hasMoreElements())
-            {
+        if (!isJNDI) {
+            Enumeration allPools = pools.elements();
+            while (allPools.hasMoreElements()) {
                 DBConnectionPool pool = (DBConnectionPool) allPools.nextElement();
                 cl += pool.freeConnections.size();
             }
@@ -102,20 +76,15 @@ public class DBConnectionManager {
     }
 
     /**
-     * Gets the connections.
-     * 
-     * @param name the name
-     * @return the connections
-     * @return
+     * Gets total count of connections of a named Pool.
+     * @param name Pool name.
+     * @return number of connections.
      */
-    public int getConnections(String name)
-    {
+    public int getConnections(String name) {
         int cl = 0;
-        if (!isJNDI)
-        {
+        if (!isJNDI) {
             DBConnectionPool pool = (DBConnectionPool) pools.get(name);
-            if (pool != null)
-            {
+            if (pool != null) {
                 cl = pool.checkedOut;
             }
         }
@@ -123,20 +92,15 @@ public class DBConnectionManager {
     }
 
     /**
-     * Gets the free connections.
-     * 
-     * @param name the name
-     * @return the free connections
-     * @return
+     * Gets count of free connections on a named Pool.
+     * @param name pool name.
+     * @return free connections count.
      */
-    public int getFreeConnections(String name)
-    {
+    public int getFreeConnections(String name) {
         int cl = 0;
-        if (!isJNDI)
-        {
+        if (!isJNDI) {
             DBConnectionPool pool = (DBConnectionPool) pools.get(name);
-            if (pool != null)
-            {
+            if (pool != null) {
                 cl = pool.freeConnections.size();
             }
         }
@@ -144,183 +108,142 @@ public class DBConnectionManager {
     }
 
     /**
-     * Cierra una conexi�n del pool especificado.
-     * 
-     * @param name the name
-     * @param con the con
+     * Closes a connection on a named Pool.
+     * @param name pool name.
+     * @param con {@link Connection} object to close.
      */
-    public void freeConnection(String name, Connection con)
-    {
-        if (!isJNDI)
-        {
+    public void freeConnection(String name, Connection con) {
+        if (!isJNDI) {
             DBConnectionPool pool = (DBConnectionPool) pools.get(name);
-            if (pool != null)
-            {
+            if (pool != null) {
                 pool.freeConnection(con);
             }
-        } else
-        {
-            try
-            {
-                if (con != null)
-                {
+        } else {
+            try {
+                if (con != null) {
                     con.close();
                 }
-            } catch (SQLException ex)
-            {
-                log.error("Error to create JNDI Pool Connection...", ex);
+            } catch (SQLException ex) {
+                log.error("Error closing JNDI Pool Connection...", ex);
             }
         }
     }
 
     /**
-     * Regresa una conexión que no pertenece al pool.
-     * 
-     * @param name the name
-     * @return  Connection  La conexi�n o nulo.
+     * Gets a {@link Connection} object related with no Pool from a named Pool.
+     * @param name pool name.
+     * @return new connection or null.
      */
-    public Connection getNoPoolConnection(String name)
-    {
-        Connection ret = null;
+    public Connection getNoPoolConnection(String name) {
         DBConnectionPool pool = (DBConnectionPool) pools.get(name);
-        if (pool != null)
-        {
-            ret = pool.newNoPoolConnection();
+        if (pool != null) {
+            return pool.newNoPoolConnection();
         }
-        return ret;
+        return null;
     }
 
     /**
-     * Regresa una conexión que no se registra en el pool, pero que se auto restablece si se piede la conexion.
-     * 
-     * @param name the name
-     * @return  Connection  La conexión o nulo.
+     * Gets an {@link AutoConnection} object related with no Pool from a named Pool.
+     * @param name pool name.
+     * @return new connection or null.
      */
-    public Connection getAutoConnection(String name)
-    {
-        Connection ret = null;
+    public Connection getAutoConnection(String name) {
         DBConnectionPool pool = (DBConnectionPool) pools.get(name);
-        if (pool != null)
-        {
-            ret = pool.newAutoConnection();
+        if (pool != null) {
+            return pool.newAutoConnection();
         }
-        return ret;
+        return null;
     }
 
     /**
-     * Regresa una conexión abierta. Si ninguna otra conexión está disponible y el número máximo
-     * de conexiones no se ha alcanzado, una nueva conexión es creada.
-     * 
-     * @param name the name
-     * @return  Connection  La conexión o nulo.
+     * Gets an open connection or creates a new one without description.
+     * @param name Pool name.
+     * @return new connection or null.
      */
-    public Connection getConnection(String name)
-    {
+    public Connection getConnection(String name) {
         return getConnection(name, null);
     }
 
     /**
-     * Regresa una conexión abierta. Si ninguna otra conexión está disponible y el número máximo
-     * de conexiones no se ha alcanzado, una nueva conexión es creada.
+     * Gets an open connection or creates a new one with given description.
      * 
-     * @param name the name
-     * @param description the description
-     * @return  Connection  La conexión o nulo.
+     * @param name pool name.
+     * @param description connection description.
+     * @return new connection or null..
      */
-    public Connection getConnection(String name, String description)
-    {
+    public Connection getConnection(String name, String description) {
         Connection ret = null;
-        if (!isJNDI)
-        {
+        if (!isJNDI) {
             DBConnectionPool pool = (DBConnectionPool) pools.get(name);
-            if (pool != null)
-            {
+            if (pool != null) {
                 PoolConnection con = (PoolConnection) pool.getConnection();
                 ret = con;
             }
-        } else
-        {
+        } else {
             DataSource ds = (DataSource) pools.get(name);
-            if (ds == null)
-            {
-                try
-                {
-                    ds = (DataSource) initCtx.lookup(JNDIPatern + name);
+            if (ds == null) {
+                try {
+                    ds = (DataSource) initCtx.lookup(jndiPattern + name);
                     pools.put(name, ds);
                     log.info("Initialized JNDI Connection Pool " + name);
-                } catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     log.error("Error to get DataSource of Context...", ex);
                 }
-            }
-            try
-            {
-                ret = ds.getConnection();
-            } catch (SQLException ex)
-            {
-                log.error("Error to get JNDI Pool Connection...", ex);
+            } else {
+                try {
+                    ret = ds.getConnection();
+                } catch (SQLException ex) {
+                    log.error("Error to get JNDI Pool Connection...", ex);
+                }
             }
         }
         return ret;
     }
 
     /**
-     * Regresa una conexión abierta. Si ninguna otra conexión está disponible y el número máximo
-     * de conexiones no se ha alcanzado, una nueva conexión es creada. Si el número máximo ha sido
-     * alcanzado espera hasta que una conexión este disponible o el tiempo especificado haya
-     * transcurrido.
+     * Gets an open connection or creates a new one. It will wait a maximum of <code>time</code> milliseconds
+     * while attempting to connect to a database.
      * 
-     * @param name the name
-     * @param time the time
-     * @return  Connection  La conexión o nulo.
+     * @param name pool name.
+     * @param time timeout in milliseconds.
+     * @return connection or null.
      */
-    public Connection getConnection(String name, long time)
-    {
+    public Connection getConnection(String name, long time) {
         Connection ret = null;
-        if (!isJNDI)
-        {
+        if (!isJNDI) {
             DBConnectionPool pool = (DBConnectionPool) pools.get(name);
-            if (pool != null)
-            {
+            if (pool != null) {
                 ret = pool.getConnection(time);
             }
-        } else
-        {
+        } else {
             DataSource ds = (DataSource) pools.get(name);
-            if (ds == null)
-            {
-                try
-                {
-                    ds = (DataSource) initCtx.lookup(JNDIPatern + name);
+            if (ds == null) {
+                try {
+                    ds = (DataSource) initCtx.lookup(jndiPattern + name);
                     pools.put(name, ds);
                     log.info("Initialized JNDI Pool [" + name + "]");
-                } catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     log.error("Error to get DataSource of Context...", ex);
                 }
-            }
-            try
-            {
-                ds.setLoginTimeout((int) (time / 1000));
-                ret = ds.getConnection();
-            } catch (SQLException ex)
-            {
-                log.error("Error to get JNDI Pool Connection...", ex);
+            } else {
+                try {
+                    ds.setLoginTimeout((int) (time / 1000));
+                    ret = ds.getConnection();
+                } catch (SQLException ex) {
+                    log.error("Error to get JNDI Pool Connection...", ex);
+                }
             }
         }
         return ret;
     }
 
     /**
-     * Cierra todas las conexiones abiertas.
+     * Closes all connections.
      */
-    public void closeAllConnection()
-    {
+    public void closeAllConnection() {
         Enumeration allPools = pools.elements();
-        if (!isJNDI)
-        {
-            while (allPools.hasMoreElements())
-            {
+        if (!isJNDI) {
+            while (allPools.hasMoreElements()) {
                 DBConnectionPool pool = (DBConnectionPool) allPools.nextElement();
                 pool.release();
             }
@@ -328,29 +251,25 @@ public class DBConnectionManager {
     }
 
     /**
-     * Crea instancias del DBConnectionPool basandose en el archivo de propiedades.
-     * Un DBConnectionPool puede ser definido con las siguientes propiedades:
+     * Creates {@link DBConnectionPool} instances with parameters from a {@link Properties} object.
+     * Properties must match values defined in db.properties file.
      * <PRE>
-     * &lt;poolname&gt;.url         El URL JDBC de la base de datos.
-     * &lt;poolname&gt;.user        Un usuario de la base de datos (opcional)
-     * &lt;poolname&gt;.password    El password del usuario de la base de datos. (Si el usuario se especifica)
-     * &lt;poolname&gt;.maxconn     El número máximo de conexiones (opcional)
+     * &lt;poolname&gt;.url         JDBC URL connection String.
+     * &lt;poolname&gt;.user        Database user (optional)
+     * &lt;poolname&gt;.password    Database password (required if user is defined)
+     * &lt;poolname&gt;.maxconn     Maximum number of connections managed by the pool (optional)
      * </PRE>
      * 
-     * @param props the props
+     * @param props properties object.
      */
-    private void createPools(Properties props)
-    {
+    private void createPools(Properties props) {
         Enumeration propNames = props.propertyNames();
-        while (propNames.hasMoreElements())
-        {
+        while (propNames.hasMoreElements()) {
             String name = (String) propNames.nextElement();
-            if (name.endsWith(".url"))
-            {
+            if (name.endsWith(".url")) {
                 String poolName = name.substring(0, name.lastIndexOf('.'));
                 String url = props.getProperty(poolName + ".url");
-                if (url == null)
-                {
+                if (url == null) {
                     log.error("No URL specified for " + poolName);
                     continue;
                 }
@@ -358,32 +277,27 @@ public class DBConnectionManager {
                 String password = props.getProperty(poolName + ".password");
                 String maxconn = props.getProperty(poolName + ".maxconn", "0");
                 String sidleTime = props.getProperty(poolName + ".idle_time", "0");
-                if (user != null)
-                {
+                if (user != null) {
                     user = user.trim();
                 }
-                if (password != null)
-                {
+                if (password != null) {
                     password = password.trim();
                 }
-                int max;
-                try
-                {
+
+                int max = 0;
+                try {
                     max = Integer.parseInt(maxconn.trim());
-                } catch (NumberFormatException e)
-                {
+                } catch (NumberFormatException e) {
                     log.warn("Invalid maxconn value " + maxconn + " for " + poolName);
-                    max = 0;
                 }
+
                 long idleTime = 0;
-                try
-                {
-                		idleTime = Long.parseLong(sidleTime.trim());
-                } catch (NumberFormatException e)
-                {
+                try {
+                    idleTime = Long.parseLong(sidleTime.trim());
+                } catch (NumberFormatException e) {
                     log.warn("Invalid idle_time value " + sidleTime + " for " + poolName);
-                    idleTime = 0;
                 }
+
                 DBConnectionPool pool =
                         new DBConnectionPool(this, poolName, url, user, password, max, idleTime);
                 pools.put(poolName, pool);
@@ -393,98 +307,78 @@ public class DBConnectionManager {
     }
 
     /**
-     * Carga las propiedades e inicializa la instancia con sus valores.
+     * Initializes {@link DBConnectionManager} with parameters from db.properties file.
      */
-    private void init()
-    {
+    private void init() {
+        //TODO: Desacoplar dependencia con archivo db.properties
         InputStream is = getClass().getResourceAsStream("/db.properties");
         Properties dbProps = new SWBProperties();
-        try
-        {
-            if (is != null)
-            {
+        try {
+            if (is != null) {
                 dbProps.load(is);
-            } else
-            {
+            } else {
                 throw new FileNotFoundException();
             }
             is.close();
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             log.error("Can't read the properties file. Make sure db.properties is in the CLASSPATH", e);
             return;
         }
 
         String jndi = dbProps.getProperty("jndi_pool", "false");
-        if (jndi.equals("true"))
-        {
+        if (jndi.equals("true")) {
             log.info("JDNI Pool found...");
             isJNDI = true;
-            JNDIPatern = dbProps.getProperty("jndi_patern", "java:comp/env/jdbc/");
-            try
-            {
+            jndiPattern = dbProps.getProperty("jndi_patern", "java:comp/env/jdbc/");
+            try {
                 initCtx = new InitialContext();
-            } catch (javax.naming.NamingException ex)
-            {
+            } catch (javax.naming.NamingException ex) {
                 log.error("Error to initialize JNDI Context", ex);
             }
         }
-        if (!isJNDI)
-        {
+        if (!isJNDI) {
             loadDrivers(dbProps);
             createPools(dbProps);
         }
     }
 
     /**
-     * Carga y registra todos los drivers JDBC. Esto lo realiza el DBConnectionManager, en comparación
-     * con el DBConnectionPool, puesto que muchos pools pueden compartir el mismo driver.
-     * 
-     * @param props the props
+     * Loads and registers shared JDBC drivers with parameters from a {@link Properties} object.
+     * @param props properties object.
      */
-    private void loadDrivers(Properties props)
-    {
+    private void loadDrivers(Properties props) {
         String driverClasses = props.getProperty("drivers");
         StringTokenizer st = new StringTokenizer(driverClasses);
-        while (st.hasMoreElements())
-        {
+        while (st.hasMoreElements()) {
             String driverClassName = st.nextToken().trim();
-            try
-            {
+            try {
                 Driver driver = (Driver) Class.forName(driverClassName).newInstance();
                 DriverManager.registerDriver(driver);
                 drivers.add(driver);
                 log.info("Registered JDBC driver " + driverClassName);
-            } catch (Exception e)
-            {
+            } catch (Exception e) {
                 log.error("Can't register JDBC driver: " + driverClassName + ", Exception: " + e);
             }
         }
     }
 
-    /** Getter for property timeLock.
+    /** Gets the time lock value.
      * @return Value of property timeLock.
-     *
      */
-    public PoolConnectionTimeLock getTimeLock()
-    {
+    public PoolConnectionTimeLock getTimeLock() {
         return timeLock;
     }
 
-    /** Getter for property pools.
-     * @return Value of property pools.
-     *
+    /** Gets the Pool objects.
+     * @return Hashtable of Pool objects.
      */
-    public Hashtable getPools()
-    {
+    public Hashtable getPools() {
         Hashtable map = new Hashtable();
         Enumeration en = pools.keys();
-        while (en.hasMoreElements())
-        {
+        while (en.hasMoreElements()) {
             String key = (String) en.nextElement();
             Object obj = pools.get(key);
-            if (obj instanceof DBConnectionPool)
-            {
+            if (obj instanceof DBConnectionPool) {
                 map.put(key, obj);
             }
         }
@@ -492,19 +386,15 @@ public class DBConnectionManager {
     }
 
     /**
-     * Gets the hits.
-     * 
-     * @return Regresa las total de solicitudes de conexiones
+     * Gets the total count of requests made to all Pools.
+     * @return count of requests on all pools.
      */
-    public long getHits()
-    {
+    public long getHits() {
         long hits = 0;
         Enumeration en = pools.elements();
-        while (en.hasMoreElements())
-        {
+        while (en.hasMoreElements()) {
             Object obj = en.nextElement();
-            if (obj instanceof DBConnectionPool)
-            {
+            if (obj instanceof DBConnectionPool) {
                 hits += ((DBConnectionPool) obj).getHits();
             }
         }

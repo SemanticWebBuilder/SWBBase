@@ -43,7 +43,6 @@
             <artifactId>maven-source-plugin</artifactId>
             <version>3.0.1</version>
             <configuration>
-              <failOnError>false</failOnError>
               <attach>true</attach>
             </configuration>
             <executions>
@@ -76,7 +75,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-email</artifactId>
-            <version>1.4</version>
+            <version>1.5</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
@@ -100,11 +99,6 @@
             <artifactId>javaee-web-api</artifactId>
             <version>7.0</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-          <groupId>com.sun.xml.bind.jaxb</groupId>
-          <artifactId>isorelax</artifactId>
-          <version>20090621</version>
         </dependency>
         <dependency>
           <groupId>net.java.dev.msv</groupId>

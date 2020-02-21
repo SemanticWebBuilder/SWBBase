@@ -29,6 +29,8 @@ import java.net.URI;
  *
  * @author jorge.jimenez
  */
+//TODO: Delete this wrapper class because only calls parent methods.
+    @Deprecated
 public class SWBFile extends java.io.File {
 
     public SWBFile(String pathName) {

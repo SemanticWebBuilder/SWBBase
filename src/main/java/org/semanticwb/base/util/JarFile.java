@@ -1,0 +1,267 @@
+/*
+ * SemanticWebBuilder es una plataforma para el desarrollo de portales y aplicaciones de integración,
+ * colaboración y conocimiento, que gracias al uso de tecnología semántica puede generar contextos de
+ * información alrededor de algún tema de interés o bien integrar información y aplicaciones de diferentes
+ * fuentes, donde a la información se le asigna un significado, de forma que pueda ser interpretada y
+ * procesada por personas y/o sistemas, es una creación original del Fondo de Información y Documentación
+ * para la Industria INFOTEC, cuyo registro se encuentra actualmente en trámite.
+ *
+ * INFOTEC pone a su disposición la herramienta SemanticWebBuilder a través de su licenciamiento abierto al público (‘open source’),
+ * en virtud del cual, usted podrá usarlo en las mismas condiciones con que INFOTEC lo ha diseñado y puesto a su disposición;
+ * aprender de él; distribuirlo a terceros; acceder a su código fuente y modificarlo, y combinarlo o enlazarlo con otro software,
+ * todo ello de conformidad con los términos y condiciones de la LICENCIA ABIERTA AL PÚBLICO que otorga INFOTEC para la utilización
+ * del SemanticWebBuilder 4.0.
+ *
+ * INFOTEC no otorga garantía sobre SemanticWebBuilder, de ninguna especie y naturaleza, ni implícita ni explícita,
+ * siendo usted completamente responsable de la utilización que le dé y asumiendo la totalidad de los riesgos que puedan derivar
+ * de la misma.
+ *
+ * Si usted tiene cualquier duda o comentario sobre SemanticWebBuilder, INFOTEC pone a su disposición la siguiente
+ * dirección electrónica:
+ *  http://www.semanticwebbuilder.org
+ */
+package org.semanticwb.base.util;
+
+import org.semanticwb.Logger;
+import org.semanticwb.SWBUtils;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
+/**
+ * Wrapper class for accessing JAR Files.
+ */
+public class JarFile {
+    private static final Logger LOG = SWBUtils.getLogger(JarFile.class);
+
+    /**
+     * The path.
+     */
+    private String path;
+
+    /**
+     * The exists.
+     */
+    private boolean exists;
+
+    /**
+     * The is dir.
+     */
+    private boolean isDir;
+
+    /**
+     * The length.
+     */
+    private long length;
+
+    /**
+     * The last modified.
+     */
+    private long lastModified;
+
+    private long stamp = System.currentTimeMillis();
+
+    private boolean replaced = false;
+
+    /**
+     * The f.
+     */
+    private File f = null;
+
+    /**
+     * The zip path.
+     */
+    private byte[] cache = null;
+
+    private ZipEntry ze = null;
+
+    /**
+     * Instantiates a new jar file.
+     * @param path the path
+     */
+    public JarFile(String path) {
+        this.setPath(path);
+    }
+
+    /**
+     * Instantiates a new jar file.
+     *
+     * @param f       the f
+     * @param zf the zip path
+     */
+    public JarFile(ZipEntry f, ZipFile zf) {
+        //this.zf=zf;
+        this.ze = f;
+        this.path = "/" + f.getName();
+        exists = true;
+        if (exists) {
+            isDir = f.isDirectory();
+            if (!isDir) {
+                length = f.getSize();
+                lastModified = f.getTime();
+            }
+            loadCache(zf);
+        } else {
+
+        }
+    }
+
+    /**
+     * Load cache.
+     */
+    private void loadCache() {
+        loadCache(null);
+    }
+
+    /**
+     * Load cache.
+     */
+    private void loadCache(ZipFile zf) {
+        try {
+            InputStream in = getInputStream(zf);
+            ByteArrayOutputStream out = new ByteArrayOutputStream((int) length);
+            if (null != in) {
+                SWBUtils.IO.copyStream(in, out);
+                cache = out.toByteArray();
+            }
+        } catch (Exception e) {
+            LOG.error(e);
+        }
+    }
+
+    /**
+     * Gets the input stream.
+     *
+     * @return the input stream
+     */
+    public InputStream getInputStream() {
+        return getInputStream(null);
+    }
+
+    /**
+     * Gets the input stream.
+     *
+     * @return the input stream
+     */
+    public InputStream getInputStream(ZipFile zf) {
+        try {
+            if (ze != null) {
+                if (zf != null)
+                    return zf.getInputStream(ze);
+                else
+                    return getClass().getResourceAsStream(path);
+            } else {
+                return new FileInputStream(f);
+            }
+        } catch (Exception e) {
+            LOG.error(e);
+            return null;
+        }
+    }
+
+
+    /**
+     * Gets the cache.
+     *
+     * @return the cache
+     */
+    public byte[] getCache() {
+        return cache;
+    }
+
+    /**
+     * Exists.
+     *
+     * @return true, if successful
+     */
+    public boolean exists() {
+        return exists;
+    }
+
+    /**
+     * Checks if is directory.
+     *
+     * @return true, if is directory
+     */
+    public boolean isDirectory() {
+        return isDir;
+    }
+
+    /**
+     * Gets the path.
+     *
+     * @return the path
+     */
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * Sets the path.
+     *
+     * @param p the new path
+     */
+    public void setPath(String p) {
+        this.path = p;
+        f = new File(SWBUtils.getApplicationPath() + path);
+        exists = f.exists();
+        if (exists) {
+            isDir = f.isDirectory();
+            if (!isDir) {
+                length = f.length();
+                lastModified = f.lastModified();
+            }
+        } else {
+
+        }
+    }
+
+    /**
+     * Length.
+     *
+     * @return the long
+     */
+    public long length() {
+        return length;
+    }
+
+    /**
+     * Last modified.
+     *
+     * @return the long
+     */
+    public long lastModified() {
+        return lastModified;
+    }
+
+    /**
+     * Checks for cache.
+     *
+     * @return true, if successful
+     */
+    public boolean hasCache() {
+        return cache != null;
+    }
+
+    public boolean isExpired() {
+        return System.currentTimeMillis() > (stamp + 60000L);
+    }
+
+    public void touch() {
+        stamp = System.currentTimeMillis();
+    }
+
+    public boolean isReplaced() {
+        return replaced;
+    }
+
+    public void setReplaced(boolean replaced) {
+        this.replaced = replaced;
+    }
+
+
+}

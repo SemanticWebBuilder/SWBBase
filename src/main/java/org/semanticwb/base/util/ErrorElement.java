@@ -25,153 +25,123 @@ package org.semanticwb.base.util;
 import java.util.Date;
 
 /**
- * Objeto: Representa y contiene una exception junto con un identificador y la
- * fecha en la que se genero.
+ * Class to hold information about an error. Used in SWBAErrorElementViewer of SemanticWebBuilder Portal
+ * and {@link org.semanticwb.base.util.imp.Logger4jImpl} classes. Instances of this class are managed by
+ * {@link org.semanticwb.SWBUtils.ERROR} static class and stored in memory as a
+ * {@link org.semanticwb.SWBUtils} class attribute.
  * @author Javier Solis Gonzalez
  */
 public class ErrorElement {
-
-    /** The counter. */
     static long counter;
-    
-    /** The id. */
     private long id = 0;
-    
-    /** The msg. */
-    private String msg = null;
-    
-    /** The date. */
+    private String msg;
     private java.util.Date date;
-    
-    /** The throwable. */
     private Throwable throwable;
-    
-    /** The cls. */
     private Class cls;
-    
-    /** The level. */
     private String level;
+    private static final String NEWLINE = "\n";
 
     /**
      * Gets the error class.
-     * 
      * @return the error class
      */
-    public Class getErrorClass()
-    {
+    public Class getErrorClass() {
         return cls;
     }
 
     /**
-     * Gets the error level.
-     * 
-     * @return the error level
+     * Gets the error level
+     * @return the error level.
      */
-    public String getErrorLevel()
-    {
+    public String getErrorLevel() {
         return level;
     }
 
     /**
-     * Creates a new instance of ErrorElement.
-     * 
-     * @param e the e
-     * @param msg the msg
-     * @param cls the cls
-     * @param level the level
+     * Constructor. Creates a new instance of {@link ErrorElement}.
+     * @param throwable the {@link Throwable} object related to the logged error.
+     * @param message the error message.
+     * @param cls class where error is generated.
+     * @param level the error level.
      */
-    public ErrorElement(Throwable e, String msg, Class cls, String level)
-    {
+    public ErrorElement(Throwable throwable, String message, Class cls, String level) {
         id = getCounter();
         date = new java.util.Date();
-        throwable = e;
-        this.msg = msg;
+        this.throwable = throwable;
+        this.msg = message;
     }
 
     /**
-     * Gets the counter.
-     * 
-     * @return the counter
+     * Gets the error counter.
+     * @return the counter.
      */
-    public static synchronized long getCounter()
-    {
+    public static synchronized long getCounter() {
         return counter++;
     }
 
     /**
-     * Getter for property id.
-     * @return Value of property id.
+     * Gets the error id.
+     * @return error id.
      */
-    public long getId()
-    {
+    public long getId() {
         return id;
     }
 
     /**
-     * Getter for property date.
-     * @return Value of property date.
+     * Gets error date.
+     * @return error date.
      */
-    public Date getDate()
-    {
+    public Date getDate() {
         return date;
     }
 
     /**
-     * Getter for property throwable.
-     * @return Value of property throwable.
+     * Gets the error {@link Throwable} object.
+     * @return throwable.
      */
-    public Throwable getThrowable()
-    {
+    public Throwable getThrowable() {
         return throwable;
     }
 
     /**
-     * Gets the message.
-     * 
-     * @return the message
+     * Gets the error message.
+     * @return error message.
      */
-    public String getMessage()
-    {  
-        if (msg != null)
-        {
+    public String getMessage() {
+        if (msg != null) {
             return msg; //La alternativa a este multiple return implica crear objetos que no se utilizaran
         }
         return throwable.toString();
     }
 
     /**
-     * Gets the stack trace.
-     * 
-     * @return the stack trace
+     * Gets the error stack trace.
+     * @return the stack trace.
      */
-    public String getStackTrace()
-    {
+    public String getStackTrace() {
         return printThrowable(throwable);
     }
 
     /**
-     * Prints the throwable.
-     * 
-     * @param th the th
-     * @return the string
+     * Prints a {@link Throwable} object stack trace information.
+     * @param throwableobj the {@link Throwable} object.
+     * @return String with a stack trace information of a {@link Throwable}.
      */
-    private String printThrowable(Throwable th)
-    {
+    private String printThrowable(Throwable throwableobj) {
         StringBuilder bug = new StringBuilder();
-        if (th != null)
-        {
-            bug.append(date + ": " + th.getMessage() + "\n");
-            StackTraceElement []elements = th.getStackTrace();
-            bug.append("// " + th + "\n");
-            for (int x = 0; x < elements.length; x++)
-            {
-                bug.append("// " + elements[x] + "\n");
+        if (throwableobj != null) {
+            bug.append(date).append(": ").append(throwableobj.getMessage()).append(NEWLINE);
+
+            StackTraceElement []elements = throwableobj.getStackTrace();
+            bug.append("// ").append(throwableobj).append(NEWLINE);
+
+            for (int x = 0; x < elements.length; x++) {
+                bug.append("// ").append(elements[x]).append(NEWLINE);
             }
 
-            Throwable rth = th.getCause();
-            if (rth != null && rth != th)
-            {
-                bug.append("\nRoot Cause:\n\n");
+            Throwable rth = throwableobj.getCause();
+            if (rth != null && rth != throwableobj) {
+                bug.append(NEWLINE).append("Root Cause:").append(NEWLINE).append(NEWLINE);
                 bug.append(printThrowable(rth));
             }
         }

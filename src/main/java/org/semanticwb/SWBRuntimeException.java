@@ -49,7 +49,7 @@ public class SWBRuntimeException extends RuntimeException {
 	 * 
 	 * @param msg
 	 *            the detail message (which is saved for later retrieval by the
-	 *            {@link Throwable.getMessage() Throwable.getMessage()} method)
+	 *            {@link #getMessage()} method)
 	 */
 	public SWBRuntimeException(String msg) {
 		super(msg);
@@ -68,7 +68,7 @@ public class SWBRuntimeException extends RuntimeException {
 	 *            Throwable.getMessage() method)
 	 * @param e
 	 *            the cause (which is saved for later retrieval by the
-	 *            {@link Throwable.getCause() Throwable.getCause()} method). (A
+	 *            {@link #getCause()} method). (A
 	 *            {@code null} value is permitted, and indicates that the cause is
 	 *            nonexistent or unknown.)
 	 */

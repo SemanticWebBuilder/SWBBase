@@ -22,6 +22,9 @@
  */
 package org.semanticwb.base.util;
 
+import org.semanticwb.Logger;
+import org.semanticwb.SWBUtils;
+
 import java.io.IOException;
 import java.util.Base64;
 
@@ -52,6 +55,7 @@ import java.util.Base64;
  * @version 1.3.4
  */
 public class SFBase64 {
+    public static final Logger LOG = SWBUtils.getLogger(SFBase64.class);
 
     /** Specify encoding (value is <tt>true</tt>). */
     public static final boolean ENCODE = true;
@@ -64,8 +68,7 @@ public class SFBase64 {
     /** The new line character (\n) as a byte. */
     private static final byte NEW_LINE = (byte) '\n';
     /** The 64 valid Base64 values. */
-    private static final byte[] ALPHABET =
-    {
+    private static final byte[] ALPHABET = {
         (byte) 'A', (byte) 'B', (byte) 'C', (byte) 'D', (byte) 'E', (byte) 'F', (byte) 'G',
         (byte) 'H', (byte) 'I', (byte) 'J', (byte) 'K', (byte) 'L', (byte) 'M', (byte) 'N',
         (byte) 'O', (byte) 'P', (byte) 'Q', (byte) 'R', (byte) 'S', (byte) 'T', (byte) 'U',
@@ -77,12 +80,12 @@ public class SFBase64 {
         (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4', (byte) '5',
         (byte) '6', (byte) '7', (byte) '8', (byte) '9', (byte) '+', (byte) '/'
     };
+
     /**
      * Translates a Base64 value to either its 6-bit reconstruction value
      * or a negative number indicating some other meaning.
      **/
-    private static final byte[] DECODABET =
-    {
+    private static final byte[] DECODABET = {
         -9, -9, -9, -9, -9, -9, -9, -9, -9, // Decimal  0 -  8
         -5, -5, // Whitespace: Tab and Linefeed
         -9, -9, // Decimal 11 - 12
@@ -104,216 +107,17 @@ public class SFBase64 {
         26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, // Letters 'a' through 'm'
         39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, // Letters 'n' through 'z'
         -9, -9, -9, -9                                 // Decimal 123 - 126
-                /*,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 127 - 139
-    -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 140 - 152
-    -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 153 - 165
-    -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 166 - 178
-    -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 179 - 191
-    -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 192 - 204
-    -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 205 - 217
-    -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 218 - 230
-    -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 231 - 243
-    -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9         // Decimal 244 - 255 */
     };
-    
+
     /** The Constant WHITE_SPACE_ENC. */
     private static final byte WHITE_SPACE_ENC = -5; // Indicates white space in encoding
-    
+
     /** The Constant EQUALS_SIGN_ENC. */
     private static final byte EQUALS_SIGN_ENC = -1; // Indicates equals sign in encoding
 
     /** Defeats instantiation. */
-    private SFBase64()
-    {
+    private SFBase64() {
     }
-
-    /**
-     * Testing. Feel free--in fact I encourage you--to throw out
-     * this entire "main" method when you actually deploy this code.
-     * 
-     * @param args the arguments
-     */
-    public static void main(String[] args)
-    {
-        try
-        {
-            // Test encoding/decoding byte arrays
-            {
-                byte[] bytes1 =
-                {
-                    (byte) 2, (byte) 2, (byte) 3, (byte) 0, (byte) 9
-                }; // My zip code
-                
-                byte[] dbytes = decode(encodeBytes(bytes1));
-            }   // end testing byte arrays
-            // Test Input Stream
-            {
-                // Read GIF stored in base64 form.
-                java.io.FileInputStream fis = new java.io.FileInputStream("test.gif.b64");
-                SFBase64.InputStream b64is = new SFBase64.InputStream(fis, DECODE);
-
-                byte[] bytes = new byte[0];
-                int b = -1;
-                while ((b = b64is.read()) >= 0)
-                {
-                    byte[] temp = new byte[bytes.length + 1];
-                    System.arraycopy(bytes, 0, temp, 0, bytes.length);
-                    temp[bytes.length] = (byte) b;
-                    bytes = temp;
-                }   // end while: terribly inefficient way to read data
-                b64is.close();
-                javax.swing.ImageIcon iicon = new javax.swing.ImageIcon(bytes);
-                javax.swing.JLabel jlabel = new javax.swing.JLabel("Read from test.gif.b64", iicon, 0);
-                javax.swing.JFrame jframe = new javax.swing.JFrame();
-                jframe.getContentPane().add(jlabel);
-                jframe.pack();
-                jframe.show();
-
-                // Write raw bytes to file
-                java.io.FileOutputStream fos = new java.io.FileOutputStream("test.gif_out");
-                fos.write(bytes);
-                fos.close();
-
-                // Read raw bytes and encode
-                fis = new java.io.FileInputStream("test.gif_out");
-                b64is = new SFBase64.InputStream(fis, ENCODE);
-                byte[] ebytes = new byte[0];
-                b = -1;
-                while ((b = b64is.read()) >= 0)
-                {
-                    byte[] temp = new byte[ebytes.length + 1];
-                    System.arraycopy(ebytes, 0, temp, 0, ebytes.length);
-                    temp[ebytes.length] = (byte) b;
-                    ebytes = temp;
-                }   // end while: terribly inefficient way to read data
-                b64is.close();
-                String s = new String(ebytes);
-                javax.swing.JTextArea jta = new javax.swing.JTextArea(s);
-                javax.swing.JScrollPane jsp = new javax.swing.JScrollPane(jta);
-                jframe = new javax.swing.JFrame();
-                jframe.setTitle("Read from test.gif_out");
-                jframe.getContentPane().add(jsp);
-                jframe.pack();
-                jframe.show();
-
-                // Write encoded bytes to file
-                fos = new java.io.FileOutputStream("test.gif.b64_out");
-                fos.write(ebytes);
-
-                // Read GIF stored in base64 form.
-                fis = new java.io.FileInputStream("test.gif.b64_out");
-                b64is = new SFBase64.InputStream(fis, DECODE);
-                byte[] edbytes = new byte[0];
-                b = -1;
-                while ((b = b64is.read()) >= 0)
-                {
-                    byte[] temp = new byte[edbytes.length + 1];
-                    System.arraycopy(edbytes, 0, temp, 0, edbytes.length);
-                    temp[edbytes.length] = (byte) b;
-                    edbytes = temp;
-                }   // end while: terribly inefficient way to read data
-                b64is.close();
-                iicon = new javax.swing.ImageIcon(edbytes);
-                jlabel = new javax.swing.JLabel("Read from test.gif.b64_out", iicon, 0);
-                jframe = new javax.swing.JFrame();
-                jframe.getContentPane().add(jlabel);
-                jframe.pack();
-                jframe.show();
-            }   // end: Test Input Stream
-            // Test Output Stream
-            {
-                // Read raw bytes
-                java.io.FileInputStream fis = new java.io.FileInputStream("test.gif_out");
-                byte[] rbytes = new byte[0];
-                int b = -1;
-                while ((b = fis.read()) >= 0)
-                {
-                    byte[] temp = new byte[rbytes.length + 1];
-                    System.arraycopy(rbytes, 0, temp, 0, rbytes.length);
-                    temp[rbytes.length] = (byte) b;
-                    rbytes = temp;
-                }   // end while: terribly inefficient way to read data
-                fis.close();
-
-                // Write raw bytes to encoded file
-                java.io.FileOutputStream fos = new java.io.FileOutputStream("test.gif.b64_out2");
-                SFBase64.OutputStream b64os = new SFBase64.OutputStream(fos, ENCODE);
-                b64os.write(rbytes);
-                b64os.close();
-
-
-                // Read raw bytes that are actually encoded (but we'll ignore that)
-                fis = new java.io.FileInputStream("test.gif.b64_out2");
-                byte[] rebytes = new byte[0];
-                b = -1;
-                while ((b = fis.read()) >= 0)
-                {
-                    byte[] temp = new byte[rebytes.length + 1];
-                    System.arraycopy(rebytes, 0, temp, 0, rebytes.length);
-                    temp[rebytes.length] = (byte) b;
-                    rebytes = temp;
-                }   // end while: terribly inefficient way to read data
-                fis.close();
-                String s = new String(rebytes);
-                javax.swing.JTextArea jta = new javax.swing.JTextArea(s);
-                javax.swing.JScrollPane jsp = new javax.swing.JScrollPane(jta);
-                javax.swing.JFrame jframe = new javax.swing.JFrame();
-                jframe.setTitle("Read from test.gif.b64_out2");
-                jframe.getContentPane().add(jsp);
-                jframe.pack();
-                jframe.show();
-
-                // Write encoded bytes to decoded raw file
-                fos = new java.io.FileOutputStream("test.gif_out2");
-                b64os = new SFBase64.OutputStream(fos, DECODE);
-                b64os.write(rebytes);
-                b64os.close();
-                javax.swing.ImageIcon iicon = new javax.swing.ImageIcon("test.gif_out2");
-                javax.swing.JLabel jlabel = new javax.swing.JLabel("Read from test.gif_out2", iicon, 0);
-                jframe = new javax.swing.JFrame();
-                jframe.getContentPane().add(jlabel);
-                jframe.pack();
-                jframe.show();
-
-            }   // end: Test Output Stream
-            // Test wagner's files
-            {
-            	//TODO: Revisar estas rutas absolutas de Windows
-                java.io.FileInputStream fis = new java.io.FileInputStream("D:\\temp\\testencoding.txt");
-                SFBase64.InputStream b64is = new SFBase64.InputStream(fis, DECODE);
-                java.io.FileOutputStream fos = new java.io.FileOutputStream("D:\\temp\\file.zip");
-                int b;
-                while ((b = b64is.read()) >= 0)
-                {
-                    fos.write(b);
-                }
-                fos.close();
-                b64is.close();
-
-            }   // end test wagner's file
-
-        } // end try
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }   // end main
-
-
-    /* ********  E N C O D I N G   M E T H O D S  ******** */
-    /**
-     * Encodes the first three bytes of array <var>threeBytes</var>
-     * and returns a four-byte array in Base64 notation.
-     * 
-     * @param threeBytes the array to convert
-     * @param numSigBytes the num sig bytes
-     * @return four byte array in Base64 notation.
-     * @since 1.3
-     */
-//    private static byte[] encode3to4(byte[] threeBytes)
-//    {
-//        return encode3to4(threeBytes, 3);
-//    }   // end encodeToBytes
 
     /**
      * Encodes up to the first three bytes of array <var>threeBytes</var>
@@ -328,8 +132,7 @@ public class SFBase64 {
      * @return four byte array in Base64 notation.
      * @since 1.3
      */
-    private static byte[] encode3to4(byte[] threeBytes, int numSigBytes)
-    {
+    private static byte[] encode3to4(byte[] threeBytes, int numSigBytes) {
         byte[] dest = new byte[4];
         encode3to4(threeBytes, 0, numSigBytes, dest, 0);
         return dest;
@@ -347,7 +150,7 @@ public class SFBase64 {
      * the <var>destination</var> array.
      * The actual number of significant bytes in your array is
      * given by <var>numSigBytes</var>.
-     * 
+     *
      * @param source the array to convert
      * @param srcOffset the index where conversion begins
      * @param numSigBytes the number of significant bytes in your array
@@ -356,10 +159,7 @@ public class SFBase64 {
      * @return the  array
      * @since 1.3
      */
-    private static byte[] encode3to4(
-            byte[] source, int srcOffset, int numSigBytes,
-            byte[] destination, int destOffset)
-    {
+    private static byte[] encode3to4(byte[] source, int srcOffset, int numSigBytes, byte[] destination, int destOffset) {
         //           1         2         3
         // 01234567890123456789012345678901 Bit position
         // --------000000001111111122222222 Array position from threeBytes
@@ -375,8 +175,7 @@ public class SFBase64 {
                 | (numSigBytes > 1 ? ((source[srcOffset + 1] << 24) >>> 16) : 0)
                 | (numSigBytes > 2 ? ((source[srcOffset + 2] << 24) >>> 24) : 0);
 
-        switch (numSigBytes)
-        {
+        switch (numSigBytes) {
             case 3:
                 destination[destOffset] = ALPHABET[(inBuff >>> 18)];
                 destination[destOffset + 1] = ALPHABET[(inBuff >>> 12) & 0x3f];
@@ -413,8 +212,7 @@ public class SFBase64 {
      * @return The Base64-encoded object
      * @since 1.4
      */
-    public static String encodeObject(java.io.Serializable serializableObject)
-    {
+    public static String encodeObject(java.io.Serializable serializableObject) {
         return encodeObject(serializableObject, true);
     }   // end encodeObject
 
@@ -429,44 +227,34 @@ public class SFBase64 {
      * @return The Base64-encoded object
      * @since 1.4
      */
-    public static String encodeObject(java.io.Serializable serializableObject, boolean breakLines)
-    {
+    public static String encodeObject(java.io.Serializable serializableObject, boolean breakLines) {
         java.io.ByteArrayOutputStream baos = null;
         java.io.OutputStream b64os = null;
         java.io.ObjectOutputStream oos = null;
 
-        try
-        {
+        try {
             baos = new java.io.ByteArrayOutputStream();
             b64os = new SFBase64.OutputStream(baos, SFBase64.ENCODE, breakLines);
             oos = new java.io.ObjectOutputStream(b64os);
 
             oos.writeObject(serializableObject);
-        } // end try
-        catch (java.io.IOException e)
-        {
+        } catch (java.io.IOException e) {
             e.printStackTrace();
             return null;
-        } // end catch
-        finally
-        {
-            try
-            {
+        } finally {
+            try {
                 oos.close();
-            } catch (Exception e)
-            {   // Abandonamos calladamente el stream
+            } catch (Exception e) {   // Abandonamos calladamente el stream
             }
-            try
-            {
+
+            try {
                 b64os.close();
-            } catch (Exception e)
-            {   // Abandonamos calladamente el stream
+            } catch (Exception e) {   // Abandonamos calladamente el stream
             }
-            try
-            {
+
+            try {
                 baos.close();
-            } catch (Exception e)
-            {   // Abandonamos calladamente el stream
+            } catch (Exception e) {   // Abandonamos calladamente el stream
             }
         }   // end finally
 
@@ -477,13 +265,12 @@ public class SFBase64 {
      * Encodes a byte array into Base64 notation.
      * Equivalen to calling
      * <code>encodeBytes( source, 0, source.length )</code>
-     * 
+     *
      * @param source The data to convert
      * @return the string
      * @since 1.4
      */
-    public static String encodeBytes(byte[] source)
-    {
+    public static String encodeBytes(byte[] source) {
         return encodeBytes(source, true);
     }   // end encodeBytes
 
@@ -491,34 +278,32 @@ public class SFBase64 {
      * Encodes a byte array into Base64 notation.
      * Equivalen to calling
      * <code>encodeBytes( source, 0, source.length )</code>
-     * 
+     *
      * @param source The data to convert
      * @param breakLines Break lines at 80 characters or less.
      * @return the string
      * @since 1.4
      */
-    public static String encodeBytes(byte[] source, boolean breakLines)
-    {
+    public static String encodeBytes(byte[] source, boolean breakLines) {
         return encodeBytes(source, 0, source.length, breakLines);
     }   // end encodeBytes
 
     /**
      * Encodes a byte array into Base64 notation.
-     * 
+     *
      * @param source The data to convert
      * @param off Offset in array where conversion should begin
      * @param len Length of data to convert
      * @return the string
      * @since 1.4
      */
-    public static String encodeBytes(byte[] source, int off, int len)
-    {
+    public static String encodeBytes(byte[] source, int off, int len) {
         return encodeBytes(source, off, len, true);
     }   // end encodeBytes
 
     /**
      * Encodes a byte array into Base64 notation.
-     * 
+     *
      * @param source The data to convert
      * @param off Offset in array where conversion should begin
      * @param len Length of data to convert
@@ -526,8 +311,7 @@ public class SFBase64 {
      * @return the string
      * @since 1.4
      */
-    public static String encodeBytes(byte[] source, int off, int len, boolean breakLines)
-    {
+    public static String encodeBytes(byte[] source, int off, int len, boolean breakLines) {
         int len43 = len * 4 / 3;
         byte[] outBuff = new byte[(len43) // Main 4:3
                 + ((len % 3) > 0 ? 4 : 0) // Account for padding
@@ -536,21 +320,18 @@ public class SFBase64 {
         int e = 0;
         int len2 = len - 2;
         int lineLength = 0;
-        for (; d < len2; d += 3, e += 4)
-        {
+        for (; d < len2; d += 3, e += 4) {
             encode3to4(source, d + off, 3, outBuff, e);
 
             lineLength += 4;
-            if (breakLines && lineLength == MAX_LINE_LENGTH)
-            {
+            if (breakLines && lineLength == MAX_LINE_LENGTH) {
                 outBuff[e + 4] = NEW_LINE;
                 e++;
                 lineLength = 0;
             }   // end if: end of line
         }   // en dfor: each piece of array
 
-        if (d < len)
-        {
+        if (d < len) {
             encode3to4(source, d + off, len - d, outBuff, e);
             e += 4;
         }   // end if: some padding needed
@@ -566,8 +347,7 @@ public class SFBase64 {
      * @return the encoded string
      * @since 1.3
      */
-    public static String encodeString(String s)
-    {
+    public static String encodeString(String s) {
         return encodeString(s, true);
     }   // end encodeString
 
@@ -580,8 +360,7 @@ public class SFBase64 {
      * @return the encoded string
      * @since 1.3
      */
-    public static String encodeString(String s, boolean breakLines)
-    {
+    public static String encodeString(String s, boolean breakLines) {
         return encodeBytes(s.getBytes(), breakLines);
     }   // end encodeString
 
@@ -595,14 +374,12 @@ public class SFBase64 {
      * @return array with decoded values
      * @since 1.3
      */
-    private static byte[] decode4to3(byte[] fourBytes)
-    {
+    private static byte[] decode4to3(byte[] fourBytes) {
         byte[] outBuff1 = new byte[3];
         int count = decode4to3(fourBytes, 0, outBuff1, 0);
         byte[] outBuff2 = new byte[count];
 
-        for (int i = 0; i < count; i++)
-        {
+        for (int i = 0; i < count; i++) {
             outBuff2[i] = outBuff1[i];
         }
 
@@ -631,11 +408,9 @@ public class SFBase64 {
      * @return the number of decoded bytes converted
      * @since 1.3
      */
-    private static int decode4to3(byte[] source, int srcOffset, byte[] destination, int destOffset)
-    {
+    private static int decode4to3(byte[] source, int srcOffset, byte[] destination, int destOffset) {
         // Example: Dk==
-        if (source[srcOffset + 2] == EQUALS_SIGN)
-        {
+        if (source[srcOffset + 2] == EQUALS_SIGN) {
             // Two ways to do the same thing. Don't know which way I like best.
             //int outBuff =   ( ( DECODABET[ source[ srcOffset    ] ] << 24 ) >>>  6 )
             //              | ( ( DECODABET[ source[ srcOffset + 1] ] << 24 ) >>> 12 );
@@ -645,8 +420,7 @@ public class SFBase64 {
             destination[destOffset] = (byte) (outBuff >>> 16);
             return 1;
         } // Example: DkL=
-        else if (source[srcOffset + 3] == EQUALS_SIGN)
-        {
+        else if (source[srcOffset + 3] == EQUALS_SIGN) {
             // Two ways to do the same thing. Don't know which way I like best.
             //int outBuff =   ( ( DECODABET[ source[ srcOffset     ] ] << 24 ) >>>  6 )
             //              | ( ( DECODABET[ source[ srcOffset + 1 ] ] << 24 ) >>> 12 )
@@ -659,10 +433,8 @@ public class SFBase64 {
             destination[destOffset + 1] = (byte) (outBuff >>> 8);
             return 2;
         } // Example: DkLE
-        else
-        {
-            try
-            {
+        else {
+            try {
                 // Two ways to do the same thing. Don't know which way I like best.
                 //int outBuff =   ( ( DECODABET[ source[ srcOffset     ] ] << 24 ) >>>  6 )
                 //              | ( ( DECODABET[ source[ srcOffset + 1 ] ] << 24 ) >>> 12 )
@@ -679,8 +451,7 @@ public class SFBase64 {
                 destination[destOffset + 2] = (byte) (outBuff);
 
                 return 3;
-            } catch (Exception e)
-            {
+            } catch (Exception e) {
                 System.out.println("" + source[srcOffset] + ": " + (DECODABET[source[srcOffset]]));
                 System.out.println("" + source[srcOffset + 1] + ": " + (DECODABET[source[srcOffset + 1]]));
                 System.out.println("" + source[srcOffset + 2] + ": " + (DECODABET[source[srcOffset + 2]]));
@@ -697,10 +468,8 @@ public class SFBase64 {
      * @return the decoded data
      * @since 1.4
      */
-    public static byte[] decode(String s)
-    {
+    public static byte[] decode(String s) {
         byte[] bytes = s.getBytes();
-        //System.out.println("\n\n\n-->\n" + bytes.length + "---" +s.length() +"\n\n\n");
         return decode(bytes, 0, bytes.length);
     }   // end decode
 
@@ -714,8 +483,7 @@ public class SFBase64 {
      * @return The data as a string
      * @since 1.4
      */
-    public static String decodeToString(String s)
-    {
+    public static String decodeToString(String s) {
         return new String(decode(s));
     }   // end decodeToString
 
@@ -727,43 +495,32 @@ public class SFBase64 {
      * @return The decoded and deserialized object
      * @since 1.4
      */
-    public static Object decodeToObject(String encodedObject)
-    {
+    public static Object decodeToObject(String encodedObject) {
         byte[] objBytes = decode(encodedObject);
 
         java.io.ByteArrayInputStream bais = null;
         java.io.ObjectInputStream ois = null;
 
-        try
-        {
+        try {
             bais = new java.io.ByteArrayInputStream(objBytes);
             ois = new java.io.ObjectInputStream(bais);
 
             return ois.readObject();
-        } // end try
-        catch (java.io.IOException e)
-        {
+        } catch (java.io.IOException e) {
             e.printStackTrace();
             return null;
-        } // end catch
-        catch (java.lang.ClassNotFoundException e)
-        {
+        } catch (java.lang.ClassNotFoundException e) {
             e.printStackTrace();
             return null;
-        } // end catch
-        finally
-        {
-            try
-            {
+        } finally {
+            try {
                 bais.close();
-            } catch (Exception e)
-            {   // Abandonamos calladamente el stream
+            } catch (Exception e) {   // Abandonamos calladamente el stream
             }
-            try
-            {
+
+            try {
                 ois.close();
-            } catch (Exception e)
-            {   // Abandonamos calladamente el stream
+            } catch (Exception e) {   // Abandonamos calladamente el stream
             }
         }   // end finally
     }   // end decodeObject
@@ -778,8 +535,7 @@ public class SFBase64 {
      * @return decoded data
      * @since 1.3
      */
-    public static byte[] decode(byte[] source, int off, int len)
-    {
+    public static byte[] decode(byte[] source, int off, int len) {
         int len34 = len * 3 / 4;
         byte[] outBuff = new byte[len34]; // Upper limit on size of output
         int outBuffPosn = 0;
@@ -789,34 +545,27 @@ public class SFBase64 {
         int i = 0;
         byte sbiCrop = 0;
         byte sbiDecode = 0;
-        for (i = 0; i < len; i++)
-        {
+        for (i = 0; i < len; i++) {
             sbiCrop = (byte) (source[i] & 0x7f); // Only the low seven bits
             sbiDecode = DECODABET[sbiCrop];
 
             if (sbiDecode >= WHITE_SPACE_ENC) // White space, Equals sign or better
             {
-                if (sbiDecode >= EQUALS_SIGN_ENC)
-                {
+                if (sbiDecode >= EQUALS_SIGN_ENC) {
                     b4[b4Posn++] = sbiCrop;
-                    if (b4Posn > 3)
-                    {
+                    if (b4Posn > 3) {
                         outBuffPosn += decode4to3(b4, 0, outBuff, outBuffPosn);
                         b4Posn = 0;
 
                         // If that was the equals sign, break out of 'for' loop
-                        if (sbiCrop == EQUALS_SIGN)
-                        {
+                        if (sbiCrop == EQUALS_SIGN) {
                             break;
                         }
                     }   // end if: quartet built
-
                 }   // end if: equals sign or better
-
             } // end if: white space, equals sign or better
-            else
-            {
-                System.err.println("Bad Base64 input character at " + i + ": " + source[i] + "(decimal)");
+            else {
+                LOG.error("Bad Base64 input character at " + i + ": " + source[i] + "(decimal)");
                 return null;
             }   // end else:
         }   // each input character
@@ -828,8 +577,8 @@ public class SFBase64 {
 
     /* ********  I N N E R   C L A S S   I N P U T S T R E A M  ******** */
     /**
-     * A {@link Base64#InputStream} will read data from another.
-     * 
+     * A {@link org.semanticwb.base.util.SFBase64.InputStream} will read data from another.
+     *
      * {@link java.io.InputStream}, given in the constructor,
      * and encode/decode to/from Base64 notation on the fly.
      * @see Base64
@@ -837,41 +586,39 @@ public class SFBase64 {
      * @since 1.3
      */
     public static class InputStream extends java.io.FilterInputStream {
-
         /** The encode. */
         private boolean encode;         // Encoding or decoding
-        
+
         /** The position. */
         private int position;       // Current position in the buffer
-        
+
         /** The buffer. */
         private byte[] buffer;         // Small buffer holding converted data
-        
+
         /** The buffer length. */
         private int bufferLength;   // Length of buffer (3 or 4)
-        
+
         /** The num sig bytes. */
         private int numSigBytes;    // Number of meaningful bytes in the buffer
-        
+
         /** The line length. */
         private int lineLength;
-        
+
         /** The break lines. */
         private boolean breakLines;     // Break lines at less than 80 characters
 
         /**
-         * Constructs a {@link Base64#InputStream} in DECODE mode.
+         * Constructs a {@link org.semanticwb.base.util.SFBase64.InputStream} in DECODE mode.
          *
          * @param in the {@link java.io.InputStream} from which to read data.
          * @since 1.3
          */
-        public InputStream(java.io.InputStream in)
-        {
+        public InputStream(java.io.InputStream in) {
             this(in, SFBase64.DECODE);
         }   // end constructor
 
         /**
-         * Constructs a {@link Base64#InputStream} in
+         * Constructs a {@link org.semanticwb.base.util.SFBase64.InputStream} in
          * either ENCODE or DECODE mode.
          *
          * @param in the {@link java.io.InputStream} from which to read data.
@@ -880,13 +627,12 @@ public class SFBase64 {
          * @see Base64#DECODE
          * @since 1.3
          */
-        public InputStream(java.io.InputStream in, boolean encode)
-        {
+        public InputStream(java.io.InputStream in, boolean encode) {
             this(in, encode, true);
         }   // end constructor
 
         /**
-         * Constructs a {@link Base64#InputStream} in
+         * Constructs a {@link org.semanticwb.base.util.SFBase64.InputStream} in
          * either ENCODE or DECODE mode.
          *
          * @param in the {@link java.io.InputStream} from which to read data.
@@ -896,8 +642,7 @@ public class SFBase64 {
          * @see Base64#DECODE
          * @since 1.3
          */
-        public InputStream(java.io.InputStream in, boolean encode, boolean breakLines)
-        {
+        public InputStream(java.io.InputStream in, boolean encode, boolean breakLines) {
             super(in);
             this.breakLines = breakLines;
             this.encode = encode;
@@ -910,119 +655,92 @@ public class SFBase64 {
         /**
          * Reads enough of the input stream to convert
          * to/from Base64 and returns the next byte.
-         * 
+         *
          * @return next byte
          * @throws IOException Signals that an I/O exception has occurred.
          * @since 1.3
          */
-        public int read() throws java.io.IOException
-        {
+        public int read() throws java.io.IOException {
             // Do we need to get data?
-            if (position < 0)
-            {
-                if (encode)
-                {
+            if (position < 0) {
+                if (encode) {
                     byte[] b3 = new byte[3];
                     int numBinaryBytes = 0;
-                    for (int i = 0; i < 3; i++)
-                    {
-                        try
-                        {
+                    for (int i = 0; i < 3; i++) {
+                        try {
                             int b = in.read();
 
                             // If end of stream, b is -1.
-                            if (b >= 0)
-                            {
+                            if (b >= 0) {
                                 b3[i] = (byte) b;
                                 numBinaryBytes++;
                             }   // end if: not end of stream
 
-                        } // end try: read
-                        catch (java.io.IOException e)
-                        {
+                        } catch (java.io.IOException e) {
                             // Only a problem if we got no data at all.
-                            if (i == 0)
-                            {
+                            if (i == 0) {
                                 throw e;
                             }
-
                         }   // end catch
                     }   // end for: each needed input byte
 
-                    if (numBinaryBytes > 0)
-                    {
+                    if (numBinaryBytes > 0) {
                         encode3to4(b3, 0, numBinaryBytes, buffer, 0);
                         position = 0;
                         numSigBytes = 4;
-                    } // end if: got data
-                    else
-                    {
+                    } else {
                         return -1;
                     }   // end else
                 } // end if: encoding
                 // Else decoding
-                else
-                {
+                else {
                     byte[] b4 = new byte[4];
                     int i = 0;
-                    for (i = 0; i < 4; i++)
-                    {
+                    for (i = 0; i < 4; i++) {
                         // Read four "meaningful" bytes:
                         int b = 0;
-                        do
-                        {
+                        do {
                             b = in.read();
                         } while (b >= 0 && DECODABET[b & 0x7f] <= WHITE_SPACE_ENC);
 
-                        if (b < 0)
-                        {
+                        if (b < 0) {
                             break; // Reads a -1 if end of stream
                         }
                         b4[i] = (byte) b;
                     }   // end for: each needed input byte
 
-                    if (i == 4)
-                    {
+                    if (i == 4) {
                         numSigBytes = decode4to3(b4, 0, buffer, 0);
                         position = 0;
                     } // end if: got four characters
-                    else if (i == 0)
-                    {
+                    else if (i == 0) {
                         return -1;
                     } // end else if: also padded correctly
-                    else
-                    {
+                    else {
                         // Must have broken out from above.
                         throw new java.io.IOException("Improperly padded Base64 input.");
                     }   // end
-
                 }   // end else: decode
             }   // end else: get data
 
             // Got data?
-            if (position >= 0)
-            {
+            if (position >= 0) {
                 // End of relevant data?
-                if (/*!encode &&*/position >= numSigBytes)
-                {
+                if (/*!encode &&*/position >= numSigBytes) {
                     return -1;
                 }
 
-                if (encode && breakLines && lineLength >= MAX_LINE_LENGTH)
-                {
+                if (encode && breakLines && lineLength >= MAX_LINE_LENGTH) {
                     lineLength = 0;
                     return '\n';
-                } // end if
-                else
-                {
+                } else {
                     lineLength++;   // This isn't important when decoding
                     // but throwing an extra "if" seems
                     // just as wasteful.
 
                     int b = buffer[position++];
 
-                    if (position >= bufferLength)
-                    {
+                    if (position >= bufferLength) {
                         position = -1;
                     }
 
@@ -1031,8 +749,7 @@ public class SFBase64 {
                 }   // end else
             } // end if: position >= 0
             // Else error
-            else
-            {
+            else {
                 // When JDK1.4 is more accepted, use an assertion here.
                 throw new java.io.IOException("Error in Base64 code reading stream.");
             }   // end else
@@ -1043,7 +760,7 @@ public class SFBase64 {
          * is reached or <var>len</var> bytes are read.
          * Returns number of bytes read into array or -1 if
          * end of stream is encountered.
-         * 
+         *
          * @param dest array to hold values
          * @param off offset for array
          * @param len max number of bytes to read into array
@@ -1051,25 +768,17 @@ public class SFBase64 {
          * @throws IOException Signals that an I/O exception has occurred.
          * @since 1.3
          */
-        public int read(byte[] dest, int off, int len) throws java.io.IOException
-        {
+        public int read(byte[] dest, int off, int len) throws java.io.IOException {
             int i;
             int b;
-            for (i = 0; i < len; i++)
-            {
+            for (i = 0; i < len; i++) {
                 b = read();
 
-                //if( b < 0 && i == 0 )
-                //    return -1;
-
-                if (b >= 0)
-                {
+                if (b >= 0) {
                     dest[off + i] = (byte) b;
-                } else if (i == 0)
-                {
+                } else if (i == 0) {
                     return -1;
-                } else
-                {
+                } else {
                     break; // Out of 'for' loop
                 }
             }   // end for: each byte read
@@ -1079,8 +788,8 @@ public class SFBase64 {
 
     /* ********  I N N E R   C L A S S   O U T P U T S T R E A M  ******** */
     /**
-     * A {@link Base64#OutputStream} will write data to another.
-     * 
+     * A {@link org.semanticwb.base.util.SFBase64.OutputStream} will write data to another.
+     *
      * {@link java.io.OutputStream}, given in the constructor,
      * and encode/decode to/from Base64 notation on the fly.
      * @see Base64
@@ -1091,35 +800,34 @@ public class SFBase64 {
 
         /** The encode. */
         private boolean encode;
-        
+
         /** The position. */
         private int position;
-        
+
         /** The buffer. */
         private byte[] buffer;
-        
+
         /** The buffer length. */
         private int bufferLength;
-        
+
         /** The line length. */
         private int lineLength;
-        
+
         /** The break lines. */
         private boolean breakLines;
 
         /**
-         * Constructs a {@link Base64#OutputStream} in ENCODE mode.
+         * Constructs a {@link org.semanticwb.base.util.SFBase64.OutputStream} in ENCODE mode.
          *
          * @param out the {@link java.io.OutputStream} to which data will be written.
          * @since 1.3
          */
-        public OutputStream(java.io.OutputStream out)
-        {
+        public OutputStream(java.io.OutputStream out) {
             this(out, SFBase64.ENCODE);
         }   // end constructor
 
         /**
-         * Constructs a {@link Base64#OutputStream} in
+         * Constructs a {@link org.semanticwb.base.util.SFBase64.OutputStream} in
          * either ENCODE or DECODE mode.
          *
          * @param out the {@link java.io.OutputStream} to which data will be written.
@@ -1128,13 +836,12 @@ public class SFBase64 {
          * @see Base64#DECODE
          * @since 1.3
          */
-        public OutputStream(java.io.OutputStream out, boolean encode)
-        {
+        public OutputStream(java.io.OutputStream out, boolean encode) {
             this(out, encode, true);
         }   // end constructor
 
         /**
-         * Constructs a {@link Base64#OutputStream} in
+         * Constructs a {@link org.semanticwb.base.util.SFBase64.OutputStream} in
          * either ENCODE or DECODE mode.
          *
          * @param out the {@link java.io.OutputStream} to which data will be written.
@@ -1144,8 +851,7 @@ public class SFBase64 {
          * @see Base64#DECODE
          * @since 1.3
          */
-        public OutputStream(java.io.OutputStream out, boolean encode, boolean breakLines)
-        {
+        public OutputStream(java.io.OutputStream out, boolean encode, boolean breakLines) {
             super(out);
             this.breakLines = breakLines;
             this.encode = encode;
@@ -1163,23 +869,20 @@ public class SFBase64 {
          * gets a write() call.
          * When decoding, bytes are buffered four
          * at a time.
-         * 
+         *
          * @param theByte the byte to write
          * @throws IOException Signals that an I/O exception has occurred.
          * @since 1.3
          */
-        public void write(int theByte) throws java.io.IOException
-        {
-            if (encode)
-            {
+        public void write(int theByte) throws java.io.IOException {
+            if (encode) {
                 buffer[position++] = (byte) theByte;
                 if (position >= bufferLength)  // Enough to encode.
                 {
                     out.write(SFBase64.encode3to4(buffer, bufferLength));
 
                     lineLength += 4;
-                    if (breakLines && lineLength >= MAX_LINE_LENGTH)
-                    {
+                    if (breakLines && lineLength >= MAX_LINE_LENGTH) {
                         out.write(NEW_LINE);
                         lineLength = 0;
                     }   // end if: end of line
@@ -1188,11 +891,9 @@ public class SFBase64 {
                 }   // end if: enough to output
             } // end if: encoding
             // Else, Decoding
-            else
-            {
+            else {
                 // Meaningful Base64 character?
-                if (DECODABET[theByte & 0x7f] > WHITE_SPACE_ENC)
-                {
+                if (DECODABET[theByte & 0x7f] > WHITE_SPACE_ENC) {
                     buffer[position++] = (byte) theByte;
                     if (position >= bufferLength)  // Enough to output.
                     {
@@ -1200,8 +901,7 @@ public class SFBase64 {
                         position = 0;
                     }   // end if: enough to output
                 } // end if: meaningful base64 character
-                else if (DECODABET[theByte & 0x7f] != WHITE_SPACE_ENC)
-                {
+                else if (DECODABET[theByte & 0x7f] != WHITE_SPACE_ENC) {
                     throw new java.io.IOException("Invalid character in Base64 data.");
                 }   // end else: not white space either
             }   // end else: decoding
@@ -1210,43 +910,35 @@ public class SFBase64 {
         /**
          * Calls {@link #write} repeatedly until <var>len</var>
          * bytes are written.
-         * 
+         *
          * @param theBytes array from which to read bytes
          * @param off offset for array
          * @param len max number of bytes to read into array
          * @throws IOException Signals that an I/O exception has occurred.
          * @since 1.3
          */
-        public void write(byte[] theBytes, int off, int len) throws java.io.IOException
-        {
-            for (int i = 0; i < len; i++)
-            {
+        public void write(byte[] theBytes, int off, int len) throws java.io.IOException {
+            for (int i = 0; i < len; i++) {
                 write(theBytes[off + i]);
             }   // end for: each byte written
-
         }   // end write
 
         /**
          * Appropriately pads Base64 notation when encoding
          * or throws an exception if Base64 input is not
          * properly padded when decoding.
-         * 
+         *
          * @throws IOException Signals that an I/O exception has occurred.
          * @since 1.3
          */
-        public void flush() throws java.io.IOException
-        {
+        public void flush() throws java.io.IOException {
             super.flush();
 
-            if (position > 0)
-            {
-                if (encode)
-                {
+            if (position > 0) {
+                if (encode) {
                     out.write(SFBase64.encode3to4(buffer, position));
                     position = 0;
-                } // end if: encoding
-                else
-                {
+                } else {
                     throw new java.io.IOException("Base64 input not properly padded.");
                 }   // end else: decoding
             }   // end if: buffer partially full
@@ -1256,15 +948,12 @@ public class SFBase64 {
 
         /**
          * Flushes and closes (I think, in the superclass) the stream.
-         * 
+         *
          * @throws IOException Signals that an I/O exception has occurred.
          * @since 1.3
          */
-        public void close() throws java.io.IOException
-        {
+        public void close() throws java.io.IOException {
             super.close();
-            //this.flush();
-
             out.close();
 
             buffer = null;
@@ -1272,4 +961,3 @@ public class SFBase64 {
         }   // end close
     }   // end inner class OutputStream
 }   // end class Base64
-

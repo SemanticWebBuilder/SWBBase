@@ -31,6 +31,8 @@ import java.io.FileOutputStream;
  *
  * @author jorge.jimenez
  */
+//TODO: Delete this wrapper class because only calls parent methods.
+@Deprecated
 public class SWBFileOutputStream extends FileOutputStream {
 
     public SWBFileOutputStream(String name) throws FileNotFoundException {

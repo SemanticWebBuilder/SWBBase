@@ -22,51 +22,40 @@
  */
 package org.semanticwb.css.parser;
 
-import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
- * The Class Selector.
- * 
+ * Class to encapsulate properties of a CSS Selector. Used in {@link CSSParser}.
  * @author victor.lorenzana
  */
 public class Selector {
-
-    /** The name. */
     private String name;
-    
-    /** The atts. */
-    private Set<Attribute> atts=new HashSet<>();
-    
+    private Set<Attribute> attributes;
+
     /**
-     * Instantiates a new selector.
-     * 
-     * @param name the name
-     * @param atts the atts
+     * Constructor. Creates a new instance of a {@link Selector}.
+     * @param name selector name.
+     * @param atts selector attributes.
      */
-    Selector(String name,Set<Attribute> atts)
-    {
-        this.name=name;
-        this.atts=atts;
+    Selector(String name, Set<Attribute> atts) {
+        this.name = name;
+        this.attributes = atts;
     }
-    
+
     /**
-     * Gets the attributes.
-     * 
-     * @return the attributes
+     * Gets the selector attributes.
+     * @return the attributes.
      */
-    public Attribute[] getAttributes()
-    {
-        return atts.toArray(new Attribute[atts.size()]);
+    public Attribute[] getAttributes() {
+        return attributes.toArray(new Attribute[attributes.size()]);
     }
-    
+
     /**
-     * Gets the name.
-     * 
-     * @return the name
+     * Gets the selector name.
+     * @return the selector name.
      */
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
@@ -74,8 +63,7 @@ public class Selector {
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         return name;
     }
 
@@ -83,28 +71,20 @@ public class Selector {
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
-    public boolean equals(Object obj)
-    {
-        if (obj == null)
+    public boolean equals(Object obj) {
+        if (obj == null || getClass() != obj.getClass()) {
             return false;
-        if (getClass() != obj.getClass())
-            return false;
-        final Selector other = (Selector) obj;
-        if ((this.name == null) ? (other.name != null) : !this.name.equals(other.name))
-            return false;
-        return true;
+        }
+        return Objects.equals(this, (Selector) obj);
     }
 
     /* (non-Javadoc)
      * @see java.lang.Object#hashCode()
      */
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         int hash = 7;
         hash = 89 * hash + (this.name != null ? this.name.hashCode() : 0);
         return hash;
     }
-    
-    
 }

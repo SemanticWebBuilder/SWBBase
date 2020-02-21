@@ -27,29 +27,18 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
- * Objeto que sobrescribe la clase Statement para poder tener control la misma
- * desde el Pool de conexiones.
- * 
+ * Implementation of {@link Statement} for usage with a {@link PoolConnection}.
  * @author Javier Solis Gonzalez (jsolis@infotec.com.mx)
  */
 public class PoolStatement implements java.sql.Statement {
-
-	/** The st. */
 	Statement st;
-
-	/** The closed. */
 	boolean closed = false;
-
-	/** The con. */
 	Connection con;
 
 	/**
-	 * Creates a new instance of PoolStatement.
-	 * 
-	 * @param st
-	 *            the st
-	 * @param con
-	 *            the con
+	 * Constructor. Creates a new instance of {@link PoolStatement}.
+	 * @param st the statement.
+	 * @param con the connection.
 	 */
 	public PoolStatement(Statement st, Connection con) {
 		this.st = st;
@@ -61,8 +50,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#addBatch(java.lang.String)
 	 */
-	public void addBatch(String str) throws java.sql.SQLException {
-		st.addBatch(str);
+	public void addBatch(String sql) throws SQLException {
+		st.addBatch(sql);
 	}
 
 	/*
@@ -70,7 +59,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#cancel()
 	 */
-	public void cancel() throws java.sql.SQLException {
+	public void cancel() throws SQLException {
 		st.cancel();
 	}
 
@@ -79,7 +68,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#clearBatch()
 	 */
-	public void clearBatch() throws java.sql.SQLException {
+	public void clearBatch() throws SQLException {
 		st.clearBatch();
 	}
 
@@ -88,7 +77,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#clearWarnings()
 	 */
-	public void clearWarnings() throws java.sql.SQLException {
+	public void clearWarnings() throws SQLException {
 		st.clearWarnings();
 	}
 
@@ -97,7 +86,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#close()
 	 */
-	public void close() throws java.sql.SQLException {
+	public void close() throws SQLException {
 		closed = true;
 		st.close();
 	}
@@ -107,8 +96,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#execute(java.lang.String)
 	 */
-	public boolean execute(String str) throws java.sql.SQLException {
-		return st.execute(str);
+	public boolean execute(String sql) throws SQLException {
+		return st.execute(sql);
 	}
 
 	/*
@@ -116,7 +105,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#executeBatch()
 	 */
-	public int[] executeBatch() throws java.sql.SQLException {
+	public int[] executeBatch() throws SQLException {
 		return st.executeBatch();
 	}
 
@@ -125,8 +114,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#executeQuery(java.lang.String)
 	 */
-	public java.sql.ResultSet executeQuery(String str) throws java.sql.SQLException {
-		return st.executeQuery(str);
+	public java.sql.ResultSet executeQuery(String sql) throws SQLException {
+		return st.executeQuery(sql);
 	}
 
 	/*
@@ -134,8 +123,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#executeUpdate(java.lang.String)
 	 */
-	public int executeUpdate(String str) throws java.sql.SQLException {
-		return st.executeUpdate(str);
+	public int executeUpdate(String sql) throws SQLException {
+		return st.executeUpdate(sql);
 	}
 
 	/*
@@ -143,7 +132,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#getConnection()
 	 */
-	public java.sql.Connection getConnection() throws java.sql.SQLException {
+	public java.sql.Connection getConnection() throws SQLException {
 		return con;
 	}
 
@@ -152,7 +141,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#getFetchDirection()
 	 */
-	public int getFetchDirection() throws java.sql.SQLException {
+	public int getFetchDirection() throws SQLException {
 		return st.getFetchDirection();
 	}
 
@@ -161,7 +150,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#getFetchSize()
 	 */
-	public int getFetchSize() throws java.sql.SQLException {
+	public int getFetchSize() throws SQLException {
 		return st.getFetchSize();
 	}
 
@@ -170,7 +159,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#getMaxFieldSize()
 	 */
-	public int getMaxFieldSize() throws java.sql.SQLException {
+	public int getMaxFieldSize() throws SQLException {
 		return st.getMaxFieldSize();
 	}
 
@@ -179,7 +168,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#getMaxRows()
 	 */
-	public int getMaxRows() throws java.sql.SQLException {
+	public int getMaxRows() throws SQLException {
 		return st.getMaxRows();
 	}
 
@@ -188,7 +177,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#getMoreResults()
 	 */
-	public boolean getMoreResults() throws java.sql.SQLException {
+	public boolean getMoreResults() throws SQLException {
 		return st.getMoreResults();
 	}
 
@@ -197,7 +186,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#getQueryTimeout()
 	 */
-	public int getQueryTimeout() throws java.sql.SQLException {
+	public int getQueryTimeout() throws SQLException {
 		return st.getQueryTimeout();
 	}
 
@@ -206,7 +195,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#getResultSet()
 	 */
-	public java.sql.ResultSet getResultSet() throws java.sql.SQLException {
+	public java.sql.ResultSet getResultSet() throws SQLException {
 		return st.getResultSet();
 	}
 
@@ -215,7 +204,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#getResultSetConcurrency()
 	 */
-	public int getResultSetConcurrency() throws java.sql.SQLException {
+	public int getResultSetConcurrency() throws SQLException {
 		return st.getResultSetConcurrency();
 	}
 
@@ -224,7 +213,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#getResultSetType()
 	 */
-	public int getResultSetType() throws java.sql.SQLException {
+	public int getResultSetType() throws SQLException {
 		return st.getResultSetType();
 	}
 
@@ -233,7 +222,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#getUpdateCount()
 	 */
-	public int getUpdateCount() throws java.sql.SQLException {
+	public int getUpdateCount() throws SQLException {
 		return st.getUpdateCount();
 	}
 
@@ -242,7 +231,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#getWarnings()
 	 */
-	public java.sql.SQLWarning getWarnings() throws java.sql.SQLException {
+	public java.sql.SQLWarning getWarnings() throws SQLException {
 		return st.getWarnings();
 	}
 
@@ -251,8 +240,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#setCursorName(java.lang.String)
 	 */
-	public void setCursorName(String str) throws java.sql.SQLException {
-		st.setCursorName(str);
+	public void setCursorName(String name) throws SQLException {
+		st.setCursorName(name);
 	}
 
 	/*
@@ -260,8 +249,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#setEscapeProcessing(boolean)
 	 */
-	public void setEscapeProcessing(boolean param) throws java.sql.SQLException {
-		st.setEscapeProcessing(param);
+	public void setEscapeProcessing(boolean enable) throws SQLException {
+		st.setEscapeProcessing(enable);
 	}
 
 	/*
@@ -269,8 +258,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#setFetchDirection(int)
 	 */
-	public void setFetchDirection(int param) throws java.sql.SQLException {
-		st.setFetchDirection(param);
+	public void setFetchDirection(int direction) throws SQLException {
+		st.setFetchDirection(direction);
 	}
 
 	/*
@@ -278,8 +267,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#setFetchSize(int)
 	 */
-	public void setFetchSize(int param) throws java.sql.SQLException {
-		st.setFetchSize(param);
+	public void setFetchSize(int size) throws SQLException {
+		st.setFetchSize(size);
 	}
 
 	/*
@@ -287,8 +276,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#setMaxFieldSize(int)
 	 */
-	public void setMaxFieldSize(int param) throws java.sql.SQLException {
-		st.setMaxFieldSize(param);
+	public void setMaxFieldSize(int max) throws SQLException {
+		st.setMaxFieldSize(max);
 	}
 
 	/*
@@ -296,8 +285,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#setMaxRows(int)
 	 */
-	public void setMaxRows(int param) throws java.sql.SQLException {
-		st.setMaxRows(param);
+	public void setMaxRows(int max) throws SQLException {
+		st.setMaxRows(max);
 	}
 
 	/*
@@ -305,14 +294,13 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#setQueryTimeout(int)
 	 */
-	public void setQueryTimeout(int param) throws java.sql.SQLException {
-		st.setQueryTimeout(param);
+	public void setQueryTimeout(int secons) throws SQLException {
+		st.setQueryTimeout(secons);
 	}
 
 	/**
-	 * Checks if is closed.
-	 * 
-	 * @return true, if is closed
+	 * Checks if statement is closed.
+	 * @return true, if it is closed.
 	 */
 	public boolean isClosed() {
 		return closed;
@@ -324,8 +312,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#execute(java.lang.String, java.lang.String[])
 	 */
-	public boolean execute(String str, String[] str1) throws java.sql.SQLException {
-		return st.execute(str, str1);
+	public boolean execute(String sql, String[] columnNames) throws SQLException {
+		return st.execute(sql, columnNames);
 	}
 
 	/*
@@ -333,8 +321,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#execute(java.lang.String, int[])
 	 */
-	public boolean execute(String str, int[] values) throws java.sql.SQLException {
-		return st.execute(str, values);
+	public boolean execute(String sql, int[] columnIndexes) throws SQLException {
+		return st.execute(sql, columnIndexes);
 	}
 
 	/*
@@ -342,8 +330,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#execute(java.lang.String, int)
 	 */
-	public boolean execute(String str, int param) throws java.sql.SQLException {
-		return st.execute(str, param);
+	public boolean execute(String sql, int autoGeneratedKeys) throws SQLException {
+		return st.execute(sql, autoGeneratedKeys);
 	}
 
 	/*
@@ -351,7 +339,7 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#getResultSetHoldability()
 	 */
-	public int getResultSetHoldability() throws java.sql.SQLException {
+	public int getResultSetHoldability() throws SQLException {
 		return st.getResultSetHoldability();
 	}
 
@@ -360,8 +348,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#getMoreResults(int)
 	 */
-	public boolean getMoreResults(int param) throws java.sql.SQLException {
-		return st.getMoreResults(param);
+	public boolean getMoreResults(int current) throws SQLException {
+		return st.getMoreResults(current);
 	}
 
 	/*
@@ -369,8 +357,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#executeUpdate(java.lang.String, java.lang.String[])
 	 */
-	public int executeUpdate(String str, String[] str1) throws java.sql.SQLException {
-		return st.executeUpdate(str, str1);
+	public int executeUpdate(String sql, String[] columnNames) throws SQLException {
+		return st.executeUpdate(sql, columnNames);
 	}
 
 	/*
@@ -378,8 +366,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#executeUpdate(java.lang.String, int)
 	 */
-	public int executeUpdate(String str, int param) throws java.sql.SQLException {
-		return st.executeUpdate(str, param);
+	public int executeUpdate(String sql, int autoGeneratedKeys) throws SQLException {
+		return st.executeUpdate(sql, autoGeneratedKeys);
 	}
 
 	/*
@@ -387,8 +375,8 @@ public class PoolStatement implements java.sql.Statement {
 	 * 
 	 * @see java.sql.Statement#executeUpdate(java.lang.String, int[])
 	 */
-	public int executeUpdate(String str, int[] values) throws java.sql.SQLException {
-		return st.executeUpdate(str, values);
+	public int executeUpdate(String sql, int[] columnIndexes) throws SQLException {
+		return st.executeUpdate(sql, columnIndexes);
 	}
 
 	/*

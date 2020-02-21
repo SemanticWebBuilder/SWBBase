@@ -22,12 +22,12 @@
  */
 package org.semanticwb.base.db;
 
+import org.semanticwb.Logger;
+import org.semanticwb.SWBUtils;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import org.semanticwb.Logger;
-import org.semanticwb.SWBUtils;
 
 /**
  * Objeto que sobrescribe la clase Statement para poder tener control la misma
